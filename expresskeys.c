@@ -1,4 +1,4 @@
-/* Version 0.05 16 March 2005
+/* Version 0.06 29 March 2005
  *
  * To compile (example in 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
@@ -16,8 +16,23 @@
  * Key configuration is easy to change in the "#define KEY_xx yy" below.
  * Use the "xev" program to find keycodes or look them up somewhere...
  * I've set the Wacom Intuos3 defaults on both sides, which is:
- * Shift, Alt, Control and Space. Touch strips are not supported.
+ * Shift, Alt, Control and Space. Touch strips are mildly supported.
  *
+ * _Version 0.06 29 March 2005_
+ * 
+ * Touch Strip simple implementation. Default, if turned on, sends plus
+ * (+) and minus (-) key presses based on finger/stylus up/down motion.
+ * This was chosen for Gimp Zoom In/Out functionality. It must be turned
+ * on by setting a value in the "user config area", just as for pen mode
+ * handling. Default is off, don't handle the touch strips.
+ * 
+ * It turns out that with linuxwacom-0.6.7 (beta is out) this program
+ * works better than ever! The blender "confusion" I talked about in
+ * the previous version note has vanished completely. Also blender
+ * zoom, translation and rotation work flawlessly with the pad buttons
+ * and pen middle button (was half-working in linuxwacom-0.6.6). So the
+ * XTestFakeKeyEvent was no bad choice at all. I'm very pleased :-)
+ * 
  * _Version 0.05 16 March 2005_
  *
  * Bugfix. My key scan "case:, if, else, break" flow was somewhat borked.
@@ -25,7 +40,7 @@
  * with (I believe) the timing of the XTestFakeKeyEvent of the XTest
  * extension. Using the "u" and "Shift-u" for undo and redo in blender
  * works, but sometimes blender gets confused. Waiting some seconds and
- * doing a "slow-push-release" of the key can fix the isssue. Ah well,
+ * doing a "slow-push-release" of the key can fix the issue. Ah well,
  * this simulates keypresses, it's not the real thing... I'll look into
  * using another extension for the simulation.
  *
@@ -40,7 +55,7 @@
  * See the new "user config area" for details. Observe: Whatever pen mode
  * you are in when exiting or killing this program, that's the pen mode
  * you have... So if wrong, fire up the program again and toggle until it's
- * the right mode.
+ * the right mode. Default is off, don't handle a pen.
  * 
  * Clearly marked and cleaned up a "user config area" at the very beginning
  * of the code.
@@ -93,6 +108,14 @@
 #define PEN_MODE "Absolute" /* The mode we should expect the pen to be in */
 			    /* when starting this program. Default usually */
 			    /* is Absolute. The "mousy" feeling is Relative */
+
+#define HANDLE_TOUCH 0	/* Main switch: 1 = yes handle touch strips, 0 = no */
+#define L_TOUCH_UP 20	/* Default 20 = "+" = Gimp Zoom In. Left up motion*/
+#define L_TOUCH_DOWN 61 /* Default 61 = "-" = Gimp Zoom Out. Left down motion */
+#define R_TOUCH_UP 20	/* Default 20 = "+" = Gimp Zoom In. Right up motion */
+#define R_TOUCH_DOWN 61 /* Default 61 = "-" = Gimp Zoom Out. Right down motion*/
+			/* Change direction by switching _UP and _DOWN values */
+
 /* Left ExpressKey Pad
 ------------ 
 |  |   |   |		Wacom Intuos3 defaults are:
@@ -155,7 +178,12 @@ int find_device_info(Display *display, char *name, Bool only_extended);
 int register_events(Display	*display, XDeviceInfo *info, char *dev_name);
 int use_events(Display *display);
 int toggle_pen_mode(Display *display, char *name);
+
 int pen_mode = 1;
+int elder_rotation = 4097;
+int old_rotation = 4097;
+int elder_throttle = 4097;
+int old_throttle = 4097;
 
 int main (int argc, char *argv[])
 {
@@ -257,12 +285,13 @@ int find_device_info(Display *display, char *name, Bool only_extended)
 	return 0;
 }
 
+static int motion_type = INVALID_EVENT_TYPE;
 static int button_press_type = INVALID_EVENT_TYPE;
 static int button_release_type = INVALID_EVENT_TYPE;
 int register_events(Display	*display, XDeviceInfo *info, char *dev_name)
 {
 	int number = 0;
-	XEventClass event_list[2];
+	XEventClass event_list[3];
 	int i;
 	XDevice *device;
 	Window root_win;
@@ -282,10 +311,16 @@ int register_events(Display	*display, XDeviceInfo *info, char *dev_name)
 	if (device->num_classes > 0) {
 	for (ip = device->classes, i=0; i<info->num_classes; ip++, i++) {
 		switch (ip->input_class) {
+
 		case ButtonClass:
 		DeviceButtonPress(device, button_press_type, event_list[number]); number++;
 		DeviceButtonRelease(device, button_release_type, event_list[number]); number++;
 		break;
+
+		case ValuatorClass:
+		DeviceMotionNotify(device, motion_type, event_list[number]); number++;
+		break;
+
 		default:
 		break;
 	    }
@@ -303,6 +338,45 @@ int use_events(Display *display)
 	XEvent Event;
 	while(1) {
 	XNextEvent(display, &Event);
+
+	if (Event.type == motion_type) {
+
+		if (HANDLE_TOUCH){
+			int rotation;
+			int throttle;
+	
+	    	XDeviceMotionEvent *motion = (XDeviceMotionEvent *) &Event;
+
+			rotation = motion->axis_data[3];
+			throttle = motion->axis_data[4];
+
+			if (rotation > 1){
+				if ((rotation < old_rotation) && (old_rotation <= elder_rotation)){
+					XTestFakeKeyEvent(display, L_TOUCH_UP, True, CurrentTime);
+					XTestFakeKeyEvent(display, L_TOUCH_UP, False, CurrentTime);
+				}
+				else if ((rotation > old_rotation) && (old_rotation >= elder_rotation)){
+					XTestFakeKeyEvent(display, L_TOUCH_DOWN, True, CurrentTime);
+					XTestFakeKeyEvent(display, L_TOUCH_DOWN, False, CurrentTime);
+				}
+			elder_rotation = old_rotation;
+			old_rotation = rotation;
+			}
+
+			if (throttle > 1){
+				if ((throttle < old_throttle) && (old_throttle <= elder_throttle)){
+					XTestFakeKeyEvent(display, R_TOUCH_UP, True, CurrentTime);
+					XTestFakeKeyEvent(display, R_TOUCH_UP, False, CurrentTime);
+				}
+				else if ((throttle > old_throttle) && (old_throttle >= elder_throttle)){
+					XTestFakeKeyEvent(display, R_TOUCH_DOWN, True, CurrentTime);
+					XTestFakeKeyEvent(display, R_TOUCH_DOWN, False, CurrentTime);
+				}
+			elder_throttle = old_throttle;
+			old_throttle = throttle;
+			}
+		}
+	}
 
 	if (Event.type == button_press_type) {
 
