@@ -1,8 +1,26 @@
-/* Version 0.08 3 April 2005
+/* Version 0.09 4 April 2005
  *
  * To compile (example in 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
  * gcc -s -L/usr/X11R6/lib -o expresskeys expresskeys.o -lX11 -lXi -lXext -lXtst
+ *
+ *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Important: If you use the linuxwacom-0.6.7-beta or in the future
+ * released versions you must change the pad statement in X config
+ * file to:
+ *
+ * Section "ServerLayout"
+ * [...]
+ * InputDevice "pad" # Intuos3 or Cintiq 21UX. It must NOT send core event
+ * [...]
+ * EndSection
+ *
+ * See: http://linuxwacom.sourceforge.net/index.php/howto/srvlayout
+ *
+ * If you use the old pad statement, any pad button press will jump the
+ * mouse cursor to the upper left corner (0,0) when another tool isn't
+ * in proximity.
+ *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
  * Run example: expresskeys pad &
  * Which will push it into the background. It is safe to close the terminal
@@ -21,7 +39,16 @@
  * Note 2 April 2005: Sometimes desktops or window managers "steal"
  * certain keypresses/combinations. If you experience that, look for
  * a way to change the keybindings of your environment.
- * 
+ *
+ * _Version 0.09 4 April 2005_
+ *
+ * Bugfix to handle some weird windows who don't set the "class",
+ * and even their parents lack it (like the "xev" program...). I
+ * won't go further back in a hierarchy, so these weirdos get the
+ * "default" keyset.
+ *
+ * Note: Without this fix expresskeys will crash in such cases.
+ *
  * _Version 0.08 3 April 2005_
  * 
  * When I was customizing the keyboard shortcuts within Gimp itself
@@ -549,13 +576,13 @@ int use_events(Display *display)
 		XQueryTree(display, focus_window, &root, &parent, &children, &num_children);
 		XGetClassHint(display, focus_window, class_hint);
 
-		if ((!class_hint->res_class) && (focus_window != root)){
+		if ((!class_hint->res_class) && (parent) && (focus_window != root)){
 			XFree(class_hint->res_class);
 			XFree(class_hint->res_name);
 			XGetClassHint(display, parent, class_hint);
 		}
 
-		if (focus_window == root){
+		if ((focus_window == root) || (class_hint->res_class == NULL)){
 			p = prog_list;
 		}
 		else {
