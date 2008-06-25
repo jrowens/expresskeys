@@ -1,4 +1,4 @@
-/* Version 0.06 29 March 2005
+/* Version 0.07 2 April 2005
  *
  * To compile (example in 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
@@ -13,12 +13,66 @@
  * "exec /usr/local/bin/expresskeys pad &" (without quotes) right before
  * the window manager is started.
  * 
- * Key configuration is easy to change in the "#define KEY_xx yy" below.
+ * Key configuration is easy to change in the "user config area" below.
  * Use the "xev" program to find keycodes or look them up somewhere...
  * I've set the Wacom Intuos3 defaults on both sides, which is:
  * Shift, Alt, Control and Space. Touch strips are mildly supported.
  *
+ * Note 2 April 2005: Sometimes desktops or window managers "steal"
+ * certain keypresses/combinations. If you experience that, look for
+ * a way to change the keybindings of your environment.
+ * 
+ * _Version 0.07 2 April 2005_
+ * 
+ * Multiple configurations to rule them all... Yes, we now send
+ * keypresses intelligently based on several configurations. I've
+ * included a "default" catch all type, one for Gimp, for Blender
+ * and for XTerm. Observe the spelling! It is case sensitive.
+ * 
+ * To create a new definition, just copy a full block and alter the
+ * Name and the keycodes. To find the proper name of a program/window
+ * fire up "xprop". It should be included with your X. xprop without
+ * any arguments expects you to then click on the target window.
+ * What comes out is a flood of information in the terminal window
+ * you used to run xprop from. What we're after is something called
+ * WM_CLASS. And within that, only one string. Let me show you:
+ * 
+ * $ xprop | grep WM_CLASS
+ * WM_CLASS(STRING) = "<unknown>", "Eclipse"
+ * 
+ * It's the last string we would use, the "Eclipse" part. That is,
+ * if we were doing a definition for this program, an IDE ;-)
+ * 
+ * You can see above why I use the last part. Program windows do not
+ * always set their "name" (the first string). But they should
+ * absolutely set the "class" they belong to, which often coincides
+ * with the name.
+ * 
+ * So non-technically, this is how expresskeys works now:
+ * 
+ * 1) Pad button pressed or Touch strips touched.
+ * 2) Examine which window is the current active one (has focus).
+ * 3) Get the "class" name of the window.
+ * 4) Compare that name with an internal list of program names.
+ * 5) If a match is found, use those keydefinitions.
+ * 6) If no match is found, use a "default" set of definitions.
+ * 7) Send the keypress to the specified window.
+ * 
+ * In order to achieve this functionality I had to change the
+ * "user config area" somewhat. I've done my very best to retain
+ * a simple design, and at the same time keep it compact. But
+ * success is in the eye of the beholder... Cut out example:
+ * 
+ *//* 	key_9	*//* <-- A visual reminder of which pad button it is. */
+/*	50,		<-- The actual keycode and a COMMA (don't erase it).
+ * 
+ * Otherwise all the keys and options from past versions are, almost,
+ * the same. End Version Note Rant.
+ * 
  * _Version 0.06 29 March 2005_
+ * 
+ * Comment 2 April 2005: This is default only in Gimp. Basic defaults
+ * are now Arrow-keys Up/Down/Right/Left. End comment.
  * 
  * Touch Strip simple implementation. Default, if turned on, sends plus
  * (+) and minus (-) key presses based on finger/stylus up/down motion.
@@ -62,6 +116,9 @@
  * 
  * _Version 0.02 14 March 2005_:
  *
+ * Comment 2 April 2005: These instructions are dated. #define
+ * for the keycodes are not used anymore. End comment.
+ * 
  * Added the option to specify an extra key for each pad key.
  * "#define KEY_xx_PLUS yy". By setting yy of KEY_11_PLUS to 57 you'd get
  * the famous Ctrl-n ;-). I needed this for undo and redo in blender.
@@ -74,9 +131,11 @@
  * Mats
  */
 /*
- * CopyLeft 2005 by Mats Johannesson aka Voluspa
+ * CopyLeft 2005 by Mats Johannesson aka Voluspa. One working address
+ * is devel with the ISP bredband which is a net domain.
+ *
  * Hacked code from xinput-1.2.tar.gz (the test.c, setmode.c and xinput.c)
- * Most are left as Frederic Lepied wrote it - I'm no coder!
+ * Most of the pure xinput is left as Frederic Lepied wrote it - I'm no coder!
  */
 /*
  * Copyright 1996 by Frederic Lepied, France. <Frederic.Lepied@sugix.frmug.org>
@@ -104,18 +163,43 @@
 /* ++++++++++ Begin user config area ++++++++++ */
 
 #define HANDLE_PEN 0	/* Main switch: 1 = yes handle a pen, 0 = no please */
-#define PEN_NAME "stylus"   /* Identifier name as configured in xorg.conf */
-#define PEN_MODE "Absolute" /* The mode we should expect the pen to be in */
-			    /* when starting this program. Default usually */
-			    /* is Absolute. The "mousy" feeling is Relative */
+#define PEN_NAME "stylus"	/* Identifier name as configured in xorg.conf */
+#define PEN_MODE "Absolute"	/* The mode we should expect the pen to be in */
+			/* when starting this program. Default usually */
+			/* is Absolute. The "mousy" feeling is Relative */
 
-#define HANDLE_TOUCH 0	/* Main switch: 1 = yes handle touch strips, 0 = no */
-#define L_TOUCH_UP 20	/* Default 20 = "+" = Gimp Zoom In. Left up motion*/
-#define L_TOUCH_DOWN 61 /* Default 61 = "-" = Gimp Zoom Out. Left down motion */
-#define R_TOUCH_UP 20	/* Default 20 = "+" = Gimp Zoom In. Right up motion */
-#define R_TOUCH_DOWN 61 /* Default 61 = "-" = Gimp Zoom Out. Right down motion*/
-			/* Change direction by switching _UP and _DOWN values */
-
+/* Now, on to the next area. Please walk this way madam!		*/
+/*----------------------------------------------.			*/
+struct program {		/*		|			*/
+	char *class_name;	/*		|			*/
+	int handle_touch;	/*		|			*/
+	int l_touch_up;		/*		|			*/
+	int l_touch_down;	/*		|			*/
+	int r_touch_up;		/*		|			*/
+	int r_touch_down;	/*		|			*/
+	int key_9;		/*		|			*/
+	int key_9_plus;		/*		|			*/
+	int key_10;		/*		|			*/
+	int key_10_plus;	/*		|			*/
+	int key_11;		/*	Nothing to see here		*/
+	int key_11_plus;	/*	madam... Please move		*/
+	int key_12;		/*	along.				*/
+	int key_12_plus;	/*		|			*/
+	int key_13;		/*		|			*/
+	int key_13_plus;	/*		|			*/
+	int key_14;		/*		|			*/
+	int key_14_plus;	/*		|			*/
+	int key_15;		/*		|			*/
+	int key_15_plus;	/*		|			*/
+	int key_16;		/*		|			*/
+	int key_16_plus;	/*		|			*/
+} prog_list[] = {		/*		|			*/
+				/*		|			*/
+/*-------------------------------.		V			*/
+/*					Go further down, past
+ * 					these comments for the
+ * 					real configuration area.
+ */
 /* Left ExpressKey Pad
 ------------ 
 |  |   |   |		Wacom Intuos3 defaults are:
@@ -125,18 +209,7 @@
 |------| C |		Key 11 = (left) Control	= keycode 37
 |  12  | H |		Key 12 = Space		= keycode 65
 ------------
-Use the string TOGGLE_PEN if you want a key to do pen mode changes.
-Eg: "#define KEY_11 TOGGLE_PEN" (the above HANDLE_PEN must also be set to 1)
 */
-#define KEY_9 50
-#define KEY_9_PLUS 0	/* extra key */
-#define KEY_10 64
-#define KEY_10_PLUS 0	/* extra key */
-#define KEY_11 37
-#define KEY_11_PLUS 0	/* extra key */
-#define KEY_12 65
-#define KEY_12_PLUS 0	/* extra key */
-
 /* Right ExpressKey Pad
 ------------ 
 |   |   |  |		Wacom Intuos3 defaults are:
@@ -146,21 +219,102 @@ Eg: "#define KEY_11 TOGGLE_PEN" (the above HANDLE_PEN must also be set to 1)
 | C |------|		Key 15 = (left) Control	= keycode 37
 | H |  16  |		Key 16 = Space		= keycode 65
 ------------
-Use the string TOGGLE_PEN if you want a key to do pen mode changes.
-Eg: "#define KEY_15 TOGGLE_PEN" (the above HANDLE_PEN must also be set to 1)
 */
-#define KEY_13 50
-#define KEY_13_PLUS 0	/* extra key */
-#define KEY_14 64
-#define KEY_14_PLUS 0	/* extra key */
-#define KEY_15 37
-#define KEY_15_PLUS 0	/* extra key */
-#define KEY_16 65
-#define KEY_16_PLUS 0	/* extra key */
 
+/* The top configuration (named "default") will be used with
+ * all programs and their windows that are not specified in a
+ * separate configuration below this one. Default keycodes are
+ * the now famous Wacom Intuos3 ones. I've also set totally
+ * non-destructive touch strip keys (only used if handle_touch
+ * is altered to a "1" - without quotes) which are: Arrow-keys
+ * Up/Down on the left strip and Arrow-keys Right/Left on the
+ * right strip. Change direction of the movement by switching
+ * the _up and _down values.
+ * 
+ * If you want a key to do pen mode changes, use the value 999
+ * under the corresponding keylabel. To be able to switch mode
+ * anywhere, each configuration must contain one 999 definition.
+ * And, of course, the main HANDLE_PEN definition above must
+ * first be set to "1" - without quotes.
+ * 
+ * Please don't alter or remove the commas (,) after the keycodes.
+ * They _must_ be there just as written.
+ */
+/*	Name	handle_touch */
+{"default",	0,
+/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
+		98,		104,		102,		100,
+/*		key_9		key_9_plus	key_10		key_10_plus */
+		50,		0,		64,		0,
+/*		key_11		key_11_plus	key_12		key_12_plus */
+		37,		0,		65,		0,
+/*		key_13		key_13_plus	key_14		key_14_plus */
+		50,		0,		64,		0,
+/*		key_15		key_15_plus	key_16		key_16_plus */
+		37,		0,		65,		0	},
+
+/*
+ * Gimp has the touch strips turned on by default. The keycodes are:
+ * 20 = "+" = Gimp Zoom In. Left/Right touch strip up motion
+ * 61 = "-" = Gimp Zoom Out. Left/Right touch strip down motion
+ * Change direction of the movement by switching _up and _down values.
+ */
+/*	Name	handle_touch */
+{"Gimp",	1,
+/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
+		20,		61,		20,		61,
+/*		key_9		key_9_plus	key_10		key_10_plus */
+		50,		0,		64,		0,
+/*		key_11		key_11_plus	key_12		key_12_plus */
+		37,		0,		65,		0,
+/*		key_13		key_13_plus	key_14		key_14_plus */
+		50,		0,		64,		0,
+/*		key_15		key_15_plus	key_16		key_16_plus */
+		37,		0,		65,		0	},
+
+/* This is my private definition for the 3D program blender...
+ */
+/*	Name	handle_touch */
+{"Blender",	1,
+/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
+		102,		100,		98,		104,
+/*		key_9		key_9_plus	key_10		key_10_plus */
+		37,		0,		9,		0,
+/*		key_11		key_11_plus	key_12		key_12_plus */
+		50,		0,		23,		0,
+/*		key_13		key_13_plus	key_14		key_14_plus */
+		50,		30,		30,		0,
+/*		key_15		key_15_plus	key_16		key_16_plus */
+		999,		0,		65,		0	},
+
+/* I feel that an xterm is too important a window to have _any_
+ * interference from the pad. But observe that I want to be able
+ * to switch pen mode even with such a window in focus.
+ */
+/*	Name	handle_touch */
+{"XTerm",	0,
+/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
+		0,		0,		0,		0,
+/*		key_9		key_9_plus	key_10		key_10_plus */
+		0,		0,		0,		0,
+/*		key_11		key_11_plus	key_12		key_12_plus */
+		0,		0,		0,		0,
+/*		key_13		key_13_plus	key_14		key_14_plus */
+		0,		0,		0,		0,
+/*		key_15		key_15_plus	key_16		key_16_plus */
+		999,		0,		0,		0	},
+
+/* And that's how it's done. Just copy a section and tweak the
+ * settings for a new program. Your machine speed and memory
+ * sets the limit ;-)
+ */
 /* ++++++++++ End user config area ++++++++++ */
 
+};
+#define NUM_LIST (sizeof prog_list / sizeof prog_list[0])
+
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/XTest.h>
 #include <stdio.h>
@@ -194,10 +348,19 @@ int main (int argc, char *argv[])
 		pen_mode = Relative;
 		}
 
-Display *display = XOpenDisplay(NULL);
+	Display *display = XOpenDisplay(NULL);
 
 	if (display == NULL) {
 		fprintf(stderr, "Can not connect to X-Server\n");
+		return EXIT_KO;
+	}
+
+	int event_base, error_base;
+	int major_version, minor_version;
+	if (!XTestQueryExtension (display, &event_base, &error_base,
+	&major_version, &minor_version)) {
+		fprintf (stderr, "XTest extension not supported on server\n");
+		XCloseDisplay(display);
 		return EXIT_KO;
 	}
 
@@ -335,13 +498,50 @@ int register_events(Display	*display, XDeviceInfo *info, char *dev_name)
 
 int use_events(Display *display)
 {
+	
 	XEvent Event;
 	while(1) {
-	XNextEvent(display, &Event);
+		XNextEvent(display, &Event);
+
+		XClassHint *class_hint;
+		class_hint = XAllocClassHint();
+
+		Window focus_window = None;
+		int focus_state;
+
+		Window root, parent;
+		Window *children;
+		unsigned int num_children;
+
+		struct program *p;
+		int in_list = 0;
+
+		XGetInputFocus(display, &focus_window, &focus_state);
+		XQueryTree(display, focus_window, &root, &parent, &children, &num_children);
+		XGetClassHint(display, focus_window, class_hint);
+		if (!class_hint->res_class){
+			XFree(class_hint->res_class);
+			XFree(class_hint->res_name);
+			XGetClassHint(display, parent, class_hint);
+		}
+
+		for (p = prog_list; p < prog_list + NUM_LIST; p++)
+			if (strcmp (class_hint->res_class, p->class_name) == 0){
+				in_list = 1;
+				break;
+			}
+		
+		XFree(class_hint->res_class);
+		XFree(class_hint->res_name);
+		if (children) XFree((char *)children);
+
+		if (!in_list){
+			p = prog_list;
+		}
 
 	if (Event.type == motion_type) {
 
-		if (HANDLE_TOUCH){
+		if (p->handle_touch){
 			int rotation;
 			int throttle;
 	
@@ -352,12 +552,12 @@ int use_events(Display *display)
 
 			if (rotation > 1){
 				if ((rotation < old_rotation) && (old_rotation <= elder_rotation)){
-					XTestFakeKeyEvent(display, L_TOUCH_UP, True, CurrentTime);
-					XTestFakeKeyEvent(display, L_TOUCH_UP, False, CurrentTime);
+					XTestFakeKeyEvent(display, p->l_touch_up, True, CurrentTime);
+					XTestFakeKeyEvent(display, p->l_touch_up, False, CurrentTime);
 				}
 				else if ((rotation > old_rotation) && (old_rotation >= elder_rotation)){
-					XTestFakeKeyEvent(display, L_TOUCH_DOWN, True, CurrentTime);
-					XTestFakeKeyEvent(display, L_TOUCH_DOWN, False, CurrentTime);
+					XTestFakeKeyEvent(display, p->l_touch_down, True, CurrentTime);
+					XTestFakeKeyEvent(display, p->l_touch_down, False, CurrentTime);
 				}
 			elder_rotation = old_rotation;
 			old_rotation = rotation;
@@ -365,12 +565,12 @@ int use_events(Display *display)
 
 			if (throttle > 1){
 				if ((throttle < old_throttle) && (old_throttle <= elder_throttle)){
-					XTestFakeKeyEvent(display, R_TOUCH_UP, True, CurrentTime);
-					XTestFakeKeyEvent(display, R_TOUCH_UP, False, CurrentTime);
+					XTestFakeKeyEvent(display, p->r_touch_up, True, CurrentTime);
+					XTestFakeKeyEvent(display, p->r_touch_up, False, CurrentTime);
 				}
 				else if ((throttle > old_throttle) && (old_throttle >= elder_throttle)){
-					XTestFakeKeyEvent(display, R_TOUCH_DOWN, True, CurrentTime);
-					XTestFakeKeyEvent(display, R_TOUCH_DOWN, False, CurrentTime);
+					XTestFakeKeyEvent(display, p->r_touch_down, True, CurrentTime);
+					XTestFakeKeyEvent(display, p->r_touch_down, False, CurrentTime);
 				}
 			elder_throttle = old_throttle;
 			old_throttle = throttle;
@@ -384,114 +584,114 @@ int use_events(Display *display)
 
 		switch (button->button) {
 			case 9:
-		if (KEY_9 == TOGGLE_PEN)
+		if (p->key_9 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_9)
-XTestFakeKeyEvent(display, KEY_9, True, CurrentTime );
-		if (KEY_9_PLUS)
-XTestFakeKeyEvent(display, KEY_9_PLUS, True, CurrentTime );
+		if (p->key_9)
+XTestFakeKeyEvent(display, p->key_9, True, CurrentTime );
+		if (p->key_9_plus)
+XTestFakeKeyEvent(display, p->key_9_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 10:
-		if (KEY_10 == TOGGLE_PEN)
+		if (p->key_10 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_10)
-XTestFakeKeyEvent(display, KEY_10, True, CurrentTime );
-		if (KEY_10_PLUS)
-XTestFakeKeyEvent(display, KEY_10_PLUS, True, CurrentTime );
+		if (p->key_10)
+XTestFakeKeyEvent(display, p->key_10, True, CurrentTime );
+		if (p->key_10_plus)
+XTestFakeKeyEvent(display, p->key_10_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 11:
-		if (KEY_11 == TOGGLE_PEN)
+		if (p->key_11 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_11)
-XTestFakeKeyEvent(display, KEY_11, True, CurrentTime );
-		if (KEY_11_PLUS)
-XTestFakeKeyEvent(display, KEY_11_PLUS, True, CurrentTime );
+		if (p->key_11)
+XTestFakeKeyEvent(display, p->key_11, True, CurrentTime );
+		if (p->key_11_plus)
+XTestFakeKeyEvent(display, p->key_11_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 12:
-		if (KEY_12 == TOGGLE_PEN)
+		if (p->key_12 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_12)
-XTestFakeKeyEvent(display, KEY_12, True, CurrentTime );
-		if (KEY_12_PLUS)
-XTestFakeKeyEvent(display, KEY_12_PLUS, True, CurrentTime );
+		if (p->key_12)
+XTestFakeKeyEvent(display, p->key_12, True, CurrentTime );
+		if (p->key_12_plus)
+XTestFakeKeyEvent(display, p->key_12_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 13:
-		if (KEY_13 == TOGGLE_PEN)
+		if (p->key_13 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_13)
-XTestFakeKeyEvent(display, KEY_13, True, CurrentTime );
-		if (KEY_13_PLUS)
-XTestFakeKeyEvent(display, KEY_13_PLUS, True, CurrentTime );
+		if (p->key_13)
+XTestFakeKeyEvent(display, p->key_13, True, CurrentTime );
+		if (p->key_13_plus)
+XTestFakeKeyEvent(display, p->key_13_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 14:
-		if (KEY_14 == TOGGLE_PEN)
+		if (p->key_14 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_14)
-XTestFakeKeyEvent(display, KEY_14, True, CurrentTime );
-		if (KEY_14_PLUS)
-XTestFakeKeyEvent(display, KEY_14_PLUS, True, CurrentTime );
+		if (p->key_14)
+XTestFakeKeyEvent(display, p->key_14, True, CurrentTime );
+		if (p->key_14_plus)
+XTestFakeKeyEvent(display, p->key_14_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 15:
-		if (KEY_15 == TOGGLE_PEN)
+		if (p->key_15 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_15)
-XTestFakeKeyEvent(display, KEY_15, True, CurrentTime );
-		if (KEY_15_PLUS)
-XTestFakeKeyEvent(display, KEY_15_PLUS, True, CurrentTime );
+		if (p->key_15)
+XTestFakeKeyEvent(display, p->key_15, True, CurrentTime );
+		if (p->key_15_plus)
+XTestFakeKeyEvent(display, p->key_15_plus, True, CurrentTime );
 		else
 			break;
 			break;
 			case 16:
-		if (KEY_16 == TOGGLE_PEN)
+		if (p->key_16 == TOGGLE_PEN)
 			if (HANDLE_PEN)
 				toggle_pen_mode(display, PEN_NAME);
 			else
 				break;
 		else
-		if (KEY_16)
-XTestFakeKeyEvent(display, KEY_16, True, CurrentTime );
-		if (KEY_16_PLUS)
-XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
+		if (p->key_16)
+XTestFakeKeyEvent(display, p->key_16, True, CurrentTime );
+		if (p->key_16_plus)
+XTestFakeKeyEvent(display, p->key_16_plus, True, CurrentTime );
 		else
 			break;
 			break;			
@@ -505,90 +705,90 @@ XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
 
         switch (button->button) {
 			case 9:
-		if (KEY_9 == TOGGLE_PEN)
+		if (p->key_9 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_9_PLUS)
-XTestFakeKeyEvent(display, KEY_9_PLUS, False, CurrentTime );
-		if (KEY_9)
-XTestFakeKeyEvent(display, KEY_9, False, CurrentTime );
+		if (p->key_9_plus)
+XTestFakeKeyEvent(display, p->key_9_plus, False, CurrentTime );
+		if (p->key_9)
+XTestFakeKeyEvent(display, p->key_9, False, CurrentTime );
 		else
 			break;
 			break;
 			case 10:
-		if (KEY_10 == TOGGLE_PEN)		
+		if (p->key_10 == TOGGLE_PEN)		
 			break;
 		else
-		if (KEY_10_PLUS)
-XTestFakeKeyEvent(display, KEY_10_PLUS, False, CurrentTime );
-		if (KEY_10)
-XTestFakeKeyEvent(display, KEY_10, False, CurrentTime );
+		if (p->key_10_plus)
+XTestFakeKeyEvent(display, p->key_10_plus, False, CurrentTime );
+		if (p->key_10)
+XTestFakeKeyEvent(display, p->key_10, False, CurrentTime );
 		else
 			break;
 			break;
 			case 11:
-		if (KEY_11 == TOGGLE_PEN)
+		if (p->key_11 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_11_PLUS)
-XTestFakeKeyEvent(display, KEY_11_PLUS, False, CurrentTime );
-		if (KEY_11)
-XTestFakeKeyEvent(display, KEY_11, False, CurrentTime );
+		if (p->key_11_plus)
+XTestFakeKeyEvent(display, p->key_11_plus, False, CurrentTime );
+		if (p->key_11)
+XTestFakeKeyEvent(display, p->key_11, False, CurrentTime );
 		else
 			break;
 			break;
 			case 12:
-		if (KEY_12 == TOGGLE_PEN)
+		if (p->key_12 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_12_PLUS)
-XTestFakeKeyEvent(display, KEY_12_PLUS, False, CurrentTime );
-		if (KEY_12)
-XTestFakeKeyEvent(display, KEY_12, False, CurrentTime );
+		if (p->key_12_plus)
+XTestFakeKeyEvent(display, p->key_12_plus, False, CurrentTime );
+		if (p->key_12)
+XTestFakeKeyEvent(display, p->key_12, False, CurrentTime );
 		else
 			break;
 			break;
 			case 13:
-		if (KEY_13 == TOGGLE_PEN)
+		if (p->key_13 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_13_PLUS)		
-XTestFakeKeyEvent(display, KEY_13_PLUS, False, CurrentTime );
-		if (KEY_13)
-XTestFakeKeyEvent(display, KEY_13, False, CurrentTime );
+		if (p->key_13_plus)		
+XTestFakeKeyEvent(display, p->key_13_plus, False, CurrentTime );
+		if (p->key_13)
+XTestFakeKeyEvent(display, p->key_13, False, CurrentTime );
 		else
 			break;
 			break;
 			case 14:
-		if (KEY_14 == TOGGLE_PEN)
+		if (p->key_14 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_14_PLUS)
-XTestFakeKeyEvent(display, KEY_14_PLUS, False, CurrentTime );
-		if (KEY_14)
-XTestFakeKeyEvent(display, KEY_14, False, CurrentTime );
+		if (p->key_14_plus)
+XTestFakeKeyEvent(display, p->key_14_plus, False, CurrentTime );
+		if (p->key_14)
+XTestFakeKeyEvent(display, p->key_14, False, CurrentTime );
 		else
 			break;
 			break;
 			case 15:
-		if (KEY_15 == TOGGLE_PEN)
+		if (p->key_15 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_15_PLUS)
-XTestFakeKeyEvent(display, KEY_15_PLUS, False, CurrentTime );
-		if (KEY_15)
-XTestFakeKeyEvent(display, KEY_15, False, CurrentTime );
+		if (p->key_15_plus)
+XTestFakeKeyEvent(display, p->key_15_plus, False, CurrentTime );
+		if (p->key_15)
+XTestFakeKeyEvent(display, p->key_15, False, CurrentTime );
 		else
 			break;
 			break;
 			case 16:
-		if (KEY_16 == TOGGLE_PEN)
+		if (p->key_16 == TOGGLE_PEN)
 			break;
 		else
-		if (KEY_16_PLUS)
-XTestFakeKeyEvent(display, KEY_16_PLUS, False, CurrentTime );
-		if (KEY_16)
-XTestFakeKeyEvent(display, KEY_16, False, CurrentTime );
+		if (p->key_16_plus)
+XTestFakeKeyEvent(display, p->key_16_plus, False, CurrentTime );
+		if (p->key_16)
+XTestFakeKeyEvent(display, p->key_16, False, CurrentTime );
 		else
 			break;
 			break;
