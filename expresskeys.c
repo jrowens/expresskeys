@@ -1,4 +1,4 @@
-/* Version 0.04 15 March 2005
+/* Version 0.05 16 March 2005
  *
  * To compile (example in 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
@@ -8,11 +8,26 @@
  * Which will push it into the background. It is safe to close the terminal
  * afterwards. Oh, and X _must_ be running... The name, "pad" here, is
  * how it's called in xorg.conf (the "Identifier" option).
+ *
+ * Update example 17 March 2005: Myself I've put it in the .xinitrc as
+ * "exec /usr/local/bin/expresskeys pad &" (without quotes) right before
+ * the window manager is started.
  * 
  * Key configuration is easy to change in the "#define KEY_xx yy" below.
  * Use the "xev" program to find keycodes or look them up somewhere...
  * I've set the Wacom Intuos3 defaults on both sides, which is:
  * Shift, Alt, Control and Space. Touch strips are not supported.
+ *
+ * _Version 0.05 16 March 2005_
+ *
+ * Bugfix. My key scan "case:, if, else, break" flow was somewhat borked.
+ * Ugly function but does the right thing now. There are still issues
+ * with (I believe) the timing of the XTestFakeKeyEvent of the XTest
+ * extension. Using the "u" and "Shift-u" for undo and redo in blender
+ * works, but sometimes blender gets confused. Waiting some seconds and
+ * doing a "slow-push-release" of the key can fix the isssue. Ah well,
+ * this simulates keypresses, it's not the real thing... I'll look into
+ * using another extension for the simulation.
  *
  * _Version 0.04 15 March 2005_
  *
@@ -305,6 +320,8 @@ int use_events(Display *display)
 XTestFakeKeyEvent(display, KEY_9, True, CurrentTime );
 		if (KEY_9_PLUS)
 XTestFakeKeyEvent(display, KEY_9_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 10:
 		if (KEY_10 == TOGGLE_PEN)
@@ -317,6 +334,8 @@ XTestFakeKeyEvent(display, KEY_9_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_10, True, CurrentTime );
 		if (KEY_10_PLUS)
 XTestFakeKeyEvent(display, KEY_10_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 11:
 		if (KEY_11 == TOGGLE_PEN)
@@ -329,6 +348,8 @@ XTestFakeKeyEvent(display, KEY_10_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_11, True, CurrentTime );
 		if (KEY_11_PLUS)
 XTestFakeKeyEvent(display, KEY_11_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 12:
 		if (KEY_12 == TOGGLE_PEN)
@@ -341,6 +362,8 @@ XTestFakeKeyEvent(display, KEY_11_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_12, True, CurrentTime );
 		if (KEY_12_PLUS)
 XTestFakeKeyEvent(display, KEY_12_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 13:
 		if (KEY_13 == TOGGLE_PEN)
@@ -353,6 +376,8 @@ XTestFakeKeyEvent(display, KEY_12_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_13, True, CurrentTime );
 		if (KEY_13_PLUS)
 XTestFakeKeyEvent(display, KEY_13_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 14:
 		if (KEY_14 == TOGGLE_PEN)
@@ -365,6 +390,8 @@ XTestFakeKeyEvent(display, KEY_13_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_14, True, CurrentTime );
 		if (KEY_14_PLUS)
 XTestFakeKeyEvent(display, KEY_14_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 15:
 		if (KEY_15 == TOGGLE_PEN)
@@ -377,6 +404,8 @@ XTestFakeKeyEvent(display, KEY_14_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_15, True, CurrentTime );
 		if (KEY_15_PLUS)
 XTestFakeKeyEvent(display, KEY_15_PLUS, True, CurrentTime );
+		else
+			break;
 			break;
 			case 16:
 		if (KEY_16 == TOGGLE_PEN)
@@ -389,6 +418,8 @@ XTestFakeKeyEvent(display, KEY_15_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_16, True, CurrentTime );
 		if (KEY_16_PLUS)
 XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
+		else
+			break;
 			break;			
 			default:
 			break;
@@ -407,6 +438,8 @@ XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
 XTestFakeKeyEvent(display, KEY_9_PLUS, False, CurrentTime );
 		if (KEY_9)
 XTestFakeKeyEvent(display, KEY_9, False, CurrentTime );
+		else
+			break;
 			break;
 			case 10:
 		if (KEY_10 == TOGGLE_PEN)		
@@ -416,6 +449,8 @@ XTestFakeKeyEvent(display, KEY_9, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_10_PLUS, False, CurrentTime );
 		if (KEY_10)
 XTestFakeKeyEvent(display, KEY_10, False, CurrentTime );
+		else
+			break;
 			break;
 			case 11:
 		if (KEY_11 == TOGGLE_PEN)
@@ -425,6 +460,8 @@ XTestFakeKeyEvent(display, KEY_10, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_11_PLUS, False, CurrentTime );
 		if (KEY_11)
 XTestFakeKeyEvent(display, KEY_11, False, CurrentTime );
+		else
+			break;
 			break;
 			case 12:
 		if (KEY_12 == TOGGLE_PEN)
@@ -434,6 +471,8 @@ XTestFakeKeyEvent(display, KEY_11, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_12_PLUS, False, CurrentTime );
 		if (KEY_12)
 XTestFakeKeyEvent(display, KEY_12, False, CurrentTime );
+		else
+			break;
 			break;
 			case 13:
 		if (KEY_13 == TOGGLE_PEN)
@@ -443,6 +482,8 @@ XTestFakeKeyEvent(display, KEY_12, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_13_PLUS, False, CurrentTime );
 		if (KEY_13)
 XTestFakeKeyEvent(display, KEY_13, False, CurrentTime );
+		else
+			break;
 			break;
 			case 14:
 		if (KEY_14 == TOGGLE_PEN)
@@ -452,6 +493,8 @@ XTestFakeKeyEvent(display, KEY_13, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_14_PLUS, False, CurrentTime );
 		if (KEY_14)
 XTestFakeKeyEvent(display, KEY_14, False, CurrentTime );
+		else
+			break;
 			break;
 			case 15:
 		if (KEY_15 == TOGGLE_PEN)
@@ -461,6 +504,8 @@ XTestFakeKeyEvent(display, KEY_14, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_15_PLUS, False, CurrentTime );
 		if (KEY_15)
 XTestFakeKeyEvent(display, KEY_15, False, CurrentTime );
+		else
+			break;
 			break;
 			case 16:
 		if (KEY_16 == TOGGLE_PEN)
@@ -470,6 +515,8 @@ XTestFakeKeyEvent(display, KEY_15, False, CurrentTime );
 XTestFakeKeyEvent(display, KEY_16_PLUS, False, CurrentTime );
 		if (KEY_16)
 XTestFakeKeyEvent(display, KEY_16, False, CurrentTime );
+		else
+			break;
 			break;
 			default:
 			break;
