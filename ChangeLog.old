@@ -1,0 +1,171 @@
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Important: If you use the linuxwacom-0.6.7-beta or in the future
+released versions you must change the pad statement in X config
+file to:
+
+Section "ServerLayout"
+[...]
+InputDevice "pad" # Intuos3 or Cintiq 21UX. It must NOT send core event
+[...]
+EndSection
+
+See: http://linuxwacom.sourceforge.net/index.php/howto/srvlayout
+
+If you use the old pad statement, any pad button press will jump the
+mouse cursor to the upper left corner (0,0) when another tool isn't
+in proximity.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Run example: expresskeys pad &
+Which will push it into the background. It is safe to close the terminal
+afterwards. Oh, and X _must_ be running... The name, "pad" here, is
+how it's called in xorg.conf (the "Identifier" option).
+
+Update example 17 March 2005: Myself I've put it in the .xinitrc as
+"exec /usr/local/bin/expresskeys pad &" (without quotes) right before
+the window manager is started.
+
+Key configuration is easy to change in the "user config area" below.
+Use the "xev" program to find keycodes or look them up somewhere...
+I've set the Wacom Intuos3 defaults on both sides, which is:
+Shift, Alt, Control and Space. Touch strips are mildly supported.
+
+Note 2 April 2005: Sometimes desktops or window managers "steal"
+certain keypresses/combinations. If you experience that, look for
+a way to change the keybindings of your environment.
+
+_Version 0.09 4 April 2005_
+
+Bugfix to handle some weird windows who don't set the "class",
+and even their parents lack it (like the "xev" program...). I
+won't go further back in a hierarchy, so these weirdos get the
+"default" keyset.
+
+Note: Without this fix expresskeys will crash in such cases.
+
+_Version 0.08 3 April 2005_
+
+When I was customizing the keyboard shortcuts within Gimp itself
+(I wanted Alt + and Alt - to do Next Brush and Previous Brush) it
+became obvious that I couldn't assign these brush steppings to any
+touch strip, due to my shortsightedness.
+
+Now touch strips can send two keys at a time, just like the pad
+buttons: l_touch_up, l_touch_up_plus etc. All of the "_plus" touch
+strip definitions are set to 0 (nothing) per default.
+
+Being able to use the touch strips for things like this is really
+neat. Look in Gimp's File -> Preferences -> Interface -> Configure
+Keyboard Shortcuts -> Context for some good touch strip candidates.
+
+Bugfix: Would crash if _no_ window had focus (except the root win).
+
+_Version 0.07 2 April 2005_
+
+Multiple configurations to rule them all... Yes, we now send
+keypresses intelligently based on several configurations. I've
+included a "default" catch all type, one for Gimp, for Blender
+and for XTerm. Observe the spelling! It is case sensitive.
+
+To create a new definition, just copy a full block and alter the
+Name and the keycodes. To find the proper name of a program/window
+fire up "xprop". It should be included with your X. xprop without
+any arguments expects you to then click on the target window.
+What comes out is a flood of information in the terminal window
+you used to run xprop from. What we're after is something called
+WM_CLASS. And within that, only one string. Let me show you:
+
+$ xprop | grep WM_CLASS
+WM_CLASS(STRING) = "<unknown>", "Eclipse"
+
+It's the last string we would use, the "Eclipse" part. That is,
+if we were doing a definition for this program, an IDE ;-)
+
+You can see above why I use the last part. Program windows do not
+always set their "name" (the first string). But they should
+absolutely set the "class" they belong to, which often coincides
+with the name.
+
+So non-technically, this is how expresskeys works now:
+
+1) Pad button pressed or Touch strips touched.
+2) Examine which window is the current active one (has focus).
+3) Get the "class" name of the window.
+4) Compare that name with an internal list of program names.
+5) If a match is found, use those keydefinitions.
+6) If no match is found, use a "default" set of definitions.
+7) Send the keypress to the specified window.
+
+In order to achieve this functionality I had to change the
+"user config area" somewhat. I've done my very best to retain
+a simple design, and at the same time keep it compact. But
+success is in the eye of the beholder... Cut out example:
+
+/* 	key_9	*/ <-- A visual reminder of which pad button it is.
+	50,	<-- The actual keycode and a COMMA (don't erase it).
+
+Otherwise all the keys and options from past versions are, almost,
+the same. End Version Note Rant.
+
+_Version 0.06 29 March 2005_
+
+Comment 2 April 2005: This is default only in Gimp. Basic defaults
+are now Arrow-keys Up/Down/Right/Left. End comment.
+
+Touch Strip simple implementation. Default, if turned on, sends plus
+(+) and minus (-) key presses based on finger/stylus up/down motion.
+This was chosen for Gimp Zoom In/Out functionality. It must be turned
+on by setting a value in the "user config area", just as for pen mode
+handling. Default is off, don't handle the touch strips.
+
+It turns out that with linuxwacom-0.6.7 (beta is out) this program
+works better than ever! The blender "confusion" I talked about in
+the previous version note has vanished completely. Also blender
+zoom, translation and rotation work flawlessly with the pad buttons
+and pen middle button (was half-working in linuxwacom-0.6.6). So the
+XTestFakeKeyEvent was no bad choice at all. I'm very pleased :-)
+
+_Version 0.05 16 March 2005_
+
+Bugfix. My key scan "case:, if, else, break" flow was somewhat borked.
+Ugly function but does the right thing now. There are still issues
+with (I believe) the timing of the XTestFakeKeyEvent of the XTest
+extension. Using the "u" and "Shift-u" for undo and redo in blender
+works, but sometimes blender gets confused. Waiting some seconds and
+doing a "slow-push-release" of the key can fix the issue. Ah well,
+this simulates keypresses, it's not the real thing... I'll look into
+using another extension for the simulation.
+
+_Version 0.04 15 March 2005_
+
+Bugfix to handle certain key combinations better. Not perfect though.
+Will debug further.
+
+_Version 0.03 15 March 2005_:
+
+Handle a pen from the pad keys (toggle between absolute and relative mode).
+See the new "user config area" for details. Observe: Whatever pen mode
+you are in when exiting or killing this program, that's the pen mode
+you have... So if wrong, fire up the program again and toggle until it's
+the right mode. Default is off, don't handle a pen.
+
+Clearly marked and cleaned up a "user config area" at the very beginning
+of the code.
+
+_Version 0.02 14 March 2005_:
+
+Comment 2 April 2005: These instructions are dated. #define
+for the keycodes are not used anymore. End comment.
+
+Added the option to specify an extra key for each pad key.
+"#define KEY_xx_PLUS yy". By setting yy of KEY_11_PLUS to 57 you'd get
+the famous Ctrl-n ;-). I needed this for undo and redo in blender.
+
+_Version 0.01 14 March 2005_:
+
+Original release
+
+Have fun,
+Mats
+
