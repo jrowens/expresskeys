@@ -1,18 +1,30 @@
-/* Version 0.02 14 March 2005
+/* Version 0.03 15 March 2005
  *
- * To compile (for example, 2 steps):
+ * To compile (example in 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
  * gcc -s -L/usr/X11R6/lib -o expresskeys expresskeys.o -lX11 -lXi -lXext -lXtst
  *
  * Run example: expresskeys pad &
  * Which will push it into the background. It is safe to close the terminal
- * afterwards. Oh, and X _must_ be running...
+ * afterwards. Oh, and X _must_ be running... The name, "pad" here, is
+ * how it's called in xorg.conf (the "Identifier" option).
  * 
  * Key configuration is easy to change in the "#define KEY_xx yy" below.
  * Use the "xev" program to find keycodes or look them up somewhere...
  * I've set the Wacom Intuos3 defaults on both sides, which is:
- * Shift, Alt, Control and Space. Touch strips are not supported, yet.
+ * Shift, Alt, Control and Space. Touch strips are not supported.
  *
+ * _Version 0.03 15 March 2005_:
+ * 
+ * Handle a pen from the pad keys (toggle between absolute and relative mode).
+ * See the new "user config area" for details. Observe: Whatever pen mode
+ * you are in when exiting or killing this program, that's the pen mode
+ * you have... So if wrong, fire up the program again and toggle until it's
+ * the right mode.
+ * 
+ * Clearly marked and cleaned up a "user config area" at the very beginning
+ * of the code.
+ * 
  * _Version 0.02 14 March 2005_:
  *
  * Added the option to specify an extra key for each pad key.
@@ -28,7 +40,7 @@
  */
 /*
  * CopyLeft 2005 by Mats Johannesson aka Voluspa
- * Hacked code from xinput-1.2.tar.gz (the test.c and xinput.c)
+ * Hacked code from xinput-1.2.tar.gz (the test.c, setmode.c and xinput.c)
  * Most are left as Frederic Lepied wrote it - I'm no coder!
  */
 /*
@@ -54,6 +66,57 @@
  *
  */
 
+/* ++++++++++ Begin user config area ++++++++++ */
+
+#define HANDLE_PEN 0	/* Main switch: 1 = yes handle a pen, 0 = no please */
+#define PEN_NAME "stylus"   /* Identifier name as configured in xorg.conf */
+#define PEN_MODE "Absolute" /* The mode we should expect the pen to be in */
+			    /* when starting this program. Default usually */
+			    /* is Absolute. The "mousy" feeling is Relative */
+/* Left ExpressKey Pad
+------------ 
+|  |   |   |		Wacom Intuos3 defaults are:
+|  | 9 | T |
+|11|---| O |		Key 9  = (left) Shift	= keycode 50
+|  |10 | U |		Key 10 = (left) Alt	= keycode 64
+|------| C |		Key 11 = (left) Control	= keycode 37
+|  12  | H |		Key 12 = Space		= keycode 65
+------------
+Use the string TOGGLE_PEN if you want a key to do pen mode changes.
+Eg: "#define KEY_11 TOGGLE_PEN" (the above HANDLE_PEN must also be set to 1)
+*/
+#define KEY_9 50
+#define KEY_9_PLUS 0	/* extra key */
+#define KEY_10 64
+#define KEY_10_PLUS 0	/* extra key */
+#define KEY_11 37
+#define KEY_11_PLUS 0	/* extra key */
+#define KEY_12 65
+#define KEY_12_PLUS 0	/* extra key */
+
+/* Right ExpressKey Pad
+------------ 
+|   |   |  |		Wacom Intuos3 defaults are:
+| T |13 |  |
+| O |---|15|		Key 13 = (left) Shift	= keycode 50
+| U |14 |  |		Key 14 = (left) Alt	= keycode 64
+| C |------|		Key 15 = (left) Control	= keycode 37
+| H |  16  |		Key 16 = Space		= keycode 65
+------------
+Use the string TOGGLE_PEN if you want a key to do pen mode changes.
+Eg: "#define KEY_15 TOGGLE_PEN" (the above HANDLE_PEN must also be set to 1)
+*/
+#define KEY_13 50
+#define KEY_13_PLUS 0	/* extra key */
+#define KEY_14 64
+#define KEY_14_PLUS 0	/* extra key */
+#define KEY_15 37
+#define KEY_15_PLUS 0	/* extra key */
+#define KEY_16 65
+#define KEY_16_PLUS 0	/* extra key */
+
+/* ++++++++++ End user config area ++++++++++ */
+
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/XTest.h>
@@ -65,52 +128,23 @@
 #define EXIT_OK 1
 #define EXIT_KO 0
 #define INVALID_EVENT_TYPE -1
-
-/* Left ExpressKey Pad
------------- 
-|  |   |   |
-|  | 9 | T |
-|11|---| O |
-|  |10 | U |
-|------| C |
-|  12  | H |
-------------
-*/
-#define KEY_9 50	/* Shift_L   */
-#define KEY_9_PLUS 0	/* extra key */
-#define KEY_10 64	/* Alt_L     */
-#define KEY_10_PLUS 0	/* extra key */
-#define KEY_11 37	/* Control_L */
-#define KEY_11_PLUS 0	/* extra key */
-#define KEY_12 65	/* Space     */
-#define KEY_12_PLUS 0	/* extra key */
-
-/* Right ExpressKey Pad
------------- 
-|   |   |  |
-| T |13 |  |
-| O |---|15|
-| U |14 |  |
-| C |------|
-| H |  16  |
-------------
-*/
-#define KEY_13 50	/* Shift_L   */
-#define KEY_13_PLUS 0	/* extra key */
-#define KEY_14 64	/* Alt_L     */
-#define KEY_14_PLUS 0	/* extra key */
-#define KEY_15 37	/* Control_L */
-#define KEY_15_PLUS 0	/* extra key */
-#define KEY_16 65	/* Space     */
-#define KEY_16_PLUS 0	/* extra key */
+#define TOGGLE_PEN 999
 
 Bool check_xinput (Display *display);
 int find_device_info(Display *display, char *name, Bool only_extended);
 int register_events(Display	*display, XDeviceInfo *info, char *dev_name);
 int use_events(Display *display);
+int toggle_pen_mode(Display *display, char *name);
+int pen_mode = 1;
 
 int main (int argc, char *argv[])
 {
+
+		if (PEN_MODE == "Absolute") {
+		pen_mode = Absolute;
+		} else {
+		pen_mode = Relative;
+		}
 
 Display *display = XOpenDisplay(NULL);
 
@@ -200,7 +234,7 @@ int find_device_info(Display *display, char *name, Bool only_extended)
 	     	return &devices[loop];
 		}
 	}
-	return NULL;
+	return 0;
 }
 
 static int button_press_type = INVALID_EVENT_TYPE;
@@ -256,48 +290,96 @@ int use_events(Display *display)
 
 		switch (button->button) {
 			case 9:
+		if (KEY_9 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_9, True, CurrentTime );
 		if (KEY_9_PLUS)
 XTestFakeKeyEvent(display, KEY_9_PLUS, True, CurrentTime );
 		else
 			break;
 			case 10:
+		if (KEY_10 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_10, True, CurrentTime );
 		if (KEY_10_PLUS)
 XTestFakeKeyEvent(display, KEY_10_PLUS, True, CurrentTime );
 		else
 			break;
 			case 11:
+		if (KEY_11 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_11, True, CurrentTime );
 		if (KEY_11_PLUS)
 XTestFakeKeyEvent(display, KEY_11_PLUS, True, CurrentTime );
 		else
 			break;
 			case 12:
+		if (KEY_12 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_12, True, CurrentTime );
 		if (KEY_12_PLUS)
 XTestFakeKeyEvent(display, KEY_12_PLUS, True, CurrentTime );
 		else
 			break;
 			case 13:
+		if (KEY_13 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_13, True, CurrentTime );
 		if (KEY_13_PLUS)
 XTestFakeKeyEvent(display, KEY_13_PLUS, True, CurrentTime );
 		else
 			break;
 			case 14:
+		if (KEY_14 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_14, True, CurrentTime );
 		if (KEY_14_PLUS)
 XTestFakeKeyEvent(display, KEY_14_PLUS, True, CurrentTime );
 		else
 			break;
 			case 15:
+		if (KEY_15 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_15, True, CurrentTime );
 		if (KEY_15_PLUS)
 XTestFakeKeyEvent(display, KEY_15_PLUS, True, CurrentTime );
 		else
 			break;
 			case 16:
+		if (KEY_16 == TOGGLE_PEN)
+			if (HANDLE_PEN)
+				toggle_pen_mode(display, PEN_NAME);
+			else
+				break;
+		else
 XTestFakeKeyEvent(display, KEY_16, True, CurrentTime );
 		if (KEY_16_PLUS)
 XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
@@ -313,48 +395,72 @@ XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
 
         switch (button->button) {
 			case 9:
+		if (KEY_9 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_9, False, CurrentTime );
 		if (KEY_9_PLUS)
 XTestFakeKeyEvent(display, KEY_9_PLUS, False, CurrentTime );
 		else
 			break;
 			case 10:
+		if (KEY_10 == TOGGLE_PEN)		
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_10, False, CurrentTime );
 		if (KEY_10_PLUS)
 XTestFakeKeyEvent(display, KEY_10_PLUS, False, CurrentTime );
 		else
 			break;
 			case 11:
+		if (KEY_11 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_11, False, CurrentTime );
 		if (KEY_11_PLUS)
 XTestFakeKeyEvent(display, KEY_11_PLUS, False, CurrentTime );
 		else
 			break;
 			case 12:
+		if (KEY_12 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_12, False, CurrentTime );
 		if (KEY_12_PLUS)
 XTestFakeKeyEvent(display, KEY_12_PLUS, False, CurrentTime );
 		else
 			break;
 			case 13:
+		if (KEY_13 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_13, False, CurrentTime );
 		if (KEY_13_PLUS)
 XTestFakeKeyEvent(display, KEY_13_PLUS, False, CurrentTime );
 		else
 			break;
 			case 14:
+		if (KEY_14 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_14, False, CurrentTime );
 		if (KEY_14_PLUS)
 XTestFakeKeyEvent(display, KEY_14_PLUS, False, CurrentTime );
 		else
 			break;
 			case 15:
+		if (KEY_15 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_15, False, CurrentTime );
 		if (KEY_15_PLUS)
 XTestFakeKeyEvent(display, KEY_15_PLUS, False, CurrentTime );
 		else
 			break;
 			case 16:
+		if (KEY_16 == TOGGLE_PEN)
+			break;
+		else
 XTestFakeKeyEvent(display, KEY_16, False, CurrentTime );
 		if (KEY_16_PLUS)
 XTestFakeKeyEvent(display, KEY_16_PLUS, False, CurrentTime );
@@ -364,6 +470,36 @@ XTestFakeKeyEvent(display, KEY_16_PLUS, False, CurrentTime );
 			break;
 			}
 		}
+	}
+}
+
+int toggle_pen_mode(Display *display, char *name)
+{
+
+	XDeviceInfo	*info;
+	XDevice		*device;
+
+	info = find_device_info(display, PEN_NAME, True);
+
+	if (!info) {
+		fprintf(stderr, "unable to find device %s\n", PEN_NAME);
+		return 0;
+	}
+
+	if (pen_mode == Absolute) {
+	pen_mode = Relative;
+	} else {
+	pen_mode = Absolute;
+	}
+
+	device = XOpenDevice(display, info->id);
+
+	if (device) {
+	XSetDeviceMode(display, device, pen_mode);
+	return 0;
+	} else {
+	fprintf(stderr, "Unable to open device %s\n", PEN_NAME);
+	return 0;
 	}
 }
 
