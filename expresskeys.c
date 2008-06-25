@@ -1,4 +1,4 @@
-/* Version 0.01 14 March 2005
+/* Version 0.02 14 March 2005
  *
  * To compile (for example, 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
@@ -13,6 +13,16 @@
  * I've set the Wacom Intuos3 defaults on both sides, which is:
  * Shift, Alt, Control and Space. Touch strips are not supported, yet.
  *
+ * _Version 0.02 14 March 2005_:
+ *
+ * Added the option to specify an extra key for each pad key.
+ * "#define KEY_xx_PLUS yy". By setting yy of KEY_11_PLUS to 57 you'd get
+ * the famous Ctrl-n ;-). I needed this for undo and redo in blender.
+ * 
+ * _Version 0.01 14 March 2005_:
+ *
+ * Original release
+ * 
  * Have fun,
  * Mats
  */
@@ -66,10 +76,14 @@
 |  12  | H |
 ------------
 */
-#define KEY_9 50   /* Shift_L   */
-#define KEY_10 64  /* Alt_L     */
-#define KEY_11 37  /* Control_L */
-#define KEY_12 65  /* Space     */
+#define KEY_9 50	/* Shift_L   */
+#define KEY_9_PLUS 0	/* extra key */
+#define KEY_10 64	/* Alt_L     */
+#define KEY_10_PLUS 0	/* extra key */
+#define KEY_11 37	/* Control_L */
+#define KEY_11_PLUS 0	/* extra key */
+#define KEY_12 65	/* Space     */
+#define KEY_12_PLUS 0	/* extra key */
 
 /* Right ExpressKey Pad
 ------------ 
@@ -81,10 +95,14 @@
 | H |  16  |
 ------------
 */
-#define KEY_13 50  /* Shift_L   */
-#define KEY_14 64  /* Alt_L     */
-#define KEY_15 37  /* Control_L */
-#define KEY_16 65  /* Space     */
+#define KEY_13 50	/* Shift_L   */
+#define KEY_13_PLUS 0	/* extra key */
+#define KEY_14 64	/* Alt_L     */
+#define KEY_14_PLUS 0	/* extra key */
+#define KEY_15 37	/* Control_L */
+#define KEY_15_PLUS 0	/* extra key */
+#define KEY_16 65	/* Space     */
+#define KEY_16_PLUS 0	/* extra key */
 
 Bool check_xinput (Display *display);
 int find_device_info(Display *display, char *name, Bool only_extended);
@@ -239,27 +257,51 @@ int use_events(Display *display)
 		switch (button->button) {
 			case 9:
 XTestFakeKeyEvent(display, KEY_9, True, CurrentTime );
+		if (KEY_9_PLUS)
+XTestFakeKeyEvent(display, KEY_9_PLUS, True, CurrentTime );
+		else
 			break;
 			case 10:
 XTestFakeKeyEvent(display, KEY_10, True, CurrentTime );
+		if (KEY_10_PLUS)
+XTestFakeKeyEvent(display, KEY_10_PLUS, True, CurrentTime );
+		else
 			break;
 			case 11:
 XTestFakeKeyEvent(display, KEY_11, True, CurrentTime );
+		if (KEY_11_PLUS)
+XTestFakeKeyEvent(display, KEY_11_PLUS, True, CurrentTime );
+		else
 			break;
 			case 12:
 XTestFakeKeyEvent(display, KEY_12, True, CurrentTime );
+		if (KEY_12_PLUS)
+XTestFakeKeyEvent(display, KEY_12_PLUS, True, CurrentTime );
+		else
 			break;
 			case 13:
 XTestFakeKeyEvent(display, KEY_13, True, CurrentTime );
+		if (KEY_13_PLUS)
+XTestFakeKeyEvent(display, KEY_13_PLUS, True, CurrentTime );
+		else
 			break;
 			case 14:
 XTestFakeKeyEvent(display, KEY_14, True, CurrentTime );
+		if (KEY_14_PLUS)
+XTestFakeKeyEvent(display, KEY_14_PLUS, True, CurrentTime );
+		else
 			break;
 			case 15:
 XTestFakeKeyEvent(display, KEY_15, True, CurrentTime );
+		if (KEY_15_PLUS)
+XTestFakeKeyEvent(display, KEY_15_PLUS, True, CurrentTime );
+		else
 			break;
 			case 16:
 XTestFakeKeyEvent(display, KEY_16, True, CurrentTime );
+		if (KEY_16_PLUS)
+XTestFakeKeyEvent(display, KEY_16_PLUS, True, CurrentTime );
+		else
 			break;			
 			default:
 			break;
@@ -272,27 +314,51 @@ XTestFakeKeyEvent(display, KEY_16, True, CurrentTime );
         switch (button->button) {
 			case 9:
 XTestFakeKeyEvent(display, KEY_9, False, CurrentTime );
+		if (KEY_9_PLUS)
+XTestFakeKeyEvent(display, KEY_9_PLUS, False, CurrentTime );
+		else
 			break;
 			case 10:
 XTestFakeKeyEvent(display, KEY_10, False, CurrentTime );
+		if (KEY_10_PLUS)
+XTestFakeKeyEvent(display, KEY_10_PLUS, False, CurrentTime );
+		else
 			break;
 			case 11:
 XTestFakeKeyEvent(display, KEY_11, False, CurrentTime );
+		if (KEY_11_PLUS)
+XTestFakeKeyEvent(display, KEY_11_PLUS, False, CurrentTime );
+		else
 			break;
 			case 12:
 XTestFakeKeyEvent(display, KEY_12, False, CurrentTime );
+		if (KEY_12_PLUS)
+XTestFakeKeyEvent(display, KEY_12_PLUS, False, CurrentTime );
+		else
 			break;
 			case 13:
 XTestFakeKeyEvent(display, KEY_13, False, CurrentTime );
+		if (KEY_13_PLUS)
+XTestFakeKeyEvent(display, KEY_13_PLUS, False, CurrentTime );
+		else
 			break;
 			case 14:
 XTestFakeKeyEvent(display, KEY_14, False, CurrentTime );
+		if (KEY_14_PLUS)
+XTestFakeKeyEvent(display, KEY_14_PLUS, False, CurrentTime );
+		else
 			break;
 			case 15:
 XTestFakeKeyEvent(display, KEY_15, False, CurrentTime );
+		if (KEY_15_PLUS)
+XTestFakeKeyEvent(display, KEY_15_PLUS, False, CurrentTime );
+		else
 			break;
 			case 16:
 XTestFakeKeyEvent(display, KEY_16, False, CurrentTime );
+		if (KEY_16_PLUS)
+XTestFakeKeyEvent(display, KEY_16_PLUS, False, CurrentTime );
+		else
 			break;
 			default:
 			break;
