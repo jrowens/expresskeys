@@ -24,11 +24,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-/* For the daemon and getpid calls */
+/* For the daemon, getpid and unlink calls */
 #include <unistd.h>
-/* For the mkdir and getpid calls */
+/* For the mkdir call */
 #include <sys/stat.h>
+/* For the mkdir, getpid and kill calls */
 #include <sys/types.h>
+/* For the signal and kill calls */
+#include <signal.h>
 
 /* Standard X includes */
 #include <X11/Xlib.h>
@@ -51,7 +54,10 @@
 /* Our global variables */
 extern char *our_prog_name;	/* This program's file name */
 extern char *pen_name;		/* Identifier as set in the X config file */
-extern char *total_config_dir; /* The "~/" of the user, plus our config_dir */
+extern char *total_config_dir;	/* The "~/" of the user, plus our config_dir */
+extern char *total_config_file;	/* total_config_dir plus config_file */
+extern char *total_pid_file;	/* total_config_dir plus pid_file */
+extern char *total_error_file;	/* total_config_dir plus error_file */
 extern char *config_dir;	/* Set to a dot directory: .expresskeys */
 extern char *config_file;	/* Set to expresskeys.conf */
 extern char *pid_file;		/* Set to expresskeys.pid */
@@ -90,6 +96,9 @@ extern int register_events(Display *display, XDeviceInfo *pad_info, char *name);
 extern int toggle_pen_mode(Display *display, char *name);
 /* In event_loop.c */
 extern int use_events(Display *display);
+/* In signal_all.c */
+extern void re_read_file_config(int signum);
+extern void clean_up_exit(int signum);
 
 /* Our global structures */
 /* The internal_list is initialized in globals.c */

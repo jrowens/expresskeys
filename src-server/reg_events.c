@@ -43,7 +43,6 @@ int register_events(Display *display, XDeviceInfo *pad_info, char *name)
 
 	pad_device = XOpenDevice(display, pad_info->id);
 	if (!pad_device) {
-		fprintf(stderr, "%s ERROR: Can not open device %s\n", our_prog_name, name);
 		return 0;
 	}
 
@@ -69,7 +68,6 @@ int register_events(Display *display, XDeviceInfo *pad_info, char *name)
 		}
 
 	if (XSelectExtensionEvent(display, root_win, event_list, count)) {
-		fprintf(stderr, "%s ERROR: Could not select extended events!\n", our_prog_name);
 		return 0;
 		}
 	}

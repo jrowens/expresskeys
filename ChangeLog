@@ -1,8 +1,37 @@
 
+_Version 0.1.2 20 April 2005_
+
+* Signal handling in place. Not much in itself, but:
+
+* Re-reads the configuration file upon receipt of the signal SIGUSR1.
+Do a "kill -USR1 <pid-of-ekeys>" after a config file edit. That's USR
+and the digit 1. I've also modified USR2 to do the same thing, for
+now at least.
+
+Included is a shell script called ekeys-reread.sh which does it for you
+if ekeys is running in daemon mode. Also included is ekeys-terminate.sh
+which replaces the former ekeys-kill.sh (a bit smarter).
+
+* The program will now refuse to start if it detects another instance
+running. Only works if there is a pid-file to examine of course.
+A pid-file left by a crash (will never happen...) and not connected
+with any process by that number is ignored, and the program continues.
+
+* A properly terminated program deletes the pid-file upon exit. Proper
+means a normal "kill <pid>", "killall ekeys", "kill -TERM <pid>" etc.
+Doing a brutal "kill -9 <pid>" or if the program crashes (cough, cough)
+will leave the pid-file undeleted.
+
+* Any error, encountered by the code, which terminates the program is
+written to the file "error.log" as well as to the screen. A restart
+truncates the file (it becomes size 0). This means that there always
+will be an error.log present, but empty in normal cases.
+
+
 _Version 0.1.1 17 April 2005_
 
 * Now reads an external configuration file at program launch. It
-searches in the user home directory under the hidden "./expresskeys"
+searches in the user home directory under the hidden "/.expresskeys"
 directory. File is called "expresskeys.conf". If none is found, or
 the directory doesn't exist yet, it makes the dir, then creates and
 populates a minimal file from an internal list. The original "default",
@@ -54,7 +83,7 @@ process identification (PID) is a unique number, separating the
 program from all the other stuff you have running. The number can
 be used, for example, to do an easy kill.
 
-I've included a simple shell script (kalled ekeys-kill.sh) which reads the
+I've included a simple shell script (called ekeys-kill.sh) which reads the
 expresskeys.pid and tries to kill whatever process that has the pid,
 so do a "ps aux | grep ekeys" beforehand to be sure it's running
 (and don't confuse your "grep ekeys" with an actual "ekeys" instance).

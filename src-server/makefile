@@ -8,8 +8,8 @@ LIBS = -lX11 -lXext -lXi -lXtst
 
 TARGET = ekeys
 
-SRCS = globals.c config_all.c get_device.c reg_events.c \
-	pen_mode.c event_loop.c main_setup.c
+SRCS = globals.c config_all.c signal_all.c pen_mode.c \
+	get_device.c reg_events.c event_loop.c main_setup.c
 
 OBJS = $(SRCS:.c=.o)
 ALL =  $(SRCS)
