@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005 - Mats Johannesson
  *
- * Based on xinput.c 1996 by Frederic Lepied
+ * Based on xinput.c 1996 by Frederic Lepied (xinput-1.2)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,13 @@
 
 #include "globals.h"
 
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+/* Function queries the X server for input devices. It only cares about non */
+/* core ones, and compares them with what was specified on the command line. */
+/* The "info" is a scratch XDeviceInfo construct which is freed by the  */
+/* caller after having set a permanent global copy for later reference */
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int get_device_info(Display *display, char *name)
 {
 	int		i;
@@ -32,7 +39,7 @@ int get_device_info(Display *display, char *name)
 
 	for(i = 0; i < nr_devices; i++) {
 		if ((info[i].use == IsXExtensionDevice) &&
-		(strcmp (info[i].name, name) == 0)){
+		(strcmp (info[i].name, name) == 0)) {
 			return (int) &info[i];
 		}
 	}

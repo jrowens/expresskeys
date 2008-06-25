@@ -2,6 +2,8 @@
 This program gives basic linux support for the ExpressKeys and
 Touch Strips of a Wacom Intuos3 tablet.
 
-The ChangeLog.old and UserConfig-Pad/Pen files contain all
-available documentation.
+Reading the ChangeLog files from bottom and up can kill some time and
+provide historic insight. It essentially is all the available user
+documentation. However, since info change over time I'll try to list
+all the important and accurate key points in the USAGE file.
 
