@@ -1,4 +1,4 @@
-/* Version 0.07 2 April 2005
+/* Version 0.08 3 April 2005
  *
  * To compile (example in 2 steps):
  * gcc -O2 -fomit-frame-pointer -c expresskeys.c
@@ -22,6 +22,23 @@
  * certain keypresses/combinations. If you experience that, look for
  * a way to change the keybindings of your environment.
  * 
+ * _Version 0.08 3 April 2005_
+ * 
+ * When I was customizing the keyboard shortcuts within Gimp itself
+ * (I wanted Alt + and Alt - to do Next Brush and Previous Brush) it
+ * became obvious that I couldn't assign these brush steppings to any
+ * touch strip, due to my shortsightedness.
+ * 
+ * Now touch strips can send two keys at a time, just like the pad
+ * buttons: l_touch_up, l_touch_up_plus etc. All of the "_plus" touch
+ * strip definitions are set to 0 (nothing) per default.
+ * 
+ * Being able to use the touch strips for things like this is really
+ * neat. Look in Gimp's File -> Preferences -> Interface -> Configure
+ * Keyboard Shortcuts -> Context for some good touch strip candidates.
+ * 
+ * Bugfix: Would crash if _no_ window had focus (except the root win).
+ *
  * _Version 0.07 2 April 2005_
  * 
  * Multiple configurations to rule them all... Yes, we now send
@@ -174,9 +191,13 @@ struct program {		/*		|			*/
 	char *class_name;	/*		|			*/
 	int handle_touch;	/*		|			*/
 	int l_touch_up;		/*		|			*/
+	int l_touch_up_plus;	/*		|			*/
 	int l_touch_down;	/*		|			*/
+	int l_touch_down_plus;	/*		|			*/
 	int r_touch_up;		/*		|			*/
+	int r_touch_up_plus;	/*		|			*/
 	int r_touch_down;	/*		|			*/
+	int r_touch_down_plus;	/*		|			*/
 	int key_9;		/*		|			*/
 	int key_9_plus;		/*		|			*/
 	int key_10;		/*		|			*/
@@ -242,8 +263,10 @@ struct program {		/*		|			*/
  */
 /*	Name	handle_touch */
 {"default",	0,
-/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
-		98,		104,		102,		100,
+/*		l_touch_up	l_touch_up_plus	l_touch_down	l_touch_down_plus */
+		98,		0,		104,		0,
+/*		r_touch_up	r_touch_up_plus	r_touch_down	r_touch_down_plus */
+		102,		0,		100,		0,
 /*		key_9		key_9_plus	key_10		key_10_plus */
 		50,		0,		64,		0,
 /*		key_11		key_11_plus	key_12		key_12_plus */
@@ -261,8 +284,10 @@ struct program {		/*		|			*/
  */
 /*	Name	handle_touch */
 {"Gimp",	1,
-/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
-		20,		61,		20,		61,
+/*		l_touch_up	l_touch_up_plus	l_touch_down	l_touch_down_plus */
+		20,		0,		61,		0,
+/*		r_touch_up	r_touch_up_plus	r_touch_down	r_touch_down_plus */
+		20,		0,		61,		0,
 /*		key_9		key_9_plus	key_10		key_10_plus */
 		50,		0,		64,		0,
 /*		key_11		key_11_plus	key_12		key_12_plus */
@@ -276,8 +301,10 @@ struct program {		/*		|			*/
  */
 /*	Name	handle_touch */
 {"Blender",	1,
-/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
-		102,		100,		98,		104,
+/*		l_touch_up	l_touch_up_plus	l_touch_down	l_touch_down_plus */
+		102,		0,		100,		0,
+/*		r_touch_up	r_touch_up_plus	r_touch_down	r_touch_down_plus */
+		98,		0,		104,		0,
 /*		key_9		key_9_plus	key_10		key_10_plus */
 		37,		0,		9,		0,
 /*		key_11		key_11_plus	key_12		key_12_plus */
@@ -293,7 +320,9 @@ struct program {		/*		|			*/
  */
 /*	Name	handle_touch */
 {"XTerm",	0,
-/*		l_touch_up	l_touch_down	r_touch_up	r_touch_down */
+/*		l_touch_up	l_touch_up_plus	l_touch_down	l_touch_down_plus */
+		0,		0,		0,		0,
+/*		r_touch_up	r_touch_up_plus	r_touch_down	r_touch_down_plus */
 		0,		0,		0,		0,
 /*		key_9		key_9_plus	key_10		key_10_plus */
 		0,		0,		0,		0,
@@ -519,16 +548,22 @@ int use_events(Display *display)
 		XGetInputFocus(display, &focus_window, &focus_state);
 		XQueryTree(display, focus_window, &root, &parent, &children, &num_children);
 		XGetClassHint(display, focus_window, class_hint);
-		if (!class_hint->res_class){
+
+		if ((!class_hint->res_class) && (focus_window != root)){
 			XFree(class_hint->res_class);
 			XFree(class_hint->res_name);
 			XGetClassHint(display, parent, class_hint);
 		}
 
-		for (p = prog_list; p < prog_list + NUM_LIST; p++)
-			if (strcmp (class_hint->res_class, p->class_name) == 0){
-				in_list = 1;
-				break;
+		if (focus_window == root){
+			p = prog_list;
+		}
+		else {
+			for (p = prog_list; p < prog_list + NUM_LIST; p++)
+				if (strcmp (class_hint->res_class, p->class_name) == 0){
+					in_list = 1;
+					break;
+				}
 			}
 		
 		XFree(class_hint->res_class);
@@ -552,12 +587,24 @@ int use_events(Display *display)
 
 			if (rotation > 1){
 				if ((rotation < old_rotation) && (old_rotation <= elder_rotation)){
-					XTestFakeKeyEvent(display, p->l_touch_up, True, CurrentTime);
-					XTestFakeKeyEvent(display, p->l_touch_up, False, CurrentTime);
+					if (p->l_touch_up){
+						XTestFakeKeyEvent(display, p->l_touch_up, True, CurrentTime);
+						if (p->l_touch_up_plus){
+							XTestFakeKeyEvent(display, p->l_touch_up_plus, True, CurrentTime);
+							XTestFakeKeyEvent(display, p->l_touch_up_plus, False, CurrentTime);
+						}
+						XTestFakeKeyEvent(display, p->l_touch_up, False, CurrentTime);
+					}
 				}
 				else if ((rotation > old_rotation) && (old_rotation >= elder_rotation)){
-					XTestFakeKeyEvent(display, p->l_touch_down, True, CurrentTime);
-					XTestFakeKeyEvent(display, p->l_touch_down, False, CurrentTime);
+					if (p->l_touch_down){
+						XTestFakeKeyEvent(display, p->l_touch_down, True, CurrentTime);
+						if (p->l_touch_down_plus){
+							XTestFakeKeyEvent(display, p->l_touch_down_plus, True, CurrentTime);
+							XTestFakeKeyEvent(display, p->l_touch_down_plus, False, CurrentTime);
+						}
+						XTestFakeKeyEvent(display, p->l_touch_down, False, CurrentTime);
+					}
 				}
 			elder_rotation = old_rotation;
 			old_rotation = rotation;
@@ -565,12 +612,24 @@ int use_events(Display *display)
 
 			if (throttle > 1){
 				if ((throttle < old_throttle) && (old_throttle <= elder_throttle)){
-					XTestFakeKeyEvent(display, p->r_touch_up, True, CurrentTime);
-					XTestFakeKeyEvent(display, p->r_touch_up, False, CurrentTime);
+					if (p->r_touch_up){
+						XTestFakeKeyEvent(display, p->r_touch_up, True, CurrentTime);
+						if (p->r_touch_up_plus){
+							XTestFakeKeyEvent(display, p->r_touch_up_plus, True, CurrentTime);
+							XTestFakeKeyEvent(display, p->r_touch_up_plus, False, CurrentTime);
+						}
+						XTestFakeKeyEvent(display, p->r_touch_up, False, CurrentTime);
+					}
 				}
 				else if ((throttle > old_throttle) && (old_throttle >= elder_throttle)){
-					XTestFakeKeyEvent(display, p->r_touch_down, True, CurrentTime);
-					XTestFakeKeyEvent(display, p->r_touch_down, False, CurrentTime);
+					if (p->r_touch_down){
+						XTestFakeKeyEvent(display, p->r_touch_down, True, CurrentTime);
+						if (p->r_touch_down_plus){
+							XTestFakeKeyEvent(display, p->r_touch_down_plus, True, CurrentTime);
+							XTestFakeKeyEvent(display, p->r_touch_down_plus, False, CurrentTime);
+						}
+						XTestFakeKeyEvent(display, p->r_touch_down, False, CurrentTime);
+					}
 				}
 			elder_throttle = old_throttle;
 			old_throttle = throttle;
