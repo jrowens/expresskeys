@@ -21,10 +21,61 @@
 #include "globals.h"
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Function acts like a traffic cop for keycodes. Sends real keycodes to
+ XTestFakeKeyEvent. Interprets fake keycodes (currently keycodes standing
+ in for mouse button presses) and sends them to the appropriate function.
+ Only existing mouse buttons, defined through the driver of the active core
+ pointer, can be simulated. If you run this function in a graphical debugger,
+ the mouse _will_ be effected.
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int fake_event(Display *display, unsigned int keycode, Bool is_press,
+               unsigned long delay)
+{
+	if ((MOUSE_BUTTON_MIN < keycode) && (keycode < MOUSE_BUTTON_MAX)) {
+		/* mouse button code */
+		if (be_verbose) {
+			fprintf(stderr, "MOUSE: ");
+		}
+
+		int i;
+		unsigned char button_map[MOUSE_BUTTON_MAX - MOUSE_BUTTON_MIN];
+		for (i = 0; i < (MOUSE_BUTTON_MAX - MOUSE_BUTTON_MIN); i++) {
+			button_map[i] = '\0';
+		}
+
+		XGetPointerMapping(display, button_map, sizeof(button_map));
+		unsigned int button = keycode - MOUSE_BUTTON_MIN;
+		unsigned int real_button = button_map[button - 1];
+
+		if (real_button) {
+			if (be_verbose) {
+				fprintf(stderr, "Real button %d found: ", button);
+			}
+			return XTestFakeButtonEvent(display, button, is_press, delay);
+		} else {
+			if (be_verbose) {
+				fprintf(stderr, "No real button %d found! ", button);
+			}
+			return 0;
+		}
+	} else {
+		/* keycode */
+		if (be_verbose) {
+			fprintf(stderr, "KEYBD: ");
+		}
+		return XTestFakeKeyEvent(display, keycode, is_press, delay);
+	}
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Function waits perpetually for the X server to deliver information
  about events from the input device. Receipt of an event that we've
  registered for (button press/release and motion) triggers a good deal
- of activity in a setup phase, after which we send the fake key press
+ of activity in a setup phase, after which we send the fake key press.
+ A button press or release will always cause first a motion and then 
+ a button event. That's why you'll see the focus window name being
+ printed twice if running with the verbose flag set.
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int use_events(Display *display)
@@ -116,7 +167,7 @@ int use_events(Display *display)
 		if (children) XFree((char *)children);
 
 		if (be_verbose) {
-			fprintf(stderr, "PGR RUNNAME = %s\n", p->class_name);
+			fprintf(stderr, "PGR FOCUS = %s\n", p->class_name);
 		}
 
 /* Finally start to look at the actual event. Touch Strips come first */
@@ -148,33 +199,45 @@ int use_events(Display *display)
 				if (rotation > 1) {
 					if ((rotation < old_rotation) && (old_rotation <= elder_rotation)) {
 						if (p->l_touch_up) {
-							XTestFakeKeyEvent(display, p->l_touch_up, True, CurrentTime);
+							fake_event(display, p->l_touch_up, True, CurrentTime);
 							if (be_verbose) {
-								fprintf(stderr, "KEY LTCHUP = %d\n", p->l_touch_up);
+								fprintf(stderr, "LTCHUP = %d dn\n", p->l_touch_up);
 							}
 							if (p->l_touch_up_plus) {
-								XTestFakeKeyEvent(display, p->l_touch_up_plus, True, CurrentTime);
-								XTestFakeKeyEvent(display, p->l_touch_up_plus, False, CurrentTime);
+								fake_event(display, p->l_touch_up_plus, True, CurrentTime);
 								if (be_verbose) {
-									fprintf(stderr, "KEY LTCHUP+ = %d\n", p->l_touch_up_plus);
+									fprintf(stderr, "LTCHUP+ = %d dn\n", p->l_touch_up_plus);
+								}
+								fake_event(display, p->l_touch_up_plus, False, CurrentTime);
+								if (be_verbose) {
+									fprintf(stderr, "LTCHUP+ = %d up\n", p->l_touch_up_plus);
 								}
 							}
-							XTestFakeKeyEvent(display, p->l_touch_up, False, CurrentTime);
+							fake_event(display, p->l_touch_up, False, CurrentTime);
+							if (be_verbose) {
+								fprintf(stderr, "LTCHUP = %d up\n", p->l_touch_up);
+							}
 						}
 					} else if ((rotation > old_rotation) && (old_rotation >= elder_rotation)) {
 						if (p->l_touch_down) {
-							XTestFakeKeyEvent(display, p->l_touch_down, True, CurrentTime);
+							fake_event(display, p->l_touch_down, True, CurrentTime);
 							if (be_verbose) {
-								fprintf(stderr, "KEY LTCHDN = %d\n", p->l_touch_down);
+								fprintf(stderr, "LTCHDN = %d dn\n", p->l_touch_down);
 							}
 							if (p->l_touch_down_plus) {
-								XTestFakeKeyEvent(display, p->l_touch_down_plus, True, CurrentTime);
-								XTestFakeKeyEvent(display, p->l_touch_down_plus, False, CurrentTime);
+								fake_event(display, p->l_touch_down_plus, True, CurrentTime);
 								if (be_verbose) {
-									fprintf(stderr, "KEY LTCHDN+ = %d\n", p->l_touch_down_plus);
+									fprintf(stderr, "LTCHDN+ = %d dn\n", p->l_touch_down_plus);
+								}
+								fake_event(display, p->l_touch_down_plus, False, CurrentTime);
+								if (be_verbose) {
+									fprintf(stderr, "LTCHDN+ = %d up\n", p->l_touch_down_plus);
 								}
 							}
-							XTestFakeKeyEvent(display, p->l_touch_down, False, CurrentTime);
+							fake_event(display, p->l_touch_down, False, CurrentTime);
+							if (be_verbose) {
+								fprintf(stderr, "LTCHDN = %d up\n", p->l_touch_down);
+							}
 						}
 					}
 				elder_rotation = old_rotation;
@@ -186,33 +249,45 @@ int use_events(Display *display)
 				if (throttle > 1) {
 					if ((throttle < old_throttle) && (old_throttle <= elder_throttle)) {
 						if (p->r_touch_up) {
-							XTestFakeKeyEvent(display, p->r_touch_up, True, CurrentTime);
+							fake_event(display, p->r_touch_up, True, CurrentTime);
 							if (be_verbose) {
-								fprintf(stderr, "KEY RTCHUP = %d\n", p->r_touch_up);
+								fprintf(stderr, "RTCHUP = %d dn\n", p->r_touch_up);
 							}
 							if (p->r_touch_up_plus) {
-								XTestFakeKeyEvent(display, p->r_touch_up_plus, True, CurrentTime);
-								XTestFakeKeyEvent(display, p->r_touch_up_plus, False, CurrentTime);
+								fake_event(display, p->r_touch_up_plus, True, CurrentTime);
 								if (be_verbose) {
-									fprintf(stderr, "KEY RTCHUP+ = %d\n", p->r_touch_up_plus);
+									fprintf(stderr, "RTCHUP+ = %d dn\n", p->r_touch_up_plus);
+								}
+								fake_event(display, p->r_touch_up_plus, False, CurrentTime);
+								if (be_verbose) {
+									fprintf(stderr, "RTCHUP+ = %d up\n", p->r_touch_up_plus);
 								}
 							}
-							XTestFakeKeyEvent(display, p->r_touch_up, False, CurrentTime);
+							fake_event(display, p->r_touch_up, False, CurrentTime);
+							if (be_verbose) {
+								fprintf(stderr, "RTCHUP = %d up\n", p->r_touch_up);
+							}
 						}
 					} else if ((throttle > old_throttle) && (old_throttle >= elder_throttle)) {
 						if (p->r_touch_down) {
-							XTestFakeKeyEvent(display, p->r_touch_down, True, CurrentTime);
+							fake_event(display, p->r_touch_down, True, CurrentTime);
 							if (be_verbose) {
-								fprintf(stderr, "KEY RTCHDN = %d\n", p->r_touch_down);
+								fprintf(stderr, "RTCHDN = %d dn\n", p->r_touch_down);
 							}
 							if (p->r_touch_down_plus) {
-								XTestFakeKeyEvent(display, p->r_touch_down_plus, True, CurrentTime);
-								XTestFakeKeyEvent(display, p->r_touch_down_plus, False, CurrentTime);
+								fake_event(display, p->r_touch_down_plus, True, CurrentTime);
 								if (be_verbose) {
-									fprintf(stderr, "KEY RTCHDN+ = %d\n", p->r_touch_down_plus);
+									fprintf(stderr, "RTCHDN+ = %d dn\n", p->r_touch_down_plus);
+								}
+								fake_event(display, p->r_touch_down_plus, False, CurrentTime);
+								if (be_verbose) {
+									fprintf(stderr, "RTCHDN+ = %d up\n", p->r_touch_down_plus);
 								}
 							}
-							XTestFakeKeyEvent(display, p->r_touch_down, False, CurrentTime);
+							fake_event(display, p->r_touch_down, False, CurrentTime);
+							if (be_verbose) {
+								fprintf(stderr, "RTCHDN = %d up\n", p->r_touch_down);
+							}
 						}
 					}
 				elder_throttle = old_throttle;
@@ -223,9 +298,8 @@ int use_events(Display *display)
 
 /* Now see if the event concerned the pad buttons. Not much to talk about.
    We follow the configuration definitions, and handle a pen if requested
-   to do so. Ah yes, the xinput-1.2 program reveals Wacom to have numbered
-   the buttons 9, 10, 11, 12 on the left side and 13, 14, 15, 16 on the
-   right. Template:
+   to do so. Wacom have numbered the buttons 9, 10, 11, 12 on the left side
+   and 13, 14, 15, 16 on the right. Template:
 
 Left ExpressKey Pad
 ------------ 
@@ -263,23 +337,23 @@ Right ExpressKey Pad
 
 			if (*button_index == TOGGLE_PEN) {
 				if (handle_pen) {
-					toggle_pen_mode(display, pen_name);
 					if (be_verbose) {
-						fprintf(stderr, "BTN %d = %d\n", button->button, *button_index);
+						fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
 					}
+					toggle_pen_mode(display, pen_name);
 				}
 			} else {
 				if (*button_index) {
-					XTestFakeKeyEvent(display, *button_index, True, CurrentTime );
+					fake_event(display, *button_index, True, CurrentTime );
 					if (be_verbose) {
-						fprintf(stderr, "BTN %d = %d\n", button->button, *button_index);
+						fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
 					}
 				}
 				button_index++;
 				if (*button_index) {
-					XTestFakeKeyEvent(display, *button_index, True, CurrentTime );
+					fake_event(display, *button_index, True, CurrentTime );
 					if (be_verbose) {
-						fprintf(stderr, "BTN+ %d = %d\n", button->button, *button_index);
+						fprintf(stderr, "BTN+ %d = %d dn\n", button->button, *button_index);
 					}
 				}
 			}
@@ -300,21 +374,21 @@ Right ExpressKey Pad
 
 			if (*button_index == TOGGLE_PEN) {
 				if (be_verbose) {
-					fprintf(stderr, "BTN %d = %d\n", button->button, *button_index);
+					fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
 				}
 			} else {
 				button_index++;
 				if (*button_index) {
-					XTestFakeKeyEvent(display, *button_index, False, CurrentTime );
+					fake_event(display, *button_index, False, CurrentTime );
 					if (be_verbose) {
-						fprintf(stderr, "BTN+ %d = %d\n", button->button, *button_index);
+						fprintf(stderr, "BTN+ %d = %d up\n", button->button, *button_index);
 					}
 				}
 				button_index--;
 				if (*button_index) {
-					XTestFakeKeyEvent(display, *button_index, False, CurrentTime );
+					fake_event(display, *button_index, False, CurrentTime );
 					if (be_verbose) {
-						fprintf(stderr, "BTN %d = %d\n", button->button, *button_index);
+						fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
 					}
 				}
 			}

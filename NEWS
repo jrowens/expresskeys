@@ -1,9 +1,9 @@
 
-_Changes since last version. Executive edition_
+_Changes since last version. Executive summary_
 
-- New configuration file format.
+- Support for faking mouse button events.
 
-- Another command line option: "-v" (verbose mode).
+- Expanded the "-v" (verbose mode) printing.
 
-- Some code simplifications.
+- Added some more knowledge to the BUGS file.
 

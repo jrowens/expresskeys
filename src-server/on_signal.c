@@ -127,13 +127,9 @@ void clean_up_exit(int signum)
 		XFreeDeviceList(pen_info_block);
 	}
 
-	if (pad_device) {
-		XCloseDevice(display, pad_device);
-	}
-
-	if (pen_device) {
-		XCloseDevice(display, pen_device);
-	}
+/* pad_device and pen_device should not be explicitly closed by a
+   call to XCloseDevice. It leaves a message from X (in the terminal
+   where X is started from) saying: "ProcXCloseDevice to close or not ?" */
 
 	if (display) {
 		XCloseDisplay(display);

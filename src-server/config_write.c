@@ -55,6 +55,9 @@ int write_file_config_header(FILE *fp)
 	fprintf(fp, "# Use the value 999 as a keycode to enable pen mode toggling. To be able\n");
 	fprintf(fp, "# to switch mode anywhere each program block must then contain one 999\n");
 	fprintf(fp, "# definition.\n\n");
+	fprintf(fp, "# Use the values 991 to 997 for simulating mouse buttons 1 to 7. Only existing\n");
+	fprintf(fp, "# mouse buttons, defined through the driver of the active core pointer, can be\n");
+	fprintf(fp, "# simulated.\n\n");
 	fprintf(fp, "# Each program record is enclosed between two sets of double percentage signs.\n");
 	fprintf(fp, "# Each program field begins after a colon \":\". Whitespace (tabs and spaces)\n");
 	fprintf(fp, "# are ignored in the keycode fields, but spaces are recorded when in a\n");

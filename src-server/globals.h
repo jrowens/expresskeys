@@ -46,6 +46,17 @@
 #define EXIT_OK 0
 #define EXIT_KO 1
 #define NON_VALID -1
+enum {                 /* Strings signaling key's use as a mouse button */
+	MOUSE_BUTTON_MIN = 990,
+	MOUSE_1,
+	MOUSE_2,
+	MOUSE_3,
+	MOUSE_4,
+	MOUSE_5,
+	MOUSE_6,
+	MOUSE_7,
+	MOUSE_BUTTON_MAX
+};	
 #define TOGGLE_PEN 999	/* String signaling the key's use as a mode toggle */
 #define MAXRECORDS 64	/* Max program definitions to handle (enough? ;-) */
 #define MAXFIELDS 25	/* Max entries (minus program name) in each record */

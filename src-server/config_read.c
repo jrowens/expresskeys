@@ -60,7 +60,7 @@ int read_file_config(int *ip, FILE *fp)
 /* Begin by making sure that the Config File Version number is present before
    a record begins. We exit if it's lacking or the number doesn't match up */
 
-/* FIXME Unpredictable behaviour on lines longer than MAXBUFFER! */
+/* FIXME Unpredictable behaviour on lines longer than MAXBUFFER etc. See BUGS */
 
 	while ((fgets(line_buffer, MAXBUFFER, fp)) != NULL) {
 		if ((delimiter_first = (strchr(line_buffer, '#'))) != NULL) {
@@ -78,6 +78,9 @@ int read_file_config(int *ip, FILE *fp)
 			token = strtok(buffer, ":");
 			token = strtok(NULL, ignore);
 			strcpy(buffer, token);
+			if (be_verbose) {
+				fprintf(stderr, "Config File Version on disk = %s Expected = %d\n", buffer, CONFIG_VERSION);
+			}
 			if ((atoi(buffer)) != CONFIG_VERSION) {
 				return 3;
 			}
@@ -93,7 +96,7 @@ int read_file_config(int *ip, FILE *fp)
    A global counter variable of full record instances is updated before the
    function exits to reflect the new state. */
 
-/* FIXME Unpredictable behaviour on lines longer than MAXBUFFER! */
+/* FIXME Unpredictable behaviour on lines longer than MAXBUFFER etc. See BUGS */
 
 	while ((fgets(line_buffer, MAXBUFFER, fp)) != NULL) {
 		if (num_record < MAXRECORDS) {
@@ -125,7 +128,7 @@ int read_file_config(int *ip, FILE *fp)
 							}
 							field_index = &p->handle_touch;
 
-/* FIXME Unpredictable behaviour on lines longer than MAXBUFFER! */
+/* FIXME Unpredictable behaviour on lines longer than MAXBUFFER etc. See BUGS */
 
 							while ((fgets(line_buffer, MAXBUFFER, fp)) != NULL) {
 								if ((delimiter_first = (strchr(line_buffer, '%'))) != NULL &&
@@ -154,6 +157,9 @@ int read_file_config(int *ip, FILE *fp)
 								num_record++;
 								p++;
 							} else {
+								if (be_verbose) {
+									fprintf(stderr, "%s skipped! (fields were too few)\n", p->class_name);
+								}
 								free(p->class_name);
 							}
 							num_field = 0;

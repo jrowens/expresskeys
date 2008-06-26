@@ -109,6 +109,16 @@ Change direction of the movement by switching the "Up" and "Down" values.
 Both pad buttons and touch strips can send two keys at a time if so
 configured through usage of the "Plus" keycode fields.
 
+If you want a button to do a mouse button press instead of a keypress,
+use a value between 991 and 997 in the corresponding keycode field, where
+991 represents mouse button 1, 992 button 2, and so on. Only existing mouse
+buttons, defined through the driver of the active core pointer, can be
+simulated. If buttons 4 and 5 are available they normally control vertical
+scrolling, like the mouse's scroll wheel (button 4 scrolls up, button 5
+scrolls down.) If buttons 6 and 7 are available they may control horizontal
+scrolling (button 6 scrolls left, button 7 scrolls right) or may match
+extra buttons on the mouse.
+
 If you want a button to do pen mode toggling between Absolute and Relative,
 use the value 999 in the corresponding keycode field. To be able to switch
 mode anywhere each program block must contain one 999 definition. And,

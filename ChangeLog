@@ -1,4 +1,44 @@
 
+_Version 0.2.1 2 May 2005_
+
+* Added support for faking mouse button events. "Anonymous1"
+(I have not received permission to use his real name or e-mail)
+sent a function called "fake_event" (top of event_loop.c) which
+in essence acts like a traffic cop, steering true keycodes to
+XTestFakeKeyEvent and a set of false ones to XTestFakeButtonEvent.
+The fake codes can be entered as 991 to 997 in the configuration
+file, simulating mouse buttons 1 to 7.
+
+Only existing mouse buttons, defined through the driver of the
+active core pointer, can be simulated. I added discovery code to
+prevent a crash if someone tries to use a nonexistent mouse button
+in the range 1 to 7.
+
+The code author wanted his touch strips to act like a mouse's scroll
+wheel through the use of mouse buttons 4 - 5 (Up/Down) and 6 - 7
+(Left/Right). I only have a three button mouse, the Wacom puck is
+not a core pointer, but can make good use of the new functionality
+in eg the web browser Opera:
+
+[...]
+20 Right Pad - Button 14:	993		# Button 14
+21 Right Pad - Button 14 Plus:	991		# Extra key
+[...]
+24 Right Pad - Button 16:	991		# Button 16
+25 Right Pad - Button 16 Plus:	993		# Extra key
+[...]
+
+With those definitions I step backwards (14) and forwards (16) in
+the visited page history. Opera's "forward" can also take me to
+the "Next" linked page, so it's very convenient when having a long
+reading session.
+
+* Expanded the "-v" (verbose mode) printing to cover more execution
+points and be a lot more detailed.
+
+* Racked my brain and added some more knowledge to the BUGS file.
+
+
 _Version 0.2.0 29 April 2005_
 
 (NOTE: A version of this archive was pulled from the website after a
