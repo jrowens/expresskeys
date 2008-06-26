@@ -37,7 +37,6 @@ int main (int argc, char *argv[])
 
 	if ((display = XOpenDisplay(NULL)) == NULL) {
 		exit_on_error(errorfp, "%s ERROR: Can not connect to your X Server\n", our_prog_name, "");
-		exit(EXIT_KO); 
 	}
 	screen = DefaultScreen(display);
 
@@ -55,7 +54,7 @@ int main (int argc, char *argv[])
 	char *total_config_dir_block;
 	len = strlen(user_homedir) + strlen(config_dir) + 1;
 	if ((total_config_dir_block = (char *)malloc(len)) == NULL) {
-		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 2!\n", our_prog_name, "");
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 1!\n", our_prog_name, "");
 	}
 	sprintf(total_config_dir_block, "%s%s", user_homedir, config_dir);
 	total_config_dir = total_config_dir_block;
@@ -65,7 +64,7 @@ int main (int argc, char *argv[])
 	char *total_config_file_block;
 	len = strlen(total_config_dir) + strlen(config_file) + 1;
 	if ((total_config_file_block = (char *)malloc(len)) == NULL) {
-		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 3!\n", our_prog_name, "");
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 2!\n", our_prog_name, "");
 	}
 	sprintf(total_config_file_block, "%s%s", total_config_dir, config_file);
 	total_config_file = total_config_file_block;
@@ -75,7 +74,7 @@ int main (int argc, char *argv[])
 	char *total_pid_file_block;
 	len = strlen(total_config_dir) + strlen(pid_file) + 1;
 	if ((total_pid_file_block = (char *)malloc(len)) == NULL) {
-		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 4!\n", our_prog_name, "");
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 3!\n", our_prog_name, "");
 	}
 	sprintf(total_pid_file_block, "%s%s", total_config_dir, pid_file);
 	total_pid_file = total_pid_file_block;
@@ -85,7 +84,7 @@ int main (int argc, char *argv[])
 	char *total_error_file_block;
 	len = strlen(total_config_dir) + strlen(error_file) + 1;
 	if ((total_error_file_block = (char *)malloc(len)) == NULL) {
-		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 5!\n", our_prog_name, "");
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 4!\n", our_prog_name, "");
 	}
 	sprintf(total_error_file_block, "%s%s", total_config_dir, error_file);
 	total_error_file = total_error_file_block;
@@ -202,6 +201,7 @@ int main (int argc, char *argv[])
 	}
 
 	if (be_verbose) {
+		fprintf(stderr, "PGR VERSION = %s\n", our_prog_version);
 		fprintf(stderr, "USR HOMEDIR = %s\n", user_homedir);
 		fprintf(stderr, "OUR CNF-DIR = %s\n", total_config_dir);
 		fprintf(stderr, "OUR CNFFILE = %s\n", total_config_file);
@@ -316,7 +316,7 @@ int main (int argc, char *argv[])
 		exit_on_error(errorfp, "%s ERROR: Could not register any events!\n", our_prog_name, "");
 	}
 
-	exit(EXIT_OK);
+	exit(EXIT_OK); /* We should never reach this */
 
 }
 

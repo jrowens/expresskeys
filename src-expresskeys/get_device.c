@@ -29,7 +29,8 @@
  permanent global copy for freeing at program exit
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int get_device_info(Display *display, XDeviceInfo *info, char *name)
+/* get_device_info returns a long to satisfy x86_64 systems */
+long get_device_info(Display *display, XDeviceInfo *info, char *name)
 {
 	int		i;
 	int		nr_devices;
@@ -45,7 +46,8 @@ int get_device_info(Display *display, XDeviceInfo *info, char *name)
 	for(i = 0; i < nr_devices; i++) {
 		if ((info[i].use == IsXExtensionDevice) &&
 		(strcmp (info[i].name, name) == 0)) {
-			return (int) &info[i];
+			/* Convert to long for x86_64 systems */
+			return (long) &info[i];
 		}
 	}
 	return 0;

@@ -79,7 +79,9 @@ int write_file_config(int *ip, FILE *fp)
 {
 
 	struct program *p;
-	p = (void *)*ip;
+	
+	/* Convert to long for x86_64 systems */
+	p = (void *)(long)*ip;
 
 	fprintf(fp, "%s				# <--- Begin New Program Record\n\n", "%%");
 	fprintf(fp, "00 Program Name: \"%s\"	# Name must be within double quotes \"\"\n", p->class_name);

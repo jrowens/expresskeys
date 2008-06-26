@@ -1,4 +1,35 @@
 
+_Version 0.2.4 23 Aug 2005_
+
+* Began code transfer/reuse from src-expresskeys to src-expresskeysconf
+as a scaffold for some kind of graphical utility. Long way to go...
+
+* Explained the X "xev" program and keycodes a little better in
+the USAGE file.
+
+* Put a warning regarding the X program "xmodmap" in the BUGS and
+in the USAGE file.
+
+* Cleaned up gcc warnings on a x86_64 system.
+
+_Data Type Sizes (for my own reference)_
+
+Type		x86	x86_64
+
+char		8	8
+short		16	16
+int		32	32
+long		32	64
+long long	64	64
+float		32	32
+double		64	64
+long double	96	128
+void*		32	64
+
+In short, a programmer should NOT assume that:
+sizeof(int) == sizeof(long) == sizeof(void*)
+
+
 _Version 0.2.3 13 May 2005_
 
 * The project now uses the GNU Autotools to:
