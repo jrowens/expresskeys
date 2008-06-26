@@ -160,7 +160,7 @@ int read_file_config(int *ip, FILE *fp)
 											} else {
 												*field_index = 0;
 												if (be_verbose) {
-													fprintf(stderr, "Illegal keycode (not 0 or 1) in Handle Touch Strips field <-- keycode IGNORED\n");
+													fprintf(stderr, "Illegal value (not 0 or 1) in Handle Touch Strips field <-- keycode IGNORED\n");
 												}
 											}
 										} else {

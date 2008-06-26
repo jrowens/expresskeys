@@ -1,4 +1,15 @@
 
+_Version 0.2.6 25 Feb 2006_
+
+* Continuation of the maintenance by future proofing the ./configure phase
+of the program compilation. We now examine what is returned from the commands
+"pkg-config --variable=libdir x11" and "pkg-config --variable=includedir x11"
+which is used to identify a modular X11R7 release. If that fails, we fall
+back on a hardcoded /usr/X11R6/lib[64] and /usr/X11R6/include path for the
+monolithic X11R6 releases. Failing that... the users can specify their own
+paths through the "--with-xlib=" and/or "--with-xinc=" options. ".
+
+
 _Version 0.2.5 7 Feb 2006_
 
 [Absolutely no new functionality! A pure maintenance release to prevent

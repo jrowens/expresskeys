@@ -1,5 +1,5 @@
 
 _Changes since last version. Executive summary_
 
-- Maintenance release for trouble prevention.
+- X11R6 monolithic and X11R7 modular X discovery at ./configure time.
 

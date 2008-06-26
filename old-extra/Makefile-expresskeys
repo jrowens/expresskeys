@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -O -g3 -Wall
 # Use -g3 to get full debug info
 
-INCLUDES = -I/usr/X11R6/lib
+INCLUDES = -I/usr/X11R6/include
 LDFLAGS = -L/usr/X11R6/lib
 LIBS = -lX11 -lXi -lXtst
 

@@ -272,7 +272,44 @@ PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
 ac_unique_file="src-expresskeys/main_setup.c"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE SRC_DIRS EXPRESSKEYS_LIBS EXPRESSKEYSCONF_LIBS LIBOBJS LTLIBOBJS'
+# Factoring default headers for most tests.
+ac_includes_default="\
+#include <stdio.h>
+#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#if HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+#if STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# if HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#if HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#endif
+#if HAVE_STRINGS_H
+# include <strings.h>
+#endif
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif"
+
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP SRC_DIRS EXPRESSKEYS_LIBS EXPRESSKEYS_INCL EXPRESSKEYSCONF_LIBS EXPRESSKEYSCONF_INCL LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -729,6 +766,10 @@ ac_env_CPPFLAGS_set=${CPPFLAGS+set}
 ac_env_CPPFLAGS_value=$CPPFLAGS
 ac_cv_env_CPPFLAGS_set=${CPPFLAGS+set}
 ac_cv_env_CPPFLAGS_value=$CPPFLAGS
+ac_env_CPP_set=${CPP+set}
+ac_env_CPP_value=$CPP
+ac_cv_env_CPP_set=${CPP+set}
+ac_cv_env_CPP_value=$CPP
 
 #
 # Report the --help message.
@@ -816,7 +857,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-xlib=dir         uses a specified X11R6 directory
+  --with-xlib=dir         use a specified X library directory
+  --with-xinc=dir         use a specified X include directory
 
 Some influential environment variables:
   CC          C compiler command
@@ -825,6 +867,7 @@ Some influential environment variables:
               nonstandard directory <lib dir>
   CPPFLAGS    C/C++ preprocessor flags, e.g. -I<include dir> if you have
               headers in a nonstandard directory <include dir>
+  CPP         C preprocessor
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -1573,7 +1616,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=expresskeys
- VERSION=0.2.5
+ VERSION=0.2.6
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2833,13 +2876,674 @@ fi
 
 
 
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+echo "$as_me:$LINENO: checking how to run the C preprocessor" >&5
+echo $ECHO_N "checking how to run the C preprocessor... $ECHO_C" >&6
+# On Suns, sometimes $CPP names a directory.
+if test -n "$CPP" && test -d "$CPP"; then
+  CPP=
+fi
+if test -z "$CPP"; then
+  if test "${ac_cv_prog_CPP+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+      # Double quotes because CPP needs to be expanded
+    for CPP in "$CC -E" "$CC -E -traditional-cpp" "/lib/cpp"
+    do
+      ac_preproc_ok=false
+for ac_c_preproc_warn_flag in '' yes
+do
+  # Use a header file that comes with gcc, so configuring glibc
+  # with a fresh cross-compiler works.
+  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+  # <limits.h> exists even on freestanding compilers.
+  # On the NeXT, cc -E runs the code through the compiler's parser,
+  # not just through cpp. "Syntax error" is here to catch this case.
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+		     Syntax error
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  :
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  # Broken: fails on valid input.
+continue
+fi
+rm -f conftest.err conftest.$ac_ext
+
+  # OK, works on sane cases.  Now check whether non-existent headers
+  # can be detected and how.
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <ac_nonexistent.h>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  # Broken: success on invalid input.
+continue
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  # Passes both tests.
+ac_preproc_ok=:
+break
+fi
+rm -f conftest.err conftest.$ac_ext
+
+done
+# Because of `break', _AC_PREPROC_IFELSE's cleaning code was skipped.
+rm -f conftest.err conftest.$ac_ext
+if $ac_preproc_ok; then
+  break
+fi
+
+    done
+    ac_cv_prog_CPP=$CPP
+
+fi
+  CPP=$ac_cv_prog_CPP
+else
+  ac_cv_prog_CPP=$CPP
+fi
+echo "$as_me:$LINENO: result: $CPP" >&5
+echo "${ECHO_T}$CPP" >&6
+ac_preproc_ok=false
+for ac_c_preproc_warn_flag in '' yes
+do
+  # Use a header file that comes with gcc, so configuring glibc
+  # with a fresh cross-compiler works.
+  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+  # <limits.h> exists even on freestanding compilers.
+  # On the NeXT, cc -E runs the code through the compiler's parser,
+  # not just through cpp. "Syntax error" is here to catch this case.
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+		     Syntax error
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  :
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  # Broken: fails on valid input.
+continue
+fi
+rm -f conftest.err conftest.$ac_ext
+
+  # OK, works on sane cases.  Now check whether non-existent headers
+  # can be detected and how.
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <ac_nonexistent.h>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  # Broken: success on invalid input.
+continue
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  # Passes both tests.
+ac_preproc_ok=:
+break
+fi
+rm -f conftest.err conftest.$ac_ext
+
+done
+# Because of `break', _AC_PREPROC_IFELSE's cleaning code was skipped.
+rm -f conftest.err conftest.$ac_ext
+if $ac_preproc_ok; then
+  :
+else
+  { { echo "$as_me:$LINENO: error: C preprocessor \"$CPP\" fails sanity check
+See \`config.log' for more details." >&5
+echo "$as_me: error: C preprocessor \"$CPP\" fails sanity check
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+echo "$as_me:$LINENO: checking for egrep" >&5
+echo $ECHO_N "checking for egrep... $ECHO_C" >&6
+if test "${ac_cv_prog_egrep+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if echo a | (grep -E '(a|b)') >/dev/null 2>&1
+    then ac_cv_prog_egrep='grep -E'
+    else ac_cv_prog_egrep='egrep'
+    fi
+fi
+echo "$as_me:$LINENO: result: $ac_cv_prog_egrep" >&5
+echo "${ECHO_T}$ac_cv_prog_egrep" >&6
+ EGREP=$ac_cv_prog_egrep
+
+
+echo "$as_me:$LINENO: checking for ANSI C header files" >&5
+echo $ECHO_N "checking for ANSI C header files... $ECHO_C" >&6
+if test "${ac_cv_header_stdc+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <float.h>
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_header_stdc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_header_stdc=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+
+if test $ac_cv_header_stdc = yes; then
+  # SunOS 4.x string.h does not declare mem*, contrary to ANSI.
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <string.h>
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "memchr" >/dev/null 2>&1; then
+  :
+else
+  ac_cv_header_stdc=no
+fi
+rm -f conftest*
+
+fi
+
+if test $ac_cv_header_stdc = yes; then
+  # ISC 2.0.2 stdlib.h does not declare free, contrary to ANSI.
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <stdlib.h>
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "free" >/dev/null 2>&1; then
+  :
+else
+  ac_cv_header_stdc=no
+fi
+rm -f conftest*
+
+fi
+
+if test $ac_cv_header_stdc = yes; then
+  # /bin/cc in Irix-4.0.5 gets non-ANSI ctype macros unless using -ansi.
+  if test "$cross_compiling" = yes; then
+  :
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <ctype.h>
+#if ((' ' & 0x0FF) == 0x020)
+# define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
+# define TOUPPER(c) (ISLOWER(c) ? 'A' + ((c) - 'a') : (c))
+#else
+# define ISLOWER(c) \
+		   (('a' <= (c) && (c) <= 'i') \
+		     || ('j' <= (c) && (c) <= 'r') \
+		     || ('s' <= (c) && (c) <= 'z'))
+# define TOUPPER(c) (ISLOWER(c) ? ((c) | 0x40) : (c))
+#endif
+
+#define XOR(e, f) (((e) && !(f)) || (!(e) && (f)))
+int
+main ()
+{
+  int i;
+  for (i = 0; i < 256; i++)
+    if (XOR (islower (i), ISLOWER (i))
+	|| toupper (i) != TOUPPER (i))
+      exit(2);
+  exit (0);
+}
+_ACEOF
+rm -f conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  :
+else
+  echo "$as_me: program exited with status $ac_status" >&5
+echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+( exit $ac_status )
+ac_cv_header_stdc=no
+fi
+rm -f core *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
+fi
+fi
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_stdc" >&5
+echo "${ECHO_T}$ac_cv_header_stdc" >&6
+if test $ac_cv_header_stdc = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define STDC_HEADERS 1
+_ACEOF
+
+fi
+
+# On IRIX 5.3, sys/types and inttypes.h are conflicting.
+
+
+
+
+
+
+
+
+
+for ac_header in sys/types.h sys/stat.h stdlib.h string.h memory.h strings.h \
+		  inttypes.h stdint.h unistd.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_Header=yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+eval "$as_ac_Header=no"
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+
+
+
+
+for ac_header in stdio.h ctype.h signal.h libgen.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_header_compiler=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the compiler's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header:     check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: see the Autoconf documentation" >&5
+echo "$as_me: WARNING: $ac_header: see the Autoconf documentation" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&5
+echo "$as_me: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: in the future, the compiler will take precedence" >&5
+echo "$as_me: WARNING: $ac_header: in the future, the compiler will take precedence" >&2;}
+    (
+      cat <<\_ASBOX
+## ------------------------------------------ ##
+## Report this to the AC_PACKAGE_NAME lists.  ##
+## ------------------------------------------ ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=\$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+
 SRC_DIRS=""
 SRC_EXPRESSKEYS=src-expresskeys
 SRC_EXPRESSKEYSCONF=src-expresskeysconf
 
 
-XLIBDIR_DEFAULT=/usr/X11R6/lib
+if test -d /usr/X11R6/lib64 ; then
+	XLIBDIR_X11R6=/usr/X11R6/lib64
+else
+	XLIBDIR_X11R6=/usr/X11R6/lib
+fi
+
+XINCDIR_X11R6=/usr/X11R6/include
+
+
 ENV_XLIB=no
+ENV_XINC=no
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2854,23 +3558,32 @@ if test "${with_xlib+set}" = set; then
   XLIBDIR=$withval
 fi;
 
-echo "$as_me:$LINENO: checking for Xlib directory" >&5
-echo $ECHO_N "checking for Xlib directory... $ECHO_C" >&6
-if test "$XLIBDIR" == "" || test "$XLIBDIR" == "yes"; then
-	if test -d $XLIBDIR_DEFAULT; then
-		XLIBDIR=$XLIBDIR_DEFAULT
-		ENV_XLIB=yes
-		echo "$as_me:$LINENO: result: found" >&5
-echo "${ECHO_T}found" >&6
+echo "$as_me:$LINENO: checking for X library directory" >&5
+echo $ECHO_N "checking for X library directory... $ECHO_C" >&6
+
+if test "$XLIBDIR" == ""; then
+	XLIBDIR_X11R7=$(pkg-config --variable=libdir x11 2>/dev/null)
+	if test $? != 0 || test ! -d $XLIBDIR_X11R7; then
+		if test -d $XLIBDIR_X11R6; then
+			XLIBDIR=$XLIBDIR_X11R6
+			ENV_XLIB=yes
+			echo "$as_me:$LINENO: result: found $XLIBDIR" >&5
+echo "${ECHO_T}found $XLIBDIR" >&6
+		else
+			ENV_XLIB=no
+			echo "$as_me:$LINENO: result: not found - tried $XLIBDIR_X11R6" >&5
+echo "${ECHO_T}not found - tried $XLIBDIR_X11R6" >&6
+		fi
 	else
-		ENV_XLIB=no
-		echo "$as_me:$LINENO: result: not found - tried $XLIBDIR_DEFAULT" >&5
-echo "${ECHO_T}not found - tried $XLIBDIR_DEFAULT" >&6
+		XLIBDIR=$XLIBDIR_X11R7
+		ENV_XLIB=yes
+		echo "$as_me:$LINENO: result: found $XLIBDIR" >&5
+echo "${ECHO_T}found $XLIBDIR" >&6
 	fi
 elif test -d $XLIBDIR; then
 	ENV_XLIB=yes
-	echo "$as_me:$LINENO: result: found" >&5
-echo "${ECHO_T}found" >&6
+	echo "$as_me:$LINENO: result: found $XLIBDIR" >&5
+echo "${ECHO_T}found $XLIBDIR" >&6
 else
 	ENV_XLIB=no
 	echo "$as_me:$LINENO: result: not found - tried $XLIBDIR" >&5
@@ -2878,7 +3591,151 @@ echo "${ECHO_T}not found - tried $XLIBDIR" >&6
 fi
 
 
-if test x$ENV_XLIB != xno; then
+XINCDIR=
+
+# Check whether --with-xinc or --without-xinc was given.
+if test "${with_xinc+set}" = set; then
+  withval="$with_xinc"
+  XINCDIR=$withval
+fi;
+
+echo "$as_me:$LINENO: checking for X include directory" >&5
+echo $ECHO_N "checking for X include directory... $ECHO_C" >&6
+
+if test "$XINCDIR" == ""; then
+        XINCDIR_X11R7=$(pkg-config --variable=includedir x11 2>/dev/null)
+        if test $? != 0 || test ! -d $XINCDIR_X11R7; then
+                if test -d $XINCDIR_X11R6; then
+                        XINCDIR=$XINCDIR_X11R6
+                        ENV_XINC=yes
+                        echo "$as_me:$LINENO: result: found $XINCDIR" >&5
+echo "${ECHO_T}found $XINCDIR" >&6
+                else
+                        ENV_XINC=no
+                        echo "$as_me:$LINENO: result: not found - tried $XINCDIR_X11R6" >&5
+echo "${ECHO_T}not found - tried $XINCDIR_X11R6" >&6
+                fi
+        else
+                XINCDIR=$XINCDIR_X11R7
+                ENV_XINC=yes
+                echo "$as_me:$LINENO: result: found $XINCDIR" >&5
+echo "${ECHO_T}found $XINCDIR" >&6
+        fi
+elif test -d $XINCDIR; then
+        ENV_XINC=yes
+        echo "$as_me:$LINENO: result: found $XINCDIR" >&5
+echo "${ECHO_T}found $XINCDIR" >&6
+else
+        ENV_XINC=no
+        echo "$as_me:$LINENO: result: not found - tried $XINCDIR" >&5
+echo "${ECHO_T}not found - tried $XINCDIR" >&6
+fi
+
+
+
+EXPRESSKEYS_DEFAULT=yes
+OPTION_EXPRESSKEYS=no
+# Check whether --enable-expresskeys or --disable-expresskeys was given.
+if test "${enable_expresskeys+set}" = set; then
+  enableval="$enable_expresskeys"
+
+else
+  enable_expresskeys=$EXPRESSKEYS_DEFAULT
+fi;
+if test "$enable_expresskeys" != "no"; then
+	if test x$ENV_XLIB != xyes; then
+		echo "***"; echo "*** WARNING libraries:";
+		echo "*** We failed to locate a full Xlib environment,"
+		echo "*** and will therefore not build expresskeys."
+                echo "*** Try './configure --with-xlib=/some/directory'"
+                echo "*** where your Xlib libraries can be found."
+                echo "*** By default we test what is returned from the"
+		echo "*** command 'pkg-config --variable=libdir x11'"
+		echo "*** which works in the modular X11R7 releases."
+		echo "*** If that fails, we try a hardcoded $XLIBDIR_X11R6"
+		echo "*** for the monolithic X11R6 releases. Both these"
+		echo "*** tests have obviously failed to produce a path."
+		echo "*** "
+		echo "***"
+                exit
+	else
+		OPTION_EXPRESSKEYS=yes
+		EXPRESSKEYS_LIBS="-L$XLIBDIR -lX11 -lXi -lXtst"
+		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYS"
+	fi
+	if test x$ENV_XINC != xyes; then
+		echo "***"; echo "*** WARNING include files:";
+		echo "*** We failed to locate a full Xlib environment,"
+		echo "*** and will therefore not build expresskeys."
+		echo "*** Try './configure --with-xinc=/some/directory'"
+		echo "*** where your Xlib include files can be found."
+		echo "*** By default we test what is returned from the"
+		echo "*** command 'pkg-config --variable=includedir x11'"
+		echo "*** which works in the modular X11R7 releases."
+		echo "*** If that fails, we try a hardcoded $XINCDIR_X11R6"
+		echo "*** for the monolithic X11R6 releases. Both these"
+		echo "*** tests have obviously failed to produce a path."
+		echo "*** "
+		echo "***"
+		exit
+	else
+		EXPRESSKEYS_INCL="-I$XINCDIR"
+	fi
+fi
+
+
+EXPRESSKEYSCONF_DEFAULT=no
+OPTION_EXPRESSKEYSCONF=no
+# Check whether --enable-expresskeysconf or --disable-expresskeysconf was given.
+if test "${enable_expresskeysconf+set}" = set; then
+  enableval="$enable_expresskeysconf"
+
+else
+  enable_expresskeysconf=$EXPRESSKEYSCONF_DEFAULT
+fi;
+if test "$enable_expresskeysconf" != "no"; then
+	if test x$ENV_XLIB != xyes; then
+                echo "***"; echo "*** WARNING libraries:";
+                echo "*** We failed to locate a full Xlib environment,"
+                echo "*** and will therefore not build expresskeysconf."
+                echo "*** Try './configure --with-xlib=/some/directory'"
+                echo "*** where your Xlib libraries can be found."
+                echo "*** By default we test what is returned from the"
+                echo "*** command 'pkg-config --variable=libdir x11'"
+                echo "*** which works in the modular X11R7 releases."
+                echo "*** If that fails, we try a hardcoded $XLIBDIR_X11R6"
+                echo "*** for the monolithic X11R6 releases. Both these"
+                echo "*** tests have obviously failed to produce a path."
+                echo "*** "
+                echo "***"
+                exit
+	else
+		OPTION_EXPRESSKEYSCONF=yes
+		EXPRESSKEYSCONF_LIBS="-L$XLIBDIR -lX11"
+		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYSCONF"
+	fi
+	if test x$ENV_XINC != xyes; then
+		echo "***"; echo "*** WARNING include files:";
+		echo "*** We failed to locate a full Xlib environment,"
+		echo "*** and will therefore not build expresskeysconf."
+		echo "*** Try './configure --with-xinc=/some/directory'"
+		echo "*** where your Xlib include files can be found."
+		echo "*** By default we test what is returned from the"
+		echo "*** command 'pkg-config --variable=includedir x11'"
+		echo "*** which works in the modular X11R7 releases."
+		echo "*** If that fails, we try a hardcoded $XINCDIR_X11R6"
+		echo "*** for the monolithic X11R6 releases. Both these"
+		echo "*** tests have obviously failed to produce a path."
+		echo "*** "
+		echo "***"
+		exit
+	else
+		EXPRESSKEYSCONF_INCL="-I$XINCDIR"
+	fi
+fi
+
+
+
 
 SOMEERROR=0
 
@@ -2886,66 +3743,66 @@ echo $'\nChecking the X compiling environment in detail...\n'
 
 echo $'main(){}'|$CC -L$XLIBDIR -lX11 -xc - -o dum 2> /dev/null
 if test $? != 0 ; then
-   echo "Can not link with X11 (libX11.so) library!"
+   echo "Can not link with X11 $XLIBDIR/libX11.so library!"
    SOMEERROR=1
 else
-   echo "X11 OK"
+   echo "$XLIBDIR/libX11.so OK"
 fi
 
 echo $'main(){}'|$CC -L$XLIBDIR -lXext -xc - -o dum 2> /dev/null
 if test $? != 0 ; then
-   echo "Can not link with Xext (libXext.so) library!"
+   echo "Can not link with Xext $XLIBDIR/libXext.so library!"
    SOMEERROR=1
 else
-   echo "Xext OK"
+   echo "$XLIBDIR/libXext.so OK"
 fi
 
 echo $'main(){}'|$CC -L$XLIBDIR -lXi -xc - -o dum 2> /dev/null
 if test $? != 0 ; then
-   echo "Can not link with Xi (libXi.so) library!"
+   echo "Can not link with Xi $XLIBDIR/libXi.so library!"
    SOMEERROR=1
 else
-   echo "Xi OK"
+   echo "$XLIBDIR/libXi.so OK"
 fi
 
 echo $'main(){}'|$CC -L$XLIBDIR -lXtst -xc - -o dum 2> /dev/null
 if test $? != 0 ; then
-   echo "Can not link with Xtst (libXtst.so) library!"
+   echo "Can not link with Xtst $XLIBDIR/libXtst.so library!"
    SOMEERROR=1
 else
-   echo "Xtst OK"
+   echo "$XLIBDIR/libXtst.so OK"
 fi
 
-echo $'#include <X11/Xlib.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2> /dev/null
+echo $'#include <X11/Xlib.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2> /dev/null
 if test $? != 0 ; then
-   echo "Can not include <X11/Xlib.h> header file!"
+   echo "Can not include $XINCDIR/X11/Xlib.h header file!"
    SOMEERROR=1
 else
-   echo "Xlib.h OK"
+   echo "$XINCDIR/X11/Xlib.h OK"
 fi
 
-echo $'#include <X11/Xutil.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2> /dev/null
+echo $'#include <X11/Xutil.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2> /dev/null
 if test $? != 0 ; then
-   echo "Can not include <X11/Xutil.h> header file!"
+   echo "Can not include $XINCDIR/X11/Xutil.h header file!"
    SOMEERROR=1
 else
-   echo "Xutil.h OK"
+   echo "$XINCDIR/X11/Xutil.h OK"
 fi
 
-echo $'#include <X11/extensions/XInput.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2>/dev/null
+echo $'#include <X11/extensions/XInput.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2>/dev/null
 if test $? != 0 ; then
-   echo "Can not include <X11/extensions/XInput.h> header file!"
+   echo "Can not include $XINCDIR/X11/extensions/XInput.h header file!"
    SOMEERROR=1
 else
-   echo "XInput.h OK"
+   echo "$XINCDIR/X11/extensions/XInput.h OK"
 fi
 
-echo $'#include <X11/extensions/XTest.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2>/dev/null
+echo $'#include <X11/extensions/XTest.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2>/dev/null
 if test $? != 0 ; then
-   echo "Can not include <X11/extensions/XTest.h> header file!"
+   echo "Can not include $XINCDIR/X11/extensions/XTest.h header file!"
    SOMEERROR=1
 else
-   echo "XTest.h OK"
+   echo "$XINCDIR/X11/extensions/XTest.h OK"
 fi
 
 rm -f dum
@@ -2963,62 +3820,9 @@ else
    echo $'\nThe X compiling environment seems to be all OK\n'
 fi
 
-fi
 
 
 
-EXPRESSKEYS_DEFAULT=yes
-OPTION_EXPRESSKEYS=no
-# Check whether --enable-expresskeys or --disable-expresskeys was given.
-if test "${enable_expresskeys+set}" = set; then
-  enableval="$enable_expresskeys"
-
-else
-  enable_expresskeys=$EXPRESSKEYS_DEFAULT
-fi;
-if test "$enable_expresskeys" != "no"; then
-	if test x$ENV_XLIB != xyes; then
-		echo "***"; echo "*** WARNING:";
-		echo "*** expresskeys requires Xlib environment."
-		echo "*** expresskeys will not be built."
-                echo "*** Try ./configure --with-xlib=/some/directory"
-                echo "*** if your Xlib environment is nonstandard."
-                echo "*** By default we look for /usr/X11R6/lib"
-		echo "***"
-                exit
-	else
-		OPTION_EXPRESSKEYS=yes
-		EXPRESSKEYS_LIBS="-L$XLIBDIR -lX11 -lXi -lXtst"
-		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYS"
-	fi
-fi
-
-
-EXPRESSKEYSCONF_DEFAULT=no
-OPTION_EXPRESSKEYSCONF=no
-# Check whether --enable-expresskeysconf or --disable-expresskeysconf was given.
-if test "${enable_expresskeysconf+set}" = set; then
-  enableval="$enable_expresskeysconf"
-
-else
-  enable_expresskeysconf=$EXPRESSKEYSCONF_DEFAULT
-fi;
-if test "$enable_expresskeysconf" != "no"; then
-	if test x$ENV_XLIB != xyes; then
-		echo "***"; echo "*** WARNING:";
-		echo "*** expresskeysconf requires Xlib environment."
-		echo "*** expresskeysconf will not be built."
-                echo "*** Try ./configure --with-xlib=/some/directory"
-                echo "*** if your Xlib environment is nonstandard."
-                echo "*** By default we look for /usr/X11R6/lib"
-		echo "***"
-                exit
-	else
-		OPTION_EXPRESSKEYSCONF=yes
-		EXPRESSKEYSCONF_LIBS="-L$XLIBDIR -lX11"
-		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYSCONF"
-	fi
-fi
 
 
 
@@ -3714,9 +4518,13 @@ s,@AMDEPBACKSLASH@,$AMDEPBACKSLASH,;t t
 s,@CCDEPMODE@,$CCDEPMODE,;t t
 s,@am__fastdepCC_TRUE@,$am__fastdepCC_TRUE,;t t
 s,@am__fastdepCC_FALSE@,$am__fastdepCC_FALSE,;t t
+s,@CPP@,$CPP,;t t
+s,@EGREP@,$EGREP,;t t
 s,@SRC_DIRS@,$SRC_DIRS,;t t
 s,@EXPRESSKEYS_LIBS@,$EXPRESSKEYS_LIBS,;t t
+s,@EXPRESSKEYS_INCL@,$EXPRESSKEYS_INCL,;t t
 s,@EXPRESSKEYSCONF_LIBS@,$EXPRESSKEYSCONF_LIBS,;t t
+s,@EXPRESSKEYSCONF_INCL@,$EXPRESSKEYSCONF_INCL,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
@@ -4439,11 +5247,12 @@ fi
 echo ""
 echo "----------------------------------------"
 echo "  BUILD ENVIRONMENT:"
-echo "		   Xlib - $ENV_XLIB $XLIBDIR"
+echo "      X libraries - $ENV_XLIB $XLIBDIR"
+echo "       X includes - $ENV_XINC $XINCDIR"
 echo ""
 echo "  BUILD OPTIONS:"
-echo "	expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- (Non-working dummy file)"
-echo "	    expresskeys - $OPTION_EXPRESSKEYS"
+echo "  expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- (Non-working dummy file)"
+echo "      expresskeys - $OPTION_EXPRESSKEYS"
 echo "----------------------------------------"
 echo ""
 
