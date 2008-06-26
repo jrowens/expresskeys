@@ -1,16 +1,14 @@
 
-The ChangeLog.old file contains all necessary information for
-a proper configuration and execution of this program.
+The USAGE file contains all necessary information for a proper
+configuration and execution of this program. Some extra knowledge
+might be had by reading the ChangeLog files. I'm a talkative guy.
 
-After that read, change the UserConfig-Pad/Pen files to your
-taste. Take a look in the extremely simple Makefile if
-setting CFLAGS is your want. Next step is to type:
+After that read, take a look in the extremely simple Makefile in
+src-server if setting CFLAGS is your want. Next step is to type:
 
 make
 
 Then copy the binary to a suitable location. There's also the
 option to type "make clean", which deletes all the .o files after
-a compilation (it will also remove the binary). The cleaning
-up must be done inbetween configurations in the UserConfig-x and
-compiles, otherwise make won't do a new compile.
+a compilation (it will also remove the binary).
 

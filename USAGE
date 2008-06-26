@@ -1,0 +1,156 @@
+///////////////////////////////////////////////////////////////////////////
+
+Important: If you use the linuxwacom-0.6.7-beta or in the future
+released versions you must change the pad statement in X config
+file to:
+
+Section "ServerLayout"
+[...]
+InputDevice "pad" # Intuos3 or Cintiq 21UX. It must NOT send core event
+[...]
+EndSection
+
+See: http://linuxwacom.sourceforge.net/index.php/howto/srvlayout
+
+If you use the old pad statement, any pad button press can jump the
+mouse cursor to the upper left corner (0,0) when another tool isn't
+in proximity.
+
+///////////////////////////////////////////////////////////////////////////
+
+USAGE of ekeys (expresskeys):
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Program can not be started unless X is running.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Command line can be:
+
+ekeys <pad-device-name> [<pen-device-name>] [-d]
+
+Where the pad name is mandatory. Specify a pen name
+if you want the program to handle pen mode switches.
+Use -d to make the program a daemon (run in the background).
+
+Example: ekeys pad stylus -d
+
+The names are the "Identifier" strings in your X config file (xorg.conf)
+Myself I start ekeys just before the window manager in my .xinitrc with:
+/usr/local/bin/ekeys pad stylus -d
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* A minimal configuration file is written on first run to the user home
+directory: ~/.expresskeys/expresskeys.conf
+
+It contains "default", "Gimp", "Blender" and "XTerm" entries and is
+recreated whenever a configuration file is missing on program start.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* A file with the program PID number is written if run with -d in:
+~/.expresskeys/expresskeys.pid
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Use the X program "xev" to find keycodes when changing the configuration.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Use the X program "xprop" to find the name string to use when changing
+the configuration. xprop without any arguments expects you to then click
+on the target window. We are looking for the WM_CLASS info so running:
+
+$ xprop | grep WM_CLASS
+WM_CLASS(STRING) = "VCLSalFrame", "OpenOffice.org 1.1.4"
+
+It's the last string we would use, the "OpenOffice.org 1.1.4". We always
+use the last part, and the spelling is case sensitive. Putting
+"openoffice.org 1.1.4" in the configuration file would not match up.
+
+Also, since spaces are accepted as part of a class name, make sure there are
+no space _before or after_ the name, prior to the terminating field comma:
+
+{"A ProgramName", or {A ProgramName,    <-- OK
+{"A ProgramName" , or { A ProgramName,  <-- NOT-OK
+
+The extra space/s would become part of the class name. Not what you want.
+If you absolutely must put some space before the comma, use TAB instead.
+Those are discarded while parsing the string.
+
+The very first entry (at the top) in the configuration file is named
+"default" and holds a key definition for all programs not specified
+in another entry. It also takes care of the root window (the "background")
+and programs lacking a class name in their WM_CLASS.
+
+"default" must always stay as the first entry in the configuration file!
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The "default" entry holds keycodes to make the pad buttons behave just
+as Wacom list them in the Quick Start Guide: Shift, Alt, Ctrl and Space
+mirrored on both sides. Touch Strip support is turned off by default.
+Use the number 1 in the handle_touch field to turn it on. You then get
+Arrow-key Up/Down on the left strip and Arrow-key Right/Left on the right.
+Change direction of the movement by switching the _up and _down values.
+
+If you want a button to do pen mode toggling between Absolute and Relative,
+use the value 999 in the corresponding keycode field. To be able to switch
+mode anywhere, each program block must contain one 999 definition. And,
+of course, a pen name must be used on the command line when starting the
+program.
+
+Both pad buttons and touch strips can send two keys at a time if so
+configured through usage of the _plus keycode fields.
+
+Please don't alter or remove the commas (,) after the class name or keycodes.
+They must be there to separate the fields, just like the { and } are used to
+separate and define the program blocks.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The "Gimp" entry has the touch strips turned on by default. The keycodes
+used are:
+20 = "+" = Gimp Zoom In. Left/Right touch strip up motion
+61 = "-" = Gimp Zoom Out. Left/Right touch strip down motion.
+
+The "Blender" entry is a private choice for the 3D program blender...
+
+I felt, and feel, that an "XTerm" is too important a window to have _any_
+interference from the pad. But observe that I want to be able to switch
+pen mode even with such a window in focus, so I've set 999 in one field.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Below is some ASCII art showing the "default":
+
+Left ExpressKey Pad
+------------ 
+|  |   |   |		Wacom Intuos3 defaults are:
+|  | 9 | T |
+|11|---| O |		Key 9  = (left) Shift	= keycode 50
+|  |10 | U |		Key 10 = (left) Alt	= keycode 64
+|------| C |		Key 11 = (left) Control	= keycode 37
+|  12  | H |		Key 12 = Space		= keycode 65
+------------
+
+Right ExpressKey Pad
+------------ 
+|   |   |  |		Wacom Intuos3 defaults are:
+| T |13 |  |
+| O |---|15|		Key 13 = (left) Shift	= keycode 50
+| U |14 |  |		Key 14 = (left) Alt	= keycode 64
+| C |------|		Key 15 = (left) Control	= keycode 37
+| H |  16  |		Key 16 = Space		= keycode 65
+------------
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Sometimes desktops or window managers "steal" certain
+keypresses/combinations. If you experience that, look for
+a way to change the keybindings of your environment.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005 - Mats Johannesson
  *
- * Based on setmode.c 1996 by Frederic Lepied
+ * Based on setmode.c 1996 by Frederic Lepied (xinput-1.2)
  *
  * This code is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +23,12 @@
 
 #include "globals.h"
 
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+/* Function opens the X input device (which stays open until program end) */
+/* and toggles mode between Absolute and Relative based on a flag status. */
+/* We make sure to only open the pen once by setting another flag. */
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int toggle_pen_mode(Display *display, char *name)
 {
 
@@ -39,8 +45,7 @@ int toggle_pen_mode(Display *display, char *name)
 		XSetDeviceMode(display, pen_device, pen_mode);
 		return 0;
 	} else {
-		fprintf(stderr, "ERROR: Can not open pen device: %s\n", PEN_NAME);
-		return 0;
+		return 1;
 	}
 }
 

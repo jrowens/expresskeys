@@ -1,4 +1,71 @@
 
+_Version 0.1.1 17 April 2005_
+
+* Now reads an external configuration file at program launch. It
+searches in the user home directory under the hidden "./expresskeys"
+directory. File is called "expresskeys.conf". If none is found, or
+the directory doesn't exist yet, it makes the dir, then creates and
+populates a minimal file from an internal list. The original "default",
+"Gimp", "Blender" and "XTerm" entries. It then goes on and reads in
+that file immediately. A limit of 64 different program definitions
+has been set (easily altered in the code). It's way more than most
+would need, since the "default" is fine for a huge group of programs.
+
+Rules for the configuration file is: Don't use { or } in comments,
+and preferably keep comments outside of program definitions. The
+comma (,) inside a definition is still used to separate all the
+fields. Program names don't need the embracing quotes "" but I
+kept the default list using them. Since spaces are accepted as part
+of a class name, make sure there are no space _before or after_ the
+name, prior to the terminating field comma:
+
+{"A ProgramName", or {A ProgramName,    <-- OK
+{"A ProgramName" , or { A ProgramName,  <-- NOT-OK
+
+The extra space/s would become part of the class name. Not what you want.
+If you absolutely must put some space before the comma, use TAB instead.
+Those are discarded while parsing the string.
+
+* Pen handling is now specified on the command line, eg:
+
+ekeys pad stylus
+
+The value for pen mode switch in the configuration file is still 999.
+
+Yes, "ekeys" :-) I changed the compile output to that name. The code
+tarball will still be named expresskeys though. Doing a web search
+revealed it to be rather unique to the Intuos3, while ekeys turned
+up music hardware and relatives. But, naturally, feel free to name it
+badzilla or VincentVanGogh instead. Program behaviour is not dependent
+on the file name.
+
+* Another command line change, to make it run in the background:
+
+ekeys pad stylus -d
+
+It then runs in "daemon" mode. The difference between pushing it
+with a terminating & or letting internal code "fork" it is beyond
+most peoples interest. I can already hear the snores building up...
+But in terms of how I've coded stuff it still matters.
+
+If the program is launched into daemon mode, it writes out another
+file in the configuration directory: "expresskeys.pid". A
+process identification (PID) is a unique number, separating the
+program from all the other stuff you have running. The number can
+be used, for example, to do an easy kill.
+
+I've included a simple shell script (kalled ekeys-kill.sh) which reads the
+expresskeys.pid and tries to kill whatever process that has the pid,
+so do a "ps aux | grep ekeys" beforehand to be sure it's running
+(and don't confuse your "grep ekeys" with an actual "ekeys" instance).
+Add a line to start ekeys directly after a kill and you have an easy
+path when doing config file changes. The pid file is not automatically
+deleted by internal code on exit (yet).
+
+* For any programmer out there, or curious user, I've now filled the
+code with comments. It had to be done at some point...
+
+
 _Version 0.1.0 5 April 2005_
 
 Just internal changes. A massive rewrite to get rid of cruft, and
