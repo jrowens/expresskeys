@@ -32,7 +32,7 @@ char *configstring = "ConfigVersion"; /* Searchable string in the config file */
 char *configversion = "3"; /* Our version. Remember to change it if necessary! */
 char *pad1idstring = "Identifier1Pad";		/* Marker to bind tablet and config file */
 char *stylus1idstring = "Identifier1Sty";	/* Marker that can't bind... */
-char *our_prog_version = "0.3.0"; /* Our version. Remember to change it! */
+char *our_prog_version = "0.3.1"; /* Our version. Remember to change it! */
 char *our_prog_name;
 char *pad1_name = 0;
 char *pad1_autoname = "pad";
@@ -42,10 +42,12 @@ char *total_config_dir;
 char *total_config_file;
 char *total_pid_file;
 char *total_error_file;
+char *total_status_file;
 char *config_dir = "/.expresskeys";	/* This is where in the user home */
 char *config_file = 0;				/* directory we'd like to reside, */
 char *pid_file = "/expresskeys.pid"; 	/* and what our different status */
 char *error_file = "/error.log"; 	/* files should be called */
+char *status_file = "/status.log";
 char *config_file_padless = "/padless.conf1";
 char *config_file_intuos3 = "/intuos3.conf1";
 char *config_file_graphire4 = "/graphire4.conf1";
@@ -54,14 +56,15 @@ int userconfigversion = 0; /* Keep track of which format the user has */
 int config3headerfields = 3; /* Number of fields in the header of a configversion 3 file */
 int configheaderfields = 0; /* How many header fields to actually parse in each file */
 int config3fields = 27; /* Number of fields in a configversion 3 record */
+int config3gr4fields = 11; /* Number of fields if tablet is a Graphire4 */
 int configfields = 0; /* How many fields to actually parse in each record */
 int screen;			/* Active screen. An X thing */
+int is_graphire4 = 0;	/* Only flag if it is so */
 int just_exit = 0;	/* Do not terminate the program immediately */
 int go_daemon = 0;	/* Do not become a daemon without a command */
-int second_instance = 0; /* Prevent a running program's PID file from erasure */
 int be_verbose = 0; /* Run silently per default */
 int reread_config = 0;	/* No memory should be freed on the first read */
-int stylus1_mode = 1;	/* Assume pen is in Absolute mode initially */
+int stylus1_mode = 1;	/* Pen initially in Absolute mode. Real value discovered later */
 int padstylus1_presscurve = 4; /* Stylus default Sensitivity. Sample xsetwacom usage */
 
 int motion_type = NON_VALID;
@@ -77,9 +80,9 @@ struct program *default_program; /* Pointer to the "default" program record */
 struct program external_list [MAXRECORDS];
 struct program internal_list[] = {
 /*	Name	stylus1_presscurve	handle_touch */
-{"default",	"0 0 100 100",	0,
+{"default",	"0 0 100 100",	1,
 /*		l_touch_up	l_touch_up_plus	l_touch_down	l_touch_down_plus */
-		98,		0,		104,		0,
+		994,		0,		995,		0,
 /*		r_touch_up	r_touch_up_plus	r_touch_down	r_touch_down_plus */
 		102,		0,		100,		0,
 /*		key_9		key_9_plus	key_10		key_10_plus */
@@ -139,7 +142,7 @@ struct program internal_list[] = {
 /* The number of programs (num_list) must be computed here. After the struct */
 int num_list = (sizeof internal_list / sizeof internal_list[0]);
 
-/* These are the keywords prefacing a value in the config file */
+/* These are the keywords prefacing a value in the Intuos3 config file */
 struct configstrings human_readable[] = {
 {"ProgramName", "Stylus1PressCurve", "HandleTouchStrips",
 "LeftPadTouchUp", "LeftPadTouchUpPlus",
@@ -154,6 +157,16 @@ struct configstrings human_readable[] = {
 "RightPadButton14", "RightPadButton14Plus",
 "RightPadButton15", "RightPadButton15Plus",
 "RightPadButton16", "RightPadButton16Plus" }
+};
+
+/* These are the keywords prefacing a value in the Graphire4 config file */
+struct configstrings gr4_human_readable[] = {
+{"ProgramName", "Stylus1PressCurve", "HandleScrollWheel",
+"ScrollWheelUp", "ScrollWheelUpPlus",
+"ScrollWheelDown", "ScrollWheelDownPlus",
+"dummy", "dummy", "dummy", "dummy", "LeftButton", "LeftButtonPlus",
+"dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "RightButton", "RightButtonPlus",
+"dummy", "dummy", "dummy", "dummy", "dummy", "dummy" }
 };
 
 /* End Code */

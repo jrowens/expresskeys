@@ -36,7 +36,6 @@
 
 int call_xsetwacom(int num)
 {
-
 	char buffer [MAXBUFFER];
 	char curve [12];
 
@@ -106,7 +105,65 @@ int call_xsetwacom(int num)
 		}
 	}
 	return 0;
+}
 
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Function uses the "popen" command which creates a pipe, forks and invokes
+ a shell where xsetwacom can be run. First action is to ensure that version
+ 0.0.7 or greater of xsetwacom is present (ie linuxwacom-0.7.5 where the
+ option GetTabletID was introduced). Thereafter we match the tablet decimal
+ number string against known Graphire4 numbers. A full table can be found in
+ src/xdrv/wcmUSB.c of the linuxwacom sources (Hex numbers).
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int identify_device(char *name)
+{
+	const char *graphire4_4x5 = "21"; /* 0x15 */
+	const char *graphire4_6x8 = "22"; /* 0x16 */
+	const char *graphire4_6x8_BT = "129"; /* 0x81 */
+	const int min_xsetwacom = 7; /* Minimum xsetwacom version we can use is 0.0.7 */
+
+	char read_buffer [MAXBUFFER];
+	char write_buffer [MAXBUFFER];
+
+	int len = 0;
+	int i, j = 0;
+	int ok_xsetwacom = 0;
+
+	FILE *execfp = NULL;
+
+	if ((execfp = popen("xsetwacom -V", "r")) != NULL) {
+		fgets(read_buffer, MAXBUFFER, execfp);
+		if ((pclose(execfp)) == 0) {
+			len = strcspn(read_buffer, " \t\n");
+			for (i = 0; i < len; i++) {
+				if (isdigit(read_buffer[i])) {
+					write_buffer[j] = read_buffer[i];
+					j++;
+				}
+			}
+			write_buffer[j] = '\0';
+			if ((atoi(write_buffer)) >= min_xsetwacom) {
+				ok_xsetwacom = 1;
+			}
+		}
+	}
+
+	if (ok_xsetwacom) {
+		snprintf(write_buffer, MAXBUFFER, "xsetwacom get %s GetTabletID", name);
+		if ((execfp = popen(write_buffer, "r")) != NULL) {
+			fgets(read_buffer, MAXBUFFER, execfp);
+			if ((pclose(execfp)) == 0) {
+				len = strcspn(read_buffer, " \t\n");
+				if (((strncmp(read_buffer, graphire4_4x5, len)) == 0)
+					|| ((strncmp(read_buffer, graphire4_6x8, len)) == 0)
+					|| ((strncmp(read_buffer, graphire4_6x8_BT, len)) == 0)) {
+					is_graphire4 = 1;
+				}
+			}
+		}
+	}
+	return 0;
 }
 
 /* End Code */

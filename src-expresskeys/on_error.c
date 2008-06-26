@@ -40,5 +40,21 @@ void exit_on_error(FILE *fp, char *string1, char *string2, char *string3)
 
 }
 
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Function is a rudimentary error handler for Xserver error returns
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int xerror_handler(Display *display, XErrorEvent *error_event)
+{
+	FILE *errorfp = NULL;
+	errorfp = fopen(total_error_file, "w");
+
+	char error_buffer [MAXBUFFER];
+	XGetErrorText(display, error_event->error_code, error_buffer, MAXBUFFER);
+	fprintf(stderr, "X error message: %d %s\n", error_event->error_code, error_buffer);
+	exit_on_error(errorfp, "%s ERROR: A fatal error was returned from the X server: %s\n", our_prog_name, error_buffer);
+	return 0;
+}
+
 /* End Code */
 

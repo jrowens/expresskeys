@@ -33,12 +33,15 @@
 /* get_device_info returns a long to satisfy x86_64 systems */
 long get_device_info(Display *display, XDeviceInfo *info, char *name)
 {
-	int	i, j, c;
+	int	i, j, k, c;
 	int	nr_devices;
 	int len = 0;
 
 	char read_buffer [MAXBUFFER];
 	char write_buffer [MAXBUFFER];
+
+	XValuatorInfoPtr valuator;
+	XAnyClassPtr anyclass;
 
 	info = XListInputDevices(display, &nr_devices);
 
@@ -56,6 +59,16 @@ long get_device_info(Display *display, XDeviceInfo *info, char *name)
 		for(i = 0; i < nr_devices; i++) {
 			if ((info[i].use == IsXExtensionDevice) &&
 			(strcmp (info[i].name, name) == 0)) {
+				anyclass = (XAnyClassPtr)(info[i].inputclassinfo);
+				for (k = 0; k < info[i].num_classes; k++) {
+					if (anyclass->class == ValuatorClass) {
+						valuator = (XValuatorInfoPtr) anyclass;
+						if (stylus1_info_block == info) {
+							stylus1_mode = valuator->mode;
+						}
+					}
+					anyclass = (XAnyClassPtr)((char *)anyclass + anyclass->length);
+				}
 				/* Convert to long for x86_64 systems */
 				return (long) &info[i];
 			}
@@ -77,6 +90,16 @@ long get_device_info(Display *display, XDeviceInfo *info, char *name)
 					}
 					strncpy(write_buffer + len, "\0", 1);
 					if ((strstr(write_buffer, name)) !=NULL) {
+						anyclass = (XAnyClassPtr)(info[i].inputclassinfo);
+						for (k = 0; k < info[i].num_classes; k++) {
+							if (anyclass->class == ValuatorClass) {
+								valuator = (XValuatorInfoPtr) anyclass;
+								if ((strstr(write_buffer, "stylus"))) {
+									stylus1_mode = valuator->mode;
+								}
+							}
+							anyclass = (XAnyClassPtr)((char *)anyclass + anyclass->length);
+						}
 						/* Convert to long for x86_64 systems */
 						return (long) &info[i];
 					}

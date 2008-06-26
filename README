@@ -1,6 +1,7 @@
 
 This program gives linux support for the ExpressKeys and Touch Strips
-of a Wacom Intuos3 tablet or a Cintiq 21UX Interactive Pen Display.
+of a Wacom Intuos3 tablet, a Cintiq 21UX Interactive Pen Display or
+the Scroll Wheel and two ExpressKeys of a Graphire4.
 
 It can also provide an automatic change of stylus pressure sensitivity
 - aka PressCurve - going from one program window to the next, by way

@@ -29,7 +29,6 @@ void re_read_file_config(int signum)
 {
 
 	struct program *p;
-	struct configstrings *hp;
 
 	FILE *fp;
 	FILE *errorfp;
@@ -43,11 +42,10 @@ void re_read_file_config(int signum)
 /* Read in an existing configuration file */
 
 	p = external_list;
-	hp = human_readable;
 	if ((fp = fopen(total_config_file, "r")) == NULL) {
 		exit_on_error(errorfp, "%s ERROR: Reread - Can not open %s in read mode\n", our_prog_name, total_config_file);
 	} else {
-		switch (read_file_config((void *)&p, (void *)&hp, fp)){
+		switch (read_file_config((void *)&p, fp)){
 
 			case 0: /* No errors */
 			fclose(fp);
@@ -79,44 +77,89 @@ void re_read_file_config(int signum)
 			exit_on_error(errorfp, "%s ERROR: Reread - Unknown error while parsing %s\n", our_prog_name, total_config_file);
 		}
 	}
-
+	go_daemon = 0;
+	status_report(0); /* Update our information file */
+	go_daemon = 1;
 	fclose(errorfp);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- Function acts as a signal handler replacement for SIGUSR2
- On this signal we print some choise information to the screen
+ Function acts as a signal handler replacement for SIGUSR2. On this
+ signal we print some choise information to a file and to the screen.
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void status_report(int signum)
 {
 
+	FILE *errorfp = NULL;
+	FILE *statusfp = NULL;
+	
 	struct program *p;
 	p = external_list;
 	int i;
 
-	fprintf(stderr, "PGR VERSION = %s\n", our_prog_version);
-	fprintf(stderr, "USR HOMEDIR = %s\n", getenv("HOME"));
-	fprintf(stderr, "OUR CNF-DIR = %s\n", total_config_dir);
-	fprintf(stderr, "OUR CNFFILE = %s\n", total_config_file);
-	fprintf(stderr, "OUR PIDFILE = %s\n", total_pid_file);
-	fprintf(stderr, "OUR LOGFILE = %s\n", total_error_file);
-	if (pad1_name) {
-		fprintf(stderr, "OUR PD1NAME = %s\n", pad1_name);
-	}
-	if (stylus1_name) {
-		fprintf(stderr, "OUR ST1NAME = %s\n", stylus1_name);
-	}
-	fprintf(stderr, "%s-user = %d\n", configstring, userconfigversion);
-	fprintf(stderr, "%s-ours = %s\n", configstring, configversion);
-	fprintf(stderr, "ConfigHeaderFields = %d\n", configheaderfields);
-	for (i = 0; i < num_list; i++, p++) {
-		fprintf(stderr, "PGR RECNAME = %s\n", p->class_name);
-		fprintf(stderr, "ST1 PRCURVE = \"%s\"\n", p->stylus1_presscurve);
-	}
-	fprintf(stderr, "PGR RECORDS = %d\n", num_list);
-	fprintf(stderr, "OUR RUN-PID = %d\n", getpid());
+	errorfp = fopen(total_error_file, "w");
 
+/* Open (and truncate) a status log and fill it with information */
+
+	if ((statusfp = fopen(total_status_file, "w")) == NULL) {
+		exit_on_error(errorfp, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_status_file);
+	} else {
+		fclose(errorfp);
+		fprintf(statusfp, "PGR VERSION = %s\n", our_prog_version);
+		fprintf(statusfp, "USR HOMEDIR = %s\n", getenv("HOME"));
+		fprintf(statusfp, "OUR CNF-DIR = %s\n", total_config_dir);
+		fprintf(statusfp, "OUR CNFFILE = %s\n", total_config_file);
+		fprintf(statusfp, "OUR PIDFILE = %s\n", total_pid_file);
+		fprintf(statusfp, "OUR INFFILE = %s\n", total_status_file);
+		fprintf(statusfp, "OUR ERRFILE = %s\n", total_error_file);
+		if (pad1_name) {
+			fprintf(statusfp, "OUR PD1NAME = %s\n", pad1_name);
+		}
+		if (stylus1_name) {
+			fprintf(statusfp, "OUR ST1NAME = %s\n", stylus1_name);
+		}
+		fprintf(statusfp, "%s-user = %d\n", configstring, userconfigversion);
+		fprintf(statusfp, "%s-ours = %s\n", configstring, configversion);
+		fprintf(statusfp, "ConfigHeaderFields = %d\n", configheaderfields);
+		for (i = 0; i < num_list; i++, p++) {
+			fprintf(statusfp, "PGR RECNAME = %s\n", p->class_name);
+			fprintf(statusfp, "ST1 PRCURVE = \"%s\"\n", p->stylus1_presscurve);
+		}
+		fprintf(statusfp, "PGR RECORDS = %d\n", num_list);
+		if (go_daemon) {
+			fprintf(statusfp, "OUR RUN-PID = %d\n", getpid());
+		}
+		fclose(statusfp);
+	}
+
+/* Also print the info to sceen (only if we have been daemonised and act on a -s signal) */
+
+	if (go_daemon) {
+		p = external_list;
+		fprintf(stderr, "PGR VERSION = %s\n", our_prog_version);
+		fprintf(stderr, "USR HOMEDIR = %s\n", getenv("HOME"));
+		fprintf(stderr, "OUR CNF-DIR = %s\n", total_config_dir);
+		fprintf(stderr, "OUR CNFFILE = %s\n", total_config_file);
+		fprintf(stderr, "OUR PIDFILE = %s\n", total_pid_file);
+		fprintf(stderr, "OUR INFFILE = %s\n", total_status_file);
+		fprintf(stderr, "OUR ERRFILE = %s\n", total_error_file);
+		if (pad1_name) {
+			fprintf(stderr, "OUR PD1NAME = %s\n", pad1_name);
+		}
+		if (stylus1_name) {
+			fprintf(stderr, "OUR ST1NAME = %s\n", stylus1_name);
+		}
+		fprintf(stderr, "%s-user = %d\n", configstring, userconfigversion);
+		fprintf(stderr, "%s-ours = %s\n", configstring, configversion);
+		fprintf(stderr, "ConfigHeaderFields = %d\n", configheaderfields);
+		for (i = 0; i < num_list; i++, p++) {
+			fprintf(stderr, "PGR RECNAME = %s\n", p->class_name);
+			fprintf(stderr, "ST1 PRCURVE = \"%s\"\n", p->stylus1_presscurve);
+		}
+		fprintf(stderr, "PGR RECORDS = %d\n", num_list);
+		fprintf(stderr, "OUR RUN-PID = %d\n", getpid());
+	}
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -140,8 +183,9 @@ void clean_up_exit(int signum)
 	}
 	clean_up_exit_in_progress = 1;
 
-	if ((go_daemon) && (!second_instance)) { /* Prevent accidental deletion */
+	if (go_daemon) {
 		unlink(total_pid_file);
+		unlink(total_status_file);
 	}
 
 	if (total_config_dir) {
@@ -158,6 +202,10 @@ void clean_up_exit(int signum)
 
 	if (total_error_file) {
 		free(total_error_file);
+	}
+
+	if (total_status_file) {
+		free(total_status_file);
 	}
 
 	if (num_list) {
@@ -178,7 +226,15 @@ void clean_up_exit(int signum)
 /* pad1_device and stylus1_device should not be explicitly closed by a
    call to XCloseDevice. It leaves a message from X (in the terminal
    where X is started from) saying: "ProcXCloseDevice to close or not ?"
-   Like the program "xsetwacom" does on every device change...*/
+   Instead we just free the XDevice structures created by XOpenDevice */
+
+	if (pad1_device) {
+		XFree(pad1_device);
+	}
+
+	if (stylus1_device) {
+		XFree(stylus1_device);
+	}
 
 	if (display) {
 		XCloseDisplay(display);

@@ -80,26 +80,27 @@ extern char *total_config_dir;	/* The "~/" of the user, plus our config_dir */
 extern char *total_config_file;	/* total_config_dir plus config_file */
 extern char *total_pid_file;	/* total_config_dir plus pid_file */
 extern char *total_error_file;	/* total_config_dir plus error_file */
+extern char *total_status_file;	/* total_config_dir plus status_file */
 extern char *config_dir;	/* Set to a dot directory: .expresskeys */
 extern char *config_file;	/* Set to NULL */
 extern char *pid_file;		/* Set to expresskeys.pid */
 extern char *error_file;	/* Set to error.log */
+extern char *status_file;	/* Set to status.log */
 extern char *config_file_padless;
 extern char *config_file_intuos3;
 extern char *config_file_graphire4;
-
 
 extern int userconfigversion; /* Keep track of which format to parse */
 extern int config3headerfields; /* Nr. of fields in the header of a configversion 3 file */
 extern int configheaderfields; /* The decided number of fields to parse in each file */
 extern int config3fields; /* Nr. of fields in a configversion 3 record: globals.c! */
+extern int config3gr4fields; /* Graphire4 fields, see globals.c! */
 extern int configfields; /* The decided number of fields to parse in each record */
 extern int screen;	/* Active screen. An X thing */
 extern int num_list;	/* Number of programs we currently handle */
-
+extern int is_graphire4; /* Flag for writing out the correct configuration file */
 extern int just_exit;	/* Flag to see if we should exit the program immediately */
 extern int go_daemon;	/* Flag to see if this program is in daemon mode */
-extern int second_instance; /* Flag it if a second instance of a daemon run is tried */
 extern int be_verbose;	/* Flag to see if we should be spitting out info */
 extern int reread_config; /* Flag for memory release if re-reading the config */
 extern int stylus1_mode;	/* Flag to keep track of the stylus mode we are in */
@@ -113,13 +114,15 @@ extern int proximity_in_type;	/* Event type to keep track of - Stylus In */
 /* Our global (internal) functions */
 extern int write_file_config_header(FILE *fp);
 extern int write_file_config(int *ip, FILE *fp);
-extern int read_file_config(int *ip, int *ihp, FILE *fp);
+extern int read_file_config(int *ip, FILE *fp);
 /* get_device_info returns a long to satisfy x86_64 systems */
 extern long get_device_info(Display *display, XDeviceInfo *info, char *name);
 extern int register_events(Display *display, XDeviceInfo *dev_info, char *name);
 extern int toggle_stylus1_mode(Display *display, char *name);
 extern int use_events(Display *display);
 extern int call_xsetwacom(int num);
+extern int identify_device(char *name);
+extern int xerror_handler(Display *display, XErrorEvent *error_event);
 extern void exit_on_error(FILE *fp, char *string1, char *string2, char *string3);
 extern void re_read_file_config(int signum);
 extern void status_report(int signum);
@@ -198,7 +201,7 @@ extern struct configstrings {
 	char *h_key_15_plus;
 	char *h_key_16;
 	char *h_key_16_plus;
-}human_readable [];
+}human_readable [], gr4_human_readable [];
 
 /* End Code */
 

@@ -33,6 +33,7 @@
 
 int register_events(Display *display, XDeviceInfo *dev_info, char *name)
 {
+
 	int i;
 	int count = 0;
 

@@ -28,11 +28,10 @@ int main (int argc, char *argv[])
 	int len = 0;
 
 	struct program *p;
-	struct configstrings *hp;
 
 	FILE *fp = NULL;
 	FILE *errorfp = NULL;
-
+	
 /* Locate the home directory of the user running this program */
 
 	char *user_homedir;
@@ -71,6 +70,16 @@ int main (int argc, char *argv[])
 	}
 	sprintf(total_error_file_block, "%s%s", total_config_dir, error_file);
 	total_error_file = total_error_file_block;
+
+/* Concatenate the full path with the status file name. Store address */
+
+	char *total_status_file_block;
+	len = strlen(total_config_dir) + strlen(status_file) + 1;
+	if ((total_status_file_block = (char *)malloc(len)) == NULL) {
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 4!\n", our_prog_name, "");
+	}
+	sprintf(total_status_file_block, "%s%s", total_config_dir, status_file);
+	total_status_file = total_status_file_block;
 
 /* Try to open the the configuration directory for reading, just as a
    test to see if it exists. A failure here can mean many things, but we
@@ -116,6 +125,10 @@ int main (int argc, char *argv[])
 		exit_on_error(errorfp, "%s ERROR: XInput extension not present on your X server\n", our_prog_name, "");
 	}
 
+/* Register our error handler for Xserver error returns */
+
+	XSetErrorHandler(xerror_handler);
+
 /* Automatically discover, open and register events with the first devices
    that contain the string 'pad' and/or 'stylus' in their xorg.conf "Identifier"
    entries (case insensitive). These devices will be invalidated if the user
@@ -124,6 +137,7 @@ int main (int argc, char *argv[])
 
 	pad1_info = (void *) get_device_info(display, pad1_info_block, pad1_autoname);
 	if (pad1_info) {
+		identify_device(pad1_info->name);
 		if (register_events(display, pad1_info, pad1_info->name)) {
 			pad1_autoname = pad1_info->name;
 		} else {
@@ -255,7 +269,7 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "  -r re-reads the configuration file of a running daemon.\n");
 		fprintf(stderr, "  -v prints info to the screen at many execution points.\n");
 		fprintf(stderr, "  -x sets -v and exits after some important info blocks.\n");
-		fprintf(stderr, "  -s tells a daemon instance to report status (info block).\n");
+		fprintf(stderr, "  -s tells a daemon instance to report status (file/screen).\n");
 		fprintf(stderr, "  -h unconditionally brings up this help text.\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Example1: %s -d (first 'pad' and/or 'stylus' found get used)\n", our_prog_name);
@@ -264,6 +278,7 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Please direct any bug reports or questions to the top address\n");
 		fprintf(stderr, "in the AUTHORS file. This program is _not_ a linuxwacom project.\n");
+		go_daemon = 0; /* Prevent a live PID-file deletion */
 		exit_on_error(errorfp, "", "", "");
 	}
 
@@ -285,8 +300,9 @@ int main (int argc, char *argv[])
 	if ((fp = fopen(total_pid_file, "r")) != NULL) { /* File exists */
 		fgets(pid_buffer, MAXBUFFER, fp);
 		fclose(fp);
-		if (((kill(atoi(pid_buffer), 0)) != NON_VALID)) { /* Live pid-file */
+		if (((kill(atoi(pid_buffer), 0)) != NON_VALID)) {
 			if ((send_sigusr1) || (send_sigusr2) || (send_sigterm)) {
+				go_daemon = 0; /* Prevent a live PID-file deletion */
 				if (send_sigusr1) {
 					if ((kill(atoi(pid_buffer), SIGUSR1)) != NON_VALID) {
 						if (be_verbose) {
@@ -318,7 +334,7 @@ int main (int argc, char *argv[])
 					}
 				}
 			} else {
-				second_instance = 1; /* Flag prevents a PID-file deletion */
+				go_daemon = 0; /* Prevent a live PID-file deletion */
 				exit_on_error(errorfp, "%s ERROR: Another instance of %s seems to be running!\n", our_prog_name, our_prog_name);
 			}
 		} else { /* Dead pid-file */
@@ -351,6 +367,7 @@ int main (int argc, char *argv[])
 			if (!pad1_info) {
 				exit_on_error(errorfp, "%s ERROR: Can not find pad device: %s\n", our_prog_name, pad1_name);
 			}
+			identify_device(pad1_name);
 			if (!register_events(display, pad1_info, pad1_name)) {
 				exit_on_error(errorfp, "%s ERROR: Could not register any pad events with %s\n", our_prog_name, pad1_name);
 			}
@@ -392,22 +409,26 @@ int main (int argc, char *argv[])
 
 /* Now determine what the config file will be named as */
 
+if (!is_graphire4) {
 	if ((pad1_name) && (stylus1_name)) {
 		config_file = config_file_intuos3;
 	} else {
 		if (stylus1_name) {
 			config_file = config_file_padless;
 		} else {
-			config_file = config_file_intuos3; /* User error? 'pad' without 'stylus'! */
+			config_file = config_file_intuos3; /* User xorg.conf error? 'pad' without 'stylus'! */
 		}
 	}
+} else {
+	config_file = config_file_graphire4;
+}
 
 /* Concatenate the full path with the config file name. Store address */
 
 	char *total_config_file_block;
 	len = strlen(total_config_dir) + strlen(config_file) + 1;
 	if ((total_config_file_block = (char *)malloc(len)) == NULL) {
-		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 4!\n", our_prog_name, "");
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 5!\n", our_prog_name, "");
 	}
 	sprintf(total_config_file_block, "%s%s", total_config_dir, config_file);
 	total_config_file = total_config_file_block;
@@ -418,7 +439,8 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "OUR CNF-DIR = %s\n", total_config_dir);
 		fprintf(stderr, "OUR CNFFILE = %s\n", total_config_file);
 		fprintf(stderr, "OUR PIDFILE = %s\n", total_pid_file);
-		fprintf(stderr, "OUR LOGFILE = %s\n", total_error_file);
+		fprintf(stderr, "OUR INFFILE = %s\n", total_status_file);
+		fprintf(stderr, "OUR ERRFILE = %s\n", total_error_file);
 		if (pad1_name) {
 			fprintf(stderr, "OUR PD1NAME = %s\n", pad1_name);
 		}
@@ -446,15 +468,11 @@ int main (int argc, char *argv[])
 	}
 	fclose(fp);
 
-/* Read in an existing configuration file */
-
 	p = external_list;
-	hp = human_readable;
 	if ((fp = fopen(total_config_file, "r")) == NULL) {
 		exit_on_error(errorfp, "%s ERROR: Can not open %s in read mode\n", our_prog_name, total_config_file);
 	} else {
-		switch (read_file_config((void *)&p, (void *)&hp, fp)){
-
+		switch (read_file_config((void *)&p, fp)){
 			case 0: /* No errors */
 			fclose(fp);
 			break; /* OBS An identical list of error code returns exist in the on_signal.c
@@ -503,6 +521,14 @@ int main (int argc, char *argv[])
 		|| (signal(SIGHUP, clean_up_exit) == SIG_ERR)
 		|| (signal(SIGTERM, clean_up_exit) == SIG_ERR)) {
 		exit_on_error(errorfp, "%s ERROR: Failed to modify signal handling!\n", our_prog_name, "");
+	}
+
+/* Store whatever information we have in the status file (silent use of the -s switch */
+
+	if (go_daemon) {
+		go_daemon = 0;
+		status_report(0);
+		go_daemon = 1;
 	}
 
 /* Ready to launch in the foreground or as a daemon.

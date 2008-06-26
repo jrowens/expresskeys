@@ -1,4 +1,60 @@
 
+_Version 0.3.1 1 Sep 2006_
+
+* Graphire4 support. And what a chore it was! The task has revealed
+weaknesses in the overall code structuring which _must_ be attended to.
+So, a long time will pass on this end doing nothing but code refactoring.
+Graphire4 got hacked in by some serious "spaghetti"...
+
+OBSERVE: linuxwacom-0.7.5 or greater is _required_ for Graphire4 support!
+
+In that release an option called GetTabletID was introduced (in xsetwacom
+version 0.0.7), which gives us a reliable and future proof way of identifying
+the tablet model any device belongs to (pad, stylus etc).
+
+The function identify_device can be found in the exec_shell.c file, where
+presently only Graphire4 as a family is registered. A finer grained division
+is planned so that correct configuration files can be written out for the
+Graphire4 BlueTooth, which lacks a Scroll Wheel, and the Intuos3 4x5 with
+its single Touch Strip and 4 buttons.
+
+Thanks go to Carsten Schurig for e-mail access to a real Graphire4.
+Imagination and deducing can only produce the code, not verify it.
+
+And, as a sidenote to the verifying part, the Scroll Wheel of a Graphire4
+triggers button press/release events, (up = button 4, down = button 5) not
+axis motion events as has been stated on the linuxwacom web pages.
+
+* The -s switch to get status from a running program was added in the last
+24 hours before the 0.3.0 release, without much thought. It turns out not
+to be particularly useful in the intended manner. Standard error (stderr)
+where it prints the report is private to each shell session. So if the
+program already has been launched by one process, the next one who queries
+from another shell will see nothing.
+
+Therefore we now save a copy of the status output as a file as well in:
+~/.expresskeys/status.log The file gets created automatically at a daemon
+launch (updated with each -s query) and is deleted by a normal program exit.
+
+* Inform the user about the different values for a PressCurve, as chosen by
+the wacomcpl program, already in the initial _configuration_ file. Nice to
+have a copy nearby when doing manual editing.
+
+* Implemented a rudimentary error handler (xerror_handler in on_error.c) for
+Xserver error returns. It is mostly a cosmetic thing, but now we can save the
+message in error.log as well. The downside is that some of the informative
+text from an unhandled X 'crash' is lost, like exactly which function call
+that was involved. This can of course be rectified with a more complete handler,
+but then the exit_on_error function needs additional parametres, and all the
+calls to it need adjustments... Some other day.
+
+* Discover the real mode of a stylus at program start, instead of assuming it
+to be Absolute.
+
+* Fixed a bug where -d together with any of -h, -s, -r and -k would delete a
+live PID-file.
+
+
 _Version 0.3.0 27 Jul 2006_
 
 * Finally and totally obliterated the src-expresskeysconf directory.
@@ -23,11 +79,11 @@ a "padless.conf1" or an "intuos3.conf1" file is written out. Apart from
 only containing relevant record fields, the headers of these files are
 tagged with device "Identifier" strings from xorg.conf, like:
 
-_intuos3.conf1_						_padless.conf1_
+_intuos3.conf1_                         _padless.conf1_
 
-ConfigVersion 3						ConfigVersion 3
-Identifier1Pad 1stIntuos3Pad		Identifier1Pad LACKING
-Identifier1Sty 1stIntuos3Stylus1	Identifier1Sty Stylus1
+ConfigVersion 3                         ConfigVersion 3
+Identifier1Pad 1stIntuos3Pad            Identifier1Pad LACKING
+Identifier1Sty 1stIntuos3Stylus1        Identifier1Sty Stylus1
 
 The TODO file - better known as the "Wish-list" - hints towards why this
 filename change has become desirable...

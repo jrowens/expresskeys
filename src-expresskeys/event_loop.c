@@ -218,7 +218,7 @@ int use_events(Display *display)
 
 /* Next we look for Touch Strip events */
 
-			if (Event.type == motion_type) {
+			if ((Event.type == motion_type) && (!is_graphire4)) {
 				if (pad1_info) {
 
 					if (p->handle_touch) {
@@ -286,8 +286,8 @@ int use_events(Display *display)
 										}
 									}
 								}
-							elder_rotation = old_rotation;
-							old_rotation = rotation;
+								elder_rotation = old_rotation;
+								old_rotation = rotation;
 							}
 
 /* Right Touch Strip */
@@ -336,8 +336,8 @@ int use_events(Display *display)
 										}
 									}
 								}
-							elder_throttle = old_throttle;
-							old_throttle = throttle;
+								elder_throttle = old_throttle;
+								old_throttle = throttle;
 							}
 						}
 					}
@@ -377,40 +377,73 @@ Right ExpressKey Pad
 
 					button = (XDeviceButtonEvent *) &Event;
 					if (button->deviceid == pad1_info->id) {
-						button_index = &p->key_9;
 
-						for (i = 9; i < button->button; i++) {
-							button_index++;
-							button_index++;
-						}
+						if (button->button >= 9) {
+							button_index = &p->key_9;
 
-						if (*button_index == TOGGLE_STYLUS1) {
-							if (stylus1_info) {
+							for (i = 9; i < button->button; i++) {
+								button_index++;
+								button_index++;
+							}
+
+							if (*button_index == TOGGLE_STYLUS1) {
+								if (stylus1_info) {
+									if (be_verbose) {
+										fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+									}
+									toggle_stylus1_mode(display, stylus1_name);
+								}
+							} else if ((*button_index >= STYLUS1_CURVE_DOWNWARD)
+										&& (*button_index <= STYLUS1_CURVE_UPWARD)
+										&& (stylus1_info)) {
 								if (be_verbose) {
 									fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
 								}
-								toggle_stylus1_mode(display, stylus1_name);
-							}
-						} else if ((*button_index >= STYLUS1_CURVE_DOWNWARD)
-									&& (*button_index <= STYLUS1_CURVE_UPWARD)
-									&& (stylus1_info)) {
-							if (be_verbose) {
-								fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
-							}
-							call_xsetwacom(*button_index);
+								call_xsetwacom(*button_index);
 
-						} else {
-							if (*button_index) {
-								fake_event(display, *button_index, True, CurrentTime );
-								if (be_verbose) {
-									fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+							} else {
+								if (*button_index) {
+									fake_event(display, *button_index, True, CurrentTime );
+									if (be_verbose) {
+										fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+									}
+								}
+								button_index++;
+								if (*button_index) {
+									fake_event(display, *button_index, True, CurrentTime );
+									if (be_verbose) {
+										fprintf(stderr, "BTN+ %d = %d dn\n", button->button, *button_index);
+									}
 								}
 							}
-							button_index++;
-							if (*button_index) {
-								fake_event(display, *button_index, True, CurrentTime );
-								if (be_verbose) {
-									fprintf(stderr, "BTN+ %d = %d dn\n", button->button, *button_index);
+
+/*Graphire4 hack*/		} else if (p->handle_touch) {
+							if (button->button == 4) {
+								if (p->l_touch_up) {
+									fake_event(display, p->l_touch_up, True, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLUP = %d dn\n", p->l_touch_up);
+									}
+								}
+								if (p->l_touch_up_plus) {
+									fake_event(display, p->l_touch_up_plus, True, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLUP+ = %d dn\n", p->l_touch_up_plus);
+									}
+								}
+							}
+							if (button->button == 5) {
+								if (p->l_touch_down) {
+									fake_event(display, p->l_touch_down, True, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLDN = %d dn\n", p->l_touch_down);
+									}
+								}
+								if (p->l_touch_down_plus) {
+									fake_event(display, p->l_touch_down_plus, True, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLDN+ = %d dn\n", p->l_touch_down_plus);
+									}
 								}
 							}
 						}
@@ -425,38 +458,71 @@ Right ExpressKey Pad
 
 					button = (XDeviceButtonEvent *) &Event;
 					if (button->deviceid == pad1_info->id) {
-						button_index = &p->key_9;
 
-						for (i = 9; i < button->button; i++) {
-							button_index++;
-							button_index++;
-						}
+						if (button->button >= 9) {
+							button_index = &p->key_9;
 
-						if (*button_index == TOGGLE_STYLUS1) {
-							if (stylus1_info) {
+							for (i = 9; i < button->button; i++) {
+								button_index++;
+								button_index++;
+							}
+
+							if (*button_index == TOGGLE_STYLUS1) {
+								if (stylus1_info) {
+									if (be_verbose) {
+										fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+									}
+								}
+							} else if ((*button_index >= STYLUS1_CURVE_DOWNWARD)
+										&& (*button_index <= STYLUS1_CURVE_UPWARD)
+										&& (stylus1_info)) {
 								if (be_verbose) {
 									fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
 								}
-							}
-						} else if ((*button_index >= STYLUS1_CURVE_DOWNWARD)
-									&& (*button_index <= STYLUS1_CURVE_UPWARD)
-									&& (stylus1_info)) {
-							if (be_verbose) {
-								fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
-							}
-						} else {
-							button_index++;
-							if (*button_index) {
-								fake_event(display, *button_index, False, CurrentTime );
-								if (be_verbose) {
-									fprintf(stderr, "BTN+ %d = %d up\n", button->button, *button_index);
+							} else {
+								button_index++;
+								if (*button_index) {
+									fake_event(display, *button_index, False, CurrentTime );
+									if (be_verbose) {
+										fprintf(stderr, "BTN+ %d = %d up\n", button->button, *button_index);
+									}
+								}
+								button_index--;
+								if (*button_index) {
+									fake_event(display, *button_index, False, CurrentTime );
+									if (be_verbose) {
+										fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+									}
 								}
 							}
-							button_index--;
-							if (*button_index) {
-								fake_event(display, *button_index, False, CurrentTime );
-								if (be_verbose) {
-									fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+
+/*Graphire4 hack*/		} else if (p->handle_touch) {
+							if (button->button == 4) {
+								if (p->l_touch_up_plus) {
+									fake_event(display, p->l_touch_up_plus, False, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLUP+ = %d up\n", p->l_touch_up_plus);
+									}
+								}
+								if (p->l_touch_up) {
+									fake_event(display, p->l_touch_up, False, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLUP = %d up\n", p->l_touch_up);
+									}
+								}
+							}
+							if (button->button == 5) {
+								if (p->l_touch_down_plus) {
+									fake_event(display, p->l_touch_down_plus, False, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLDN+ = %d up\n", p->l_touch_down_plus);
+									}
+								}
+								if (p->l_touch_down) {
+									fake_event(display, p->l_touch_down, False, CurrentTime);
+									if (be_verbose) {
+										fprintf(stderr, "SWHLDN = %d up\n", p->l_touch_down);
+									}
 								}
 							}
 						}

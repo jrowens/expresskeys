@@ -27,7 +27,7 @@
  keywords). Returns nothing unless an error occured.
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int read_file_config(int *ip, int *ihp, FILE *fp)
+int read_file_config(int *ip, FILE *fp)
 {
 
 	struct program *p;
@@ -35,7 +35,12 @@ int read_file_config(int *ip, int *ihp, FILE *fp)
 
 	/* Convert to long for x86_64 systems */
 	p = (void *)(long)*ip;
-	hp = (void *)(long)*ihp;
+
+	if (is_graphire4) {
+		hp = gr4_human_readable;
+	} else {
+		hp = human_readable;
+	}
 
 	int i;
 	int j;
@@ -47,6 +52,7 @@ int read_file_config(int *ip, int *ihp, FILE *fp)
 	int sane = 0;
 	int programname_alloced = 0;
 	int presscurve_alloced = 0;
+	int re_aligned = 0;
 
 	int *field_index = 0;
 	const char *string_index = 0;
@@ -124,6 +130,9 @@ int read_file_config(int *ip, int *ihp, FILE *fp)
 						if (pad1_info) {
 							configfields = config3fields; /* Full 'pad' and 'stylus' */
 						}
+						if (is_graphire4) {
+							configfields = config3gr4fields; /* Tiny 'pad' and 'stylus' */
+						}
 						configheaderfields = config3headerfields;
 					} else {
 						return 3;		/* Add handling when next version exist! */
@@ -176,6 +185,7 @@ int read_file_config(int *ip, int *ihp, FILE *fp)
 					if ((newline = (strchr(read_buffer, '\n'))) != NULL) {
 
 						keyword = hp->h_class_name;
+						re_aligned = 0;
 
 /* Keyword loop */		for (i = 0; i < configfields; i++) {
 
@@ -253,9 +263,24 @@ int read_file_config(int *ip, int *ihp, FILE *fp)
  structure through string length+1). */
 											field_index = &p->handle_touch;
 											string_index = hp->h_handle_touch;
-											for (j = 0; j < (configfields - 2); j++) {
+											for (j = 0; j <= (configfields - 2); j++) {
 												slen = strlen(string_index);
 												if ((strcmp(string_index, keyword)) == 0) {
+/* Time for another ugly hack...*/					if (is_graphire4) {
+														if ((strcmp(keyword, "LeftButton")) == 0) {
+															field_index = &p->key_9;
+														}
+														if ((strcmp(keyword, "LeftButtonPlus")) == 0) {
+															field_index = &p->key_9_plus;
+														}
+														if ((strcmp(keyword, "RightButton")) == 0) {
+															field_index = &p->key_13;
+														}
+														if ((strcmp(keyword, "RightButtonPlus")) == 0) {
+															field_index = &p->key_13_plus;
+														}
+													}
+/* Just until I understand!*/
 /* Write the field to memory structure */			*field_index = atoi(write_buffer);
 													num_field++;
 													break;
@@ -269,6 +294,12 @@ int read_file_config(int *ip, int *ihp, FILE *fp)
 								}
 							}
 							keyword = keyword+klen+1; /* Steps to the next string member in the struct */
+/* This is such a HACK*/	if (!re_aligned) {
+/* Because I don't know*/		if ((programname_alloced) && (presscurve_alloced)) {
+/* How to traverse structs*/		keyword = hp->h_handle_touch;
+/* Refactor after graphire4!*/		re_aligned = 1;
+								}
+							}
 						}
 /* End keyword loop */
 					} else {

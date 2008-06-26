@@ -1,6 +1,7 @@
 
 _Changes since last version. Executive summary_
 
-- New configuration file structure (open-ended). Automatic stylus PressCurve
-  usage. Automatic device detection on program start-up.
+- Graphire4 support (2 buttons and 1 wheel).
+
+OBSERVE: linuxwacom-0.7.5 or greater is _required_ for Graphire4 support!
 
