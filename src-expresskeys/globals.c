@@ -32,7 +32,7 @@ char *configstring = "ConfigVersion"; /* Searchable string in the config file */
 char *configversion = "3"; /* Our version. Remember to change it if necessary! */
 char *pad1idstring = "Identifier1Pad";		/* Marker to bind tablet and config file */
 char *stylus1idstring = "Identifier1Sty";	/* Marker that can't bind... */
-char *our_prog_version = "0.3.1"; /* Our version. Remember to change it! */
+char *our_prog_version = "0.3.2"; /* Our version. Remember to change it! */
 char *our_prog_name;
 char *pad1_name = 0;
 char *pad1_autoname = "pad";
@@ -165,8 +165,8 @@ struct configstrings gr4_human_readable[] = {
 "ScrollWheelUp", "ScrollWheelUpPlus",
 "ScrollWheelDown", "ScrollWheelDownPlus",
 "dummy", "dummy", "dummy", "dummy", "LeftButton", "LeftButtonPlus",
-"dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "RightButton", "RightButtonPlus",
-"dummy", "dummy", "dummy", "dummy", "dummy", "dummy" }
+"RightButton", "RightButtonPlus", "dummy", "dummy", "dummy", "dummy",
+"dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy" }
 };
 
 /* End Code */

@@ -1,4 +1,13 @@
 
+_Version 0.3.2 14 Sep 2006_
+
+* Graphire4 button ordering was changed in linuxwacom-0.7.5-2 so that
+Left Button sends a 9 and Right Button a 10 internally, instead of the
+9 and 13 in previous drivers. Expresskeys has been updated accordingly.
+This is the only change in 0.3.2! I'm still busy with the large refactoring
+of a new codebase.
+
+
 _Version 0.3.1 1 Sep 2006_
 
 * Graphire4 support. And what a chore it was! The task has revealed
@@ -6,7 +15,7 @@ weaknesses in the overall code structuring which _must_ be attended to.
 So, a long time will pass on this end doing nothing but code refactoring.
 Graphire4 got hacked in by some serious "spaghetti"...
 
-OBSERVE: linuxwacom-0.7.5 or greater is _required_ for Graphire4 support!
+OBSERVE: linuxwacom-0.7.5-2 or greater is _required_ for Graphire4 support!
 
 In that release an option called GetTabletID was introduced (in xsetwacom
 version 0.0.7), which gives us a reliable and future proof way of identifying

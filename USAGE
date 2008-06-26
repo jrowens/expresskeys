@@ -22,10 +22,10 @@ in proximity.
 
 ///////////////////////////////////////////////////////////////////////////
 
-Important: linuxwacom-0.7.5 or greater is _required_ for Graphire4 support!
+Important: linuxwacom-0.7.5-2 or greater is _required_ for Graphire4 support!
 
 A quick way to find out which release you have installed is to do a
-"xsetwacom -V" in a terminal (it should say 0.0.7 or more for linuxwacom-0.7.5
+"xsetwacom -V" in a terminal (it should say 0.0.7 or more for linuxwacom-0.7.5-2
 and newer releases). Ask your distro maintainers to update the linuxwacom
 packages if they are too old. Or install from source yourself, it is not that
 hard...

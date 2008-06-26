@@ -110,7 +110,7 @@ int call_xsetwacom(int num)
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Function uses the "popen" command which creates a pipe, forks and invokes
  a shell where xsetwacom can be run. First action is to ensure that version
- 0.0.7 or greater of xsetwacom is present (ie linuxwacom-0.7.5 where the
+ 0.0.7 or greater of xsetwacom is present (ie linuxwacom-0.7.5-2 where the
  option GetTabletID was introduced). Thereafter we match the tablet decimal
  number string against known Graphire4 numbers. A full table can be found in
  src/xdrv/wcmUSB.c of the linuxwacom sources (Hex numbers).

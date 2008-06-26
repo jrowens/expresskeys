@@ -163,8 +163,8 @@ int write_file_config(int *ip, FILE *fp)
 		fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_l_touch_down_plus, p->l_touch_down_plus);
 		fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_9, p->key_9);
 		fprintf(fp, "%s		%d	# Extra keycode\n\n", hp->h_key_9_plus, p->key_9_plus);
-		fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_13, p->key_13);
-		fprintf(fp, "%s		%d	# Extra keycode\n\n", hp->h_key_13_plus, p->key_13_plus);
+		fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_10, p->key_10);
+		fprintf(fp, "%s		%d	# Extra keycode\n\n", hp->h_key_10_plus, p->key_10_plus);
 	}
 	return 0;
 }

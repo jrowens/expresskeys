@@ -137,6 +137,7 @@ void status_report(int signum)
 
 	if (go_daemon) {
 		p = external_list;
+		fprintf(stderr, "\n");
 		fprintf(stderr, "PGR VERSION = %s\n", our_prog_version);
 		fprintf(stderr, "USR HOMEDIR = %s\n", getenv("HOME"));
 		fprintf(stderr, "OUR CNF-DIR = %s\n", total_config_dir);

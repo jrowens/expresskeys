@@ -1,7 +1,7 @@
 
 _Changes since last version. Executive summary_
 
-- Graphire4 support (2 buttons and 1 wheel).
+- Graphire4 support adjusted for new button ordering in linuxwacom-0.7.5-2
 
-OBSERVE: linuxwacom-0.7.5 or greater is _required_ for Graphire4 support!
+OBSERVE: linuxwacom-0.7.5-2 or greater is _required_ for Graphire4 support!
 

@@ -274,10 +274,10 @@ int read_file_config(int *ip, FILE *fp)
 															field_index = &p->key_9_plus;
 														}
 														if ((strcmp(keyword, "RightButton")) == 0) {
-															field_index = &p->key_13;
+															field_index = &p->key_10;
 														}
 														if ((strcmp(keyword, "RightButtonPlus")) == 0) {
-															field_index = &p->key_13_plus;
+															field_index = &p->key_10_plus;
 														}
 													}
 /* Just until I understand!*/
