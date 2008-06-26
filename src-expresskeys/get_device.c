@@ -42,6 +42,7 @@ int proximity_in_type;
 int proximity_out_type;
 
 /* Used in many situations as identification, for math and for flow control: */
+const int bee = 5;
 const int i3 = 4;
 const int i3s = 3;
 const int g4 = 2;
@@ -99,6 +100,7 @@ static int identify_device(char* device_name)
 {
 	ok_xsetwacom = 0;
 
+	const char* cintiq_20wsx = "197"; /* 0xC5 */
 	const char* cintiq_21UX = "63"; /* 0x3F */
 	const char* i3_6x8 = "177"; /* 0xB1 */
 	const char* i3_9x12 = "178"; /* 0xB2 */
@@ -172,6 +174,9 @@ static int identify_device(char* device_name)
 
 		if (ok_value) {
 			len = strcspn(read_buffer, " \t\n");
+			if ((strncmp(read_buffer, cintiq_20wsx, len)) == 0) {
+				return bee;
+			}
 			if ((strncmp(read_buffer, cintiq_21UX, len)) == 0) {
 				return i3;
 			}

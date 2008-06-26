@@ -74,6 +74,8 @@ extern struct button_data {
 	int repeat14 [1];
 	int repeat15 [1];
 	int repeat16 [1];
+	int repeat17 [1];
+	int repeat18 [1];
 	int button9[MAXKEYS];
 	int button10[MAXKEYS];
 	int button11[MAXKEYS];
@@ -82,10 +84,20 @@ extern struct button_data {
 	int button14[MAXKEYS];
 	int button15[MAXKEYS];
 	int button16[MAXKEYS];
+	int button17[MAXKEYS];
+	int button18[MAXKEYS];
 } button_data[];
 
 
 /* Data structures (consolidation): */
+
+extern struct bee_program {
+	struct bee_program* default_program;
+	struct common_data common_data;
+	struct touch_data touch_data;
+	struct button_data button_data;
+} bee_internal_list[], bee_1_external_list[], bee_2_external_list[],
+							bee_3_external_list[];
 
 extern struct i3_program {
 	struct i3_program* default_program;
@@ -165,6 +177,8 @@ extern struct button_string {
 	const char* repeat14;
 	const char* repeat15;
 	const char* repeat16;
+	const char* repeat17;
+	const char* repeat18;
 	const char* button9;
 	const char* button10;
 	const char* button11;
@@ -173,10 +187,18 @@ extern struct button_string {
 	const char* button14;
 	const char* button15;
 	const char* button16;
+	const char* button17;
+	const char* button18;
 } button_string[];
 
 
 /* String structures (consolidation): */
+
+extern struct bee_configstrings {
+	struct common_string common_string;
+	struct touch_string touch_string;
+	struct button_string button_string;
+} bee_configstrings[];
 
 extern struct i3_configstrings {
 	struct common_string common_string;
@@ -209,6 +231,7 @@ extern struct nop_configstrings {
 /* Data structure (final consolidation): */
 
 extern struct model_index {
+	struct bee_program* bee;
 	struct i3_program* i3;
 	struct i3s_program* i3s;
 	struct g4_program* g4;

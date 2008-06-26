@@ -41,12 +41,16 @@ const char* total_file3_intuos3s;
 const char* total_file1_intuos3;
 const char* total_file2_intuos3;
 const char* total_file3_intuos3;
+const char* total_file1_bee;
+const char* total_file2_bee;
+const char* total_file3_bee;
 
 /* Externals: */
 
 extern int have_pad;
 extern int have_padless;
 
+extern const int bee;
 extern const int i3;
 extern const int i3s;
 extern const int g4;
@@ -79,6 +83,20 @@ static void mark_device(const char* device, int row, int column,
 							const char* configfile)
 {
 	if (device == pad_string) {
+		if (row == bee) {
+			struct bee_program* p = NULL;
+			if (column == 0) {
+				p = bee_1_external_list;
+			} else if (column == 1) {
+				p = bee_2_external_list;
+			} else if (column == 2) {
+				p = bee_3_external_list;
+			}
+			p->common_data.padname = pad_name[row][column];
+			p->common_data.padid = pad_id[row][column];
+			p->common_data.configfile = configfile;
+			return;
+		}
 		if (row == i3) {
 			struct i3_program* p = NULL;
 			if (column == 0) {
@@ -150,6 +168,31 @@ static void mark_device(const char* device, int row, int column,
 	}
 
 	if (device == stylus_string) {
+		if ((column == MAXPAD*bee) || (column == (MAXPAD*bee)+1)
+			|| (column == (MAXPAD*bee)+2)) {
+			struct bee_program* p = NULL;
+			if (column == MAXPAD*bee) {
+				p = bee_1_external_list;
+			} else if (column == (MAXPAD*bee)+1) {
+				p = bee_2_external_list;
+			} else if (column == (MAXPAD*bee)+2) {
+				p = bee_3_external_list;
+			}
+			if (row == 0) {
+				p->common_data.sty1name =
+						stylus_name[row][column];
+				p->common_data.sty1id = stylus_id[row][column];
+				p->common_data.sty1mode =
+						stylus_mode[row][column];
+			} else if (row == 1) {
+				p->common_data.sty2name =
+						stylus_name[row][column];
+				p->common_data.sty2id = stylus_id[row][column];
+				p->common_data.sty2mode =
+						stylus_mode[row][column];
+			}
+			return;
+		}
 		if ((column == MAXPAD*i3) || (column == (MAXPAD*i3)+1)
 			|| (column == (MAXPAD*i3)+2)) {
 			struct i3_program* p = NULL;
@@ -299,8 +342,35 @@ static void mark_config(const char* device, int row, int column)
 	const char* file1_intuos3 = "/intuos3.conf1";
 	const char* file2_intuos3 = "/intuos3.conf2";
 	const char* file3_intuos3 = "/intuos3.conf3";
+	const char* file1_bee = "/cintiq20.conf1";
+	const char* file2_bee = "/cintiq20.conf2";
+	const char* file3_bee = "/cintiq20.conf3";
 
 	switch (row) {
+/* pad Cintiq 20wsx */
+	case 5:
+		switch (column) {
+		case 0:
+			total_file1_bee = path_malloc
+				((void*)total_config_dir, (void*)file1_bee);
+			mark_device(device, row, column, total_file1_bee);
+			return;
+
+		case 1:
+			total_file2_bee = path_malloc
+				((void*)total_config_dir, (void*)file2_bee);
+			mark_device(device, row, column, total_file2_bee);
+			return;
+
+		case 2:
+			total_file3_bee = path_malloc
+				((void*)total_config_dir, (void*)file3_bee);
+			mark_device(device, row, column, total_file3_bee);
+			return;
+
+		default:
+			return;
+		}
 /* pad Intuos3/Cintiq 21UX */
 	case 4:
 		switch (column) {

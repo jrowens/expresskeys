@@ -30,12 +30,14 @@ const char* configversion = "4";
 
 /* Externals: */
 
+extern const int bee;
 extern const int i3;
 extern const int i3s;
 extern const int g4;
 extern const int g4b;
 extern const int nop;
 
+extern const int bee_num_list;
 extern const int i3_num_list;
 extern const int i3s_num_list;
 extern const int g4_num_list;
@@ -43,6 +45,158 @@ extern const int g4b_num_list;
 extern const int nop_num_list;
 
 extern const char* our_prog_name;
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Write a set of records tuned for a Cintiq 20wsx/'bee' tablet:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_bee(FILE* fp)
+{
+	int i;
+
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+	const char* sec_tail = "# Seconds (Max 10 - Min 0.01 - Or no delay)";
+	const char* tch_onoff = "# Switch 1/0 (Enable/Disable Touch Strips)";
+	const char* key_tail = "# Keycodes (Max number of keys to send is";
+	const char* tht_tail = "# Switch 1/0 (Finger held at top repeat keys)";
+	const char* thb_tail="# Switch 1/0 (Finger held at bottom repeat keys)";
+	const char* but_tail="# Switch 1/0 (Press and hold button repeat keys)";
+
+	struct bee_program* ip;
+	ip = bee_internal_list;
+	struct bee_configstrings* sp;
+	sp = bee_configstrings;
+
+	for (i = 0; i < bee_num_list; i++, ip++) {
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->common_string.keycode_delay, *ip->common_data.keycode_delay,
+				*(ip->common_data.keycode_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->button_string.repeat_after, *ip->button_data.repeat_after,
+				*(ip->button_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->button_string.repeat_delay, *ip->button_data.repeat_delay,
+				*(ip->button_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->touch_string.repeat_after, *ip->touch_data.repeat_after,
+				*(ip->touch_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->touch_string.repeat_delay, *ip->touch_data.repeat_delay,
+				*(ip->touch_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i	%s\n\n",
+		sp->touch_string.handle_touch,
+				*ip->touch_data.handle_touch, tch_onoff);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.left_touch_up,
+			*ip->touch_data.left_touch_up,
+			*(ip->touch_data.left_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.left_touch_down,
+			*ip->touch_data.left_touch_down,
+			*(ip->touch_data.left_touch_down+1), key_tail, MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_left_up,
+				*ip->touch_data.repeat_left_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_left_down,
+				*ip->touch_data.repeat_left_down, thb_tail);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.right_touch_up,
+			*ip->touch_data.right_touch_up,
+			*(ip->touch_data.right_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.right_touch_down,
+			*ip->touch_data.right_touch_down,
+			*(ip->touch_data.right_touch_down+1), key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_right_up,
+				*ip->touch_data.repeat_right_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_right_down,
+				*ip->touch_data.repeat_right_down, thb_tail);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button9, *ip->button_data.button9,
+				*(ip->button_data.button9+1), key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button10, *ip->button_data.button10,
+				*(ip->button_data.button10+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button11, *ip->button_data.button11,
+				*(ip->button_data.button11+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button12, *ip->button_data.button12,
+				*(ip->button_data.button12+1),key_tail,MAXKEYS);
+		/* button 17 is on the left side */
+		fprintf(fp, "%s		%i %i	%s %i)\n\n",
+		sp->button_string.button17, *ip->button_data.button17,
+				*(ip->button_data.button17+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat9, *ip->button_data.repeat9, but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat10, *ip->button_data.repeat10,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat11, *ip->button_data.repeat11,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat12, *ip->button_data.repeat12,but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat17, *ip->button_data.repeat17,but_tail);
+
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button13, *ip->button_data.button13,
+				*(ip->button_data.button13+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button14, *ip->button_data.button14,
+				*(ip->button_data.button14+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button15, *ip->button_data.button15,
+				*(ip->button_data.button15+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button16, *ip->button_data.button16,
+				*(ip->button_data.button16+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->button_string.button18, *ip->button_data.button18,
+				*(ip->button_data.button18+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat13, *ip->button_data.repeat13,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat14, *ip->button_data.repeat14,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat15, *ip->button_data.repeat15,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat16, *ip->button_data.repeat16,but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat18, *ip->button_data.repeat18,but_tail);
+	}
+}
+
+
+
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Write a set of records tuned for a Intuos3/Cintiq tablet:
@@ -486,6 +640,24 @@ static void write_preface(FILE* fp, const int model)
 "# Some ASCII art showing the \"default\" program record:\n"
 "#\n";
 
+	const char *model_bee =
+"# Cintiq 20 ExpressKeys Pad\n"
+"#             Left         Right\n"
+"#           +---+---+    +---+---+\n"
+"#           |N/A|N/A|    |N/A|N/A|\n"
+"#           +---+---+    +---+---+\n"
+"# Back Left                         Back Right\n"
+"#  +----+   +---+---+    +---+---+   +----+\n"
+"#  |    |   |   17  |    |   18  |   |    |\n"
+"#  | T  |   +---+---+    +---+---+   | T  |\n"
+"#  | O  |   |   | 9 |    | 13|   |   | O  |\n"
+"#  | U  |   |11 |---|    +---+ 15|   | U  |\n"
+"#  | C  |   |   |10 |    | 14|   |   | C  |\n"
+"#  | H  |   +---+---+    +---+---+   | H  |\n"
+"#  |    |   |   12  |    |   16  |   |    |\n"
+"#  +----+   +---+---+    +---+---+   +----+\n"
+"# The N/A keys aren't supported yet\n";
+
 	const char* model_i3si3 =
 "# Left ExpressKeys Pad\n"
 "# ------------\n"
@@ -586,6 +758,9 @@ static void write_preface(FILE* fp, const int model)
 		fprintf(fp, "%s", model_notnop1);
 	}
 
+	if (model == bee)
+		fprintf(fp, "%s", model_bee);
+
 	if ((model == i3s) || (model == i3)) {
 		fprintf(fp, "%s", model_i3si3);
 	}
@@ -631,7 +806,9 @@ static void write_if_lacking(FILE* errorfp, const char* configfile, int model)
 
 		write_preface(fp, model);
 
-		if (model == i3) {
+		if (model == bee) {
+			write_bee(fp);
+		} else if (model == i3) {
 			write_i3(fp);
 		} else if (model == i3s) {
 			write_i3s(fp);
@@ -666,6 +843,9 @@ void write_config(FILE* errorfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->bee->common_data.configfile)
+			write_if_lacking(errorfp,
+					mip->bee->common_data.configfile, bee);
 		if (mip->i3->common_data.configfile) {
 			write_if_lacking(errorfp,
 					mip->i3->common_data.configfile, i3);

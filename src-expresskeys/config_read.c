@@ -43,6 +43,7 @@ static int st2_prcurve_malloced;
 extern int be_verbose;
 extern int reread_config;
 
+extern const int bee;
 extern const int i3;
 extern const int i3s;
 extern const int g4;
@@ -300,6 +301,7 @@ static void prune_field(char* field_begin, char* write_buffer)
 static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 								const int model)
 {
+	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
 	struct g4_program* pg4;
@@ -309,6 +311,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 	struct touch_data* tdp = NULL;
 	struct wheel_data* wdp = NULL;
 	struct button_data* bdp = NULL;
+	struct bee_configstrings* cbee;
 	struct i3_configstrings* ci3;
 	struct i3s_configstrings* ci3s;
 	struct g4_configstrings* cg4;
@@ -319,7 +322,16 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 	struct wheel_string* wsp = NULL;
 	struct button_string* bsp = NULL;
 
-	if (model == i3) {
+	if (model == bee) {
+		pbee = address;
+		cdp = &pbee->common_data;
+		tdp = &pbee->touch_data;
+		bdp = &pbee->button_data;
+		cbee = bee_configstrings;
+		csp = &cbee->common_string;
+		tsp = &cbee->touch_string;
+		bsp = &cbee->button_string;
+	} else if (model == i3) {
 		pi3 = address;
 		cdp = &pi3->common_data;
 		tdp = &pi3->touch_data;
@@ -439,7 +451,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 	}
 /* HandleTouchStrips TouchRepeatAfter DelayTouchRepeat
  LeftPadTouchUp LeftPadTouchDown RepeatLeftUp RepeatLeftDown */
-	if (model == i3s || model == i3) {
+	if (model == i3s || model == i3 || model == bee) {
 		if (((field = (strstr(read_buffer, tsp->handle_touch))) != NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
 						|| (field < comment))) {
@@ -523,7 +535,8 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 /* ButtonRepeatAfter DelayButtonRepeat
  LeftPadButton9/LeftButton LeftPadButton10/RightButton
  RepeatButton9/RepeatLeft RepeatButton10/RepeatRight */
-	if (model == i3s || model == i3 || model == g4 || model == g4b) {
+	if (model == i3s || model == i3 || model == g4 || model == g4b ||
+							  model == bee) {
 		if (((field = (strstr(read_buffer, bsp->repeat_after)))!= NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
 						|| (field < comment))) {
@@ -568,7 +581,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 		}
 	}
 /* LeftPadButton11 LeftPadButton12 RepeatButton11 RepeatButton12 */
-	if (model == i3s || model == i3) {
+	if (model == i3s || model == i3 || model == bee) {
 		if (((field = (strstr(read_buffer, bsp->button11))) != NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
 						|| (field < comment))) {
@@ -601,7 +614,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 /* RightPadTouchUp RightPadTouchDown RepeatRightUp RepeatRightDown
  RightPadButton13 RightPadButton14 RightPadButton15 RightPadButton16
  RepeatButton13 RepeatButton14 RepeatButton15 RepeatButton16 */
-	if (model == i3) {
+	if (model == i3 || model == bee) {
 		if (((field = (strstr(read_buffer, tsp->right_touch_up)))
 								!= NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
@@ -690,6 +703,37 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 			transfer_boolean(bdp->repeat16, write_buffer);
 			return;
 		}
+
+		if (model == bee) {
+			if (((field = (strstr(read_buffer, bsp->button17))) != NULL)
+				&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+							|| (field < comment))) {
+				prune_field(field, write_buffer);
+				transfer_keycode(bdp->button17, write_buffer);
+				return;
+			}
+			if (((field = (strstr(read_buffer, bsp->button18))) != NULL)
+				&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+							|| (field < comment))) {
+				prune_field(field, write_buffer);
+				transfer_keycode(bdp->button18, write_buffer);
+				return;
+			}
+			if (((field = (strstr(read_buffer, bsp->repeat17))) != NULL)
+				&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+							|| (field < comment))) {
+				prune_field(field, write_buffer);
+				transfer_boolean(bdp->repeat17, write_buffer);
+				return;
+			}
+			if (((field = (strstr(read_buffer, bsp->repeat18))) != NULL)
+				&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+							|| (field < comment))) {
+				prune_field(field, write_buffer);
+				transfer_boolean(bdp->repeat18, write_buffer);
+				return;
+			}
+		}
 	}
 
 }
@@ -716,18 +760,27 @@ static void read_body(FILE* errorfp, void* address, const int model,
 	st1_prcurve_malloced = 0;
 	st2_prcurve_malloced = 0;
 
+	struct bee_program* pbee = NULL;
 	struct i3_program* pi3 = NULL;
 	struct i3s_program* pi3s = NULL;
 	struct g4_program* pg4 = NULL;
 	struct g4b_program* pg4b = NULL;
 	struct nop_program* pnop = NULL;
+	struct bee_program* pbee_base = NULL;
 	struct i3_program* pi3_base = NULL;
 	struct i3s_program* pi3s_base = NULL;
 	struct g4_program* pg4_base = NULL;
 	struct g4b_program* pg4b_base = NULL;
 	struct nop_program* pnop_base = NULL;
 
-	if (model == i3) {
+	if (model == bee) {
+		pbee = address;
+		pbee_base = pbee;
+		if (reread_config) {
+			pbee->default_program = NULL;
+			pbee->common_data.num_record = 0;
+		}
+	} else if (model == i3) {
 		pi3 = address;
 		pi3_base = pi3;
 		if (reread_config) {
@@ -847,7 +900,9 @@ static void read_body(FILE* errorfp, void* address, const int model,
 				continue;
 			}
 
-			if (pi3) {
+			if (pbee) {
+				handle_field(errorfp, read_buffer, pbee, model);
+			} else if (pi3) {
 				handle_field(errorfp, read_buffer, pi3, model);
 			} else if (pi3s) {
 				handle_field(errorfp, read_buffer, pi3s, model);
@@ -862,7 +917,42 @@ static void read_body(FILE* errorfp, void* address, const int model,
 
 /* End field loop*/
 
-		if (pi3) {
+		if (pbee) {
+			if (pbee->common_data.class_name == NULL) {
+				revert_config = 1;
+				if (pbee->common_data.stylus1_presscurve
+								!= NULL) {
+				free(pbee->common_data.stylus1_presscurve);
+				st1_prcurve_malloced = 0;
+				pbee->common_data.stylus1_presscurve = NULL;
+				}
+				if (pbee->common_data.stylus2_presscurve
+								!= NULL) {
+				free(pbee->common_data.stylus2_presscurve);
+				st2_prcurve_malloced = 0;
+				pbee->common_data.stylus2_presscurve = NULL;
+				}
+			}
+			if ((pbee->common_data.class_name != NULL)
+				&& (strcmp(pbee->common_data.class_name,
+							def_rec) == 0)) {
+				pbee_base->default_program = pbee;
+			}
+			if (pbee->common_data.class_name != NULL) {
+				pgr_recname_malloced = 0;
+				revert_config = 0;
+				num_record++;
+				if (pbee->common_data.stylus1_presscurve
+								!= NULL) {
+					st1_prcurve_malloced = 0;
+				}
+				if (pbee->common_data.stylus2_presscurve
+								!= NULL) {
+					st2_prcurve_malloced = 0;
+				}
+				pbee++;
+			}
+		} else if (pi3) {
 			if (pi3->common_data.class_name == NULL) {
 				revert_config = 1;
 				if (pi3->common_data.stylus1_presscurve
@@ -1044,7 +1134,13 @@ static void read_body(FILE* errorfp, void* address, const int model,
 
 	fclose(fp);
 
-	if (model == i3) {
+	if (model == bee) {
+		pbee = address;
+		if (pbee->default_program == NULL) {
+			no_default = 1;
+		}
+		pbee->common_data.num_record = num_record;
+	} else if (model == i3) {
 		pi3 = address;
 		if (pi3->default_program == NULL) {
 			no_default = 1;
@@ -1205,6 +1301,25 @@ void read_config(FILE* errorfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->bee->common_data.configfile) {
+			if (be_verbose) {
+				fprintf(stderr, "%s %s\n", our_cnffile,
+				mip->bee->common_data.configfile);
+			}
+
+			if ((k = read_header(errorfp, write_buffer,
+					mip->bee->common_data.configfile))) {
+				mip->bee->common_data.userconfigversion = k;
+				if (be_verbose) {
+					print_device(stderr,
+						mip->bee->common_data.padname,
+						mip->bee->common_data.sty1name,
+						mip->bee->common_data.sty2name);
+				}
+				read_body(errorfp, mip->bee, bee,
+					mip->bee->common_data.configfile);
+			}
+		}
 		if (mip->i3->common_data.configfile) {
 			if (be_verbose) {
 				fprintf(stderr, "%s %s\n", our_cnffile,

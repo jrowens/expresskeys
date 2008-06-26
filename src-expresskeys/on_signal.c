@@ -43,6 +43,7 @@ const char* sty2str = "CurrentSty2";
 extern int ok_config;
 extern int go_daemon;
 
+extern const int bee;
 extern const int i3;
 extern const int i3s;
 extern const int g4;
@@ -83,6 +84,9 @@ extern char* total_file3_intuos3s;
 extern char* total_file1_intuos3;
 extern char* total_file2_intuos3;
 extern char* total_file3_intuos3;
+extern char* total_file1_bee;
+extern char* total_file2_bee;
+extern char* total_file3_bee;
 
 extern void read_config(FILE* errorfp);
 
@@ -96,18 +100,19 @@ void report_header(FILE* statusfp)
 
 	fprintf(statusfp,
 "\n'Models': nopad, Graphire4 BlueTooth, Graphire4, Intuos3 small, \
-Intuos3/Cintiq\n");
+Intuos3/Cintiq, Cintiq 20wsx\n");
 	fprintf(statusfp, "\n* Pad-index *\n");
 	fprintf(statusfp, "%i (nop): 0 1 2\n", nop);
 	fprintf(statusfp, "%i (g4b): 0 1 2\n", g4b);
 	fprintf(statusfp, "%i (g4 ): 0 1 2\n", g4);
 	fprintf(statusfp, "%i (i3s): 0 1 2\n", i3s);
-	fprintf(statusfp, "%i (i3 ): 0 1 2\n\n", i3);
+	fprintf(statusfp, "%i (i3 ): 0 1 2\n", i3);
+	fprintf(statusfp, "%i (bee): 0 1 2\n\n", bee);
 	fprintf(statusfp, "* Stylus-index *\n");
 	fprintf(statusfp, "0 st1 (nop): 0 1 2 (g4b): 3 4 5 (g4): 6 7 8 \
-(i3s): 9 10 11 (i3): 12 13 14\n");
+(i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16\n");
 	fprintf(statusfp, "1 st2 (nop): 0 1 2 (g4b): 3 4 5 (g4): 6 7 8 \
-(i3s): 9 10 11 (i3): 12 13 14\n\n");
+(i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16\n\n");
 	fprintf(statusfp, "PGR RUNNAME = %s\n", our_prog_name);
 	fprintf(statusfp, "PGR VERSION = %s\n", our_prog_version);
 	fprintf(statusfp, "USR HOMEDIR = %s\n", getenv("HOME"));
@@ -141,6 +146,7 @@ Intuos3/Cintiq\n");
 
 static void report_record(FILE* statusfp, void* address, const int model)
 {
+	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
 	struct g4_program* pg4;
@@ -148,7 +154,10 @@ static void report_record(FILE* statusfp, void* address, const int model)
 	struct nop_program* pnop;
 	struct common_data* cdp = NULL;
 
-	if (model == i3) {
+	if (model == bee) {
+		pbee = address;
+		cdp = &pbee->common_data;
+	} else if (model == i3) {
 		pi3 = address;
 		cdp = &pi3->common_data;
 	} else if (model == i3s) {
@@ -206,6 +215,7 @@ static void report_common(FILE* statusfp)
 	int num_record;
 	const char* pgr_records = "PGR RECORDS =";
 
+	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
 	struct g4_program* pg4;
@@ -216,6 +226,20 @@ static void report_common(FILE* statusfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->bee->common_data.num_record) {
+			print_common(statusfp, mip->bee->common_data.configfile,
+					mip->bee->common_data.userconfigversion,
+						mip->bee->common_data.padname,
+						mip->bee->common_data.sty1name,
+						mip->bee->common_data.sty2name);
+			num_record = mip->bee->common_data.num_record;
+			pbee = mip->bee;
+			for (j = 0; j < num_record; j++, pbee++) {
+				report_record(statusfp, pbee, bee);
+			}
+			fprintf(statusfp, "%s %i (of max %i)\n\n", pgr_records,
+							num_record, MAXRECORDS);
+		}
 		if (mip->i3->common_data.num_record) {
 			print_common(statusfp, mip->i3->common_data.configfile,
 					mip->i3->common_data.userconfigversion,
@@ -366,6 +390,7 @@ void re_read_config(int signum)
 
 static void free_common(void* address, const int model)
 {
+	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
 	struct g4_program* pg4;
@@ -373,7 +398,10 @@ static void free_common(void* address, const int model)
 	struct nop_program* pnop;
 	struct common_data* cdp = NULL;
 
-	if (model == i3) {
+	if (model == bee) {
+		pbee = address;
+		cdp = &pbee->common_data;
+	} else if (model == i3) {
 		pi3 = address;
 		cdp = &pi3->common_data;
 	} else if (model == i3s) {
@@ -417,6 +445,7 @@ void clean_up_exit(int signum)
 {
 	int i, j;
 
+	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
 	struct g4_program* pg4;
@@ -440,6 +469,12 @@ void clean_up_exit(int signum)
 
 	mip = model_list;
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->bee->common_data.configfile) {
+			pbee = mip->bee;
+			for (j = 0; j < MAXRECORDS; j++, pbee++) {
+				free_common(pbee, bee);
+			}
+		}
 		if (mip->i3->common_data.configfile) {
 			pi3 = mip->i3;
 			for (j = 0; j < MAXRECORDS; j++, pi3++) {
@@ -553,6 +588,18 @@ void clean_up_exit(int signum)
 	}
 	if (total_file3_intuos3) {
 		free(total_file3_intuos3);
+	}
+
+/*---*/
+
+	if (total_file1_bee) {
+		free(total_file1_bee);
+	}
+	if (total_file2_bee) {
+		free(total_file2_bee);
+	}
+	if (total_file3_bee) {
+		free(total_file3_bee);
 	}
 
 /* The pad devices and styli devices should not be explicitly closed by a
