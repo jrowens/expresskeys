@@ -24,7 +24,7 @@
 int main (int argc, char *argv[])
 {
 
-	our_prog_name = argv[0];
+	our_prog_name = basename(argv[0]);
 
 	struct program *p;
 
@@ -37,7 +37,7 @@ int main (int argc, char *argv[])
 /* Prelaunch sanity checks: See if X is OK */
 
 	if ((display = XOpenDisplay(NULL)) == NULL) {
-		fprintf(stderr, "%s ERROR: Can not connect to your X Server\n", our_prog_name);
+		exit_on_error(errorfp, "%s ERROR: Can not connect to your X Server\n", our_prog_name, "");
 		exit(EXIT_KO); 
 	}
 	screen = DefaultScreen(display);
@@ -47,20 +47,6 @@ int main (int argc, char *argv[])
 	char *user_homedir;
 	if ((user_homedir = getenv("HOME")) == NULL) {
 		exit_on_error(errorfp, "%s ERROR: Can not find your HOME directory!\n", our_prog_name, "");
-	}
-
-/* This is silly, but in order to keep the heap from being stomped on */
-/* by malloc and even automatic allocations we first need to allocate */
-/* a slight bit of memory. Here I use 1024 bytes, which seems enough. */
-/* Not doing this results in random errors when changing the code. */
-/* The "heap_protect" memory is freed before we leave the function */
-/* Another solution is to allocate a fair bit of memory in the actual */
-/* malloc that stomps on the heap. But it seems even sillier to use */
-/* a 1024 byte string when only needing 41, than this workaround is*/
-
-	char *heap_protect;
-	if ((heap_protect = (char *)malloc(1024)) == NULL) {
-		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 1!\n", our_prog_name, "");
 	}
 
 /* Concatenate the home directory string with the string of our preferred*/
@@ -174,14 +160,12 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Example: %s pad stylus -d\n", our_prog_name);
 		fprintf(stderr, "\n");
-		XCloseDisplay(display);
-		exit(EXIT_KO);
+		exit_on_error(errorfp, "", "", "");
 	}
 
 /* See if the pad is for real, and if it is active */
 
-	pad_info = (void *) get_device_info(display, argv[1]);
-	XFreeDeviceList(info);
+	pad_info = (void *) get_device_info(display, pad_info_block, argv[1]);
 	if (!pad_info) {
 		exit_on_error(errorfp, "%s ERROR: Can not find pad device: %s\n", our_prog_name, argv[1]);
 	}
@@ -200,8 +184,7 @@ int main (int argc, char *argv[])
 			if (strcmp(argv[i], "-d") != 0) {
 				pen_name = argv[i];
 				handle_pen = 1;
-				pen_info = (void *) get_device_info(display, argv[i]);
-				XFreeDeviceList(info);
+				pen_info = (void *) get_device_info(display, pen_info_block, argv[i]);
 				if (!pen_info) {
 					exit_on_error(errorfp, "%s ERROR: Can not find pen device: %s\n", our_prog_name, pen_name);
 				}
@@ -227,7 +210,7 @@ int main (int argc, char *argv[])
 	} else {
 		rewind(fp);
 		if (fgetc(fp) == EOF) {
-			fprintf(fp, "Config File Version %d:\n\n", CONFIG_VERSION);
+			fprintf(fp, "Version: %d\n\n", CONFIG_VERSION);
 			for (p = internal_list; p < internal_list + num_list; p++) {
 				write_file_config((void *)&p, fp);
 				if (ferror(fp)) {
@@ -251,12 +234,15 @@ int main (int argc, char *argv[])
 			break;
 
 			case 1:
+			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: No complete record found in %s\n", our_prog_name, total_config_file);
 			
 			case 2:
+			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
 			
 			default:
+			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Unknown error while parsing %s\n", our_prog_name, total_config_file);
 		}
 	}
@@ -296,14 +282,12 @@ int main (int argc, char *argv[])
 				}
 			}
 		}
-		fclose(errorfp); /* Close error log */
-		free(heap_protect); /* free the dummy heap protect */
+		fclose(errorfp);
 		use_events(display); /* <-- Our true launch! The event loop */
 	} else {
 		exit_on_error(errorfp, "%s ERROR: Could not register any events!\n", our_prog_name, "");
 	}
 
-	XCloseDisplay(display);
 	exit(EXIT_OK);
 
 }

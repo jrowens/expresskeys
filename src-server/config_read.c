@@ -42,13 +42,6 @@ int read_file_config(int *ip, FILE *fp)
 	int num_field = 0;
 
 	char buffer [MAXBUFFER];
-	char *heap_protect;
-
-/* Put a dummy heap protection in place... */
-
-	if ((heap_protect = (char *)malloc(1024)) == NULL) {
-		return 2; 
-	}
 
 /* Previously allocated memory for the program names must be released */
 /* on subsequent reads of the config file. At program start the flag is 0 */
@@ -191,9 +184,9 @@ int read_file_config(int *ip, FILE *fp)
 		}
 	}
 	if (!num_record) {
+		num_list = 0;
 		return 1;
 	}
-	free(heap_protect);
 	num_list = num_record;
 	return 0;
 }

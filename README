@@ -1,9 +1,20 @@
 
 This program gives basic linux support for the ExpressKeys and
-Touch Strips of a Wacom Intuos3 tablet.
+Touch Strips of a Wacom Intuos3 tablet. Latest version can be found at:
+
+http://web.telia.com/~u46133770/wacom/index.html
+
+The USAGE file lists all the important and current key points for
+program configuration and execution.
+
+The INSTALL file keeps compilation information.
+
+AUTHORS and Copyright speak of who it was that wrote the code. The
+latter also gives explicit permission for the code and program usage.
+
+LICENSE is a copy of the GNU General Public License Version 2.
 
 Reading the ChangeLog files from bottom and up can kill some time and
-provide historic insight. It essentially is all the available user
-documentation. However, since info change over time I'll try to list
-all the important and accurate key points in the USAGE file.
+provide historic insight. They constitute a very outdated user
+documentation.
 

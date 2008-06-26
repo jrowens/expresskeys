@@ -22,19 +22,19 @@
 #include "globals.h"
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/* Function prints out the error strings from a caller and exits */
+/* Function prints out the error strings from a caller and terminates */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int exit_on_error(FILE *fp, char *string1, char *string2, char *string3)
+void exit_on_error(FILE *fp, char *string1, char *string2, char *string3)
 {
 
 	if (fp) {
 		fprintf(fp, string1, string2, string3);
+		fclose(fp);
 	}
 
 	fprintf(stderr, string1, string2, string3);
-	XCloseDisplay(display);
-	exit(EXIT_KO);
+	clean_up_exit(SIGTERM);
 
 }
 

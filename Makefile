@@ -1,10 +1,10 @@
 
 all:
 	$(MAKE) -C src-server
-	mv src-server/ekeys .
+	mv src-server/expresskeys .
 
 #	$(MAKE) -C src-client
 #	mv src-client/cekeys .
 clean:
-	rm -f ekeys cekeys src-server/*.o src-client/*.o
+	rm -f expresskeys cekeys src-server/*.o src-client/*.o
 

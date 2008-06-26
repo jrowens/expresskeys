@@ -6,7 +6,7 @@ INCLUDES = -I/usr/X11R6/lib
 LDFLAGS = -L/usr/X11R6/lib
 LIBS = -lX11 -lXext -lXi -lXtst
 
-TARGET = ekeys
+TARGET = expresskeys
 
 SRCS = globals.c config_read.c config_write.c on_error.c on_signal.c \
 	pen_mode.c get_device.c reg_events.c event_loop.c main_setup.c

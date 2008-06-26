@@ -1,10 +1,6 @@
 
-The USAGE file contains all necessary information for a proper
-configuration and execution of this program. Some extra knowledge
-might be had by reading the ChangeLog files. I'm a talkative guy.
-
-After that read, take a look in the extremely simple Makefile in
-src-server if setting CFLAGS is your want. Next step is to type:
+Take a look in the extremely simple Makefile in the src-server
+directory if setting CFLAGS is your want. Next step is to type:
 
 make
 

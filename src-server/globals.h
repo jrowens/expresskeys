@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+/* For the basename call */
+#include <libgen.h>
 /* For the daemon, getpid and unlink calls */
 #include <unistd.h>
 /* For the mkdir call */
@@ -79,30 +81,23 @@ extern int button_release_type;	/* Event type to keep track of - Pad Buttons */
 
 /* Global X functions */
 extern Display *display;	/* Active display. An X thing */
-extern XDeviceInfo *info;	/* Scratch while fishing for pad and pen info */
+extern XDeviceInfo *pad_info_block;	/* Base address - searching pad info */
+extern XDeviceInfo *pen_info_block; /* Base address - searching pen info */
 extern XDeviceInfo *pad_info;	/* Keeps all X knowledge of the pad device */
 extern XDeviceInfo *pen_info;	/* Keeps all X knowledge of the pen device */
 extern XDevice *pad_device;	/* The actual pointer to the pad device */
 extern XDevice *pen_device;	/* The actual pointer to the pen device */
 
 /* Our global (internal) functions */
-/* In config_read.c */
-extern int read_file_config(int *ip, FILE *fp);
-/* In config_write.c */
 extern int write_file_config(int *ip, FILE *fp);
-/* In event_loop.c */
+extern int read_file_config(int *ip, FILE *fp);
+extern int get_device_info(Display *display, XDeviceInfo *info, char *name);
+extern int register_events(Display *display, XDeviceInfo *pad_info, char *name);
+extern int toggle_pen_mode(Display *display, char *name);
 extern int use_events(Display *display);
-/* In get_device.c */
-extern int get_device_info(Display *display, char *name);
-/* In on_error.c */
-extern int exit_on_error(FILE *fp, char *string1, char *string2, char *string3);
-/* In on_signal.c */
+extern void exit_on_error(FILE *fp, char *string1, char *string2, char *string3);
 extern void re_read_file_config(int signum);
 extern void clean_up_exit(int signum);
-/* In pen_mode.c */
-extern int toggle_pen_mode(Display *display, char *name);
-/* In reg_events.c */
-extern int register_events(Display *display, XDeviceInfo *pad_info, char *name);
 
 /* Our global structures */
 /* The internal_list is initialized in globals.c */

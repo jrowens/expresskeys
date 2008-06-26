@@ -22,7 +22,8 @@
 #include "globals.h"
 
 Display *display;
-XDeviceInfo *info;
+XDeviceInfo *pad_info_block;
+XDeviceInfo *pen_info_block;
 XDeviceInfo *pad_info;
 XDeviceInfo *pen_info;
 XDevice *pad_device;

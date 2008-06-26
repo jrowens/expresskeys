@@ -1,5 +1,5 @@
 
-ExpressKeys was written by Mats Johannesson aka Voluspa in 2005.
+Mats Johannesson aka Voluspa began writing expresskeys in 2005.
 The original framework (one big .c file) built heavily on some
 functions in Frederic Lepied's xinput-1.2 from 1996. Without that
 smooth entrypoint the program had remained a pipe dream for sure.

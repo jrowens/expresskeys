@@ -26,16 +26,22 @@
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /* Function queries the X server for input devices. It only cares about non */
 /* core ones, and compares them with what was specified on the command line. */
-/* The "info" is a scratch XDeviceInfo construct which is freed by the  */
-/* caller after having set a permanent global copy for later reference */
+/* The "info" is a XDeviceInfo construct whos address is transferred to a */
+/* permanent global copy for freeing at program exit */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int get_device_info(Display *display, char *name)
+int get_device_info(Display *display, XDeviceInfo *info, char *name)
 {
 	int		i;
 	int		nr_devices;
 
 	info = XListInputDevices(display, &nr_devices);
+
+	if (pad_info_block) {
+		pen_info_block = info;
+	} else {
+		pad_info_block = info;
+	}
 
 	for(i = 0; i < nr_devices; i++) {
 		if ((info[i].use == IsXExtensionDevice) &&

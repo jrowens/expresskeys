@@ -1,4 +1,35 @@
 
+_Version 0.1.4 24 April 2005_
+
+* Memory bugfix. Running the program under Valgrind to catch memory
+leaks and other errors I finally saw the reason for me needing
+heap_protect kludges. Doing XFreeDeviceList on a structure and then
+reading data from the freed memory only works through luck...
+
+* Took the opportunity to free lingering memory allocations at program
+exit. It's not strictly necessary since the OS should reclaim it all,
+but looks nice in the Valgrind summary. There's still one left that
+I can't find the souce of. It belongs to XextCreateExtension apparently.
+
+* Bugfix: Had forgotten to close the error.log after writing to it in
+the exit_on_error function. Also, that function shouldn't do a final
+exit(EXIT_KO) but instead jump to clean_up_exit(SIGTERM). However,
+doing that it won't return the EXIT_KO to any parent. I'd have to
+change the signal handling to achieve this.
+
+* Bugfix: The config file version tag was meant to look like:
+
+Version: 1
+
+and nothing else, for now... The confusion and uncertainty stems from
+doing this before a final format has been chosen. There are many factors
+to consider, so bear with me.
+
+* Reverted to the "expresskeys" base name on compile output and shell
+files. When writing code it's more convenient with a short name, but
+any final product should have a consistent naming.
+
+
 _Version 0.1.3 21 April 2005_
 
 * Just internal code cleanup/restructuring after having begun reading

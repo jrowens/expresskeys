@@ -18,7 +18,7 @@ in proximity.
 
 ///////////////////////////////////////////////////////////////////////////
 
-USAGE of ekeys (expresskeys):
+USAGE of expresskeys:
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -28,17 +28,17 @@ USAGE of ekeys (expresskeys):
 
 * Command line can be:
 
-ekeys <pad-device-name> [<pen-device-name>] [-d]
+expresskeys <pad-device-name> [<pen-device-name>] [-d]
 
 Where the pad name is mandatory. Specify a pen name
 if you want the program to handle pen mode switches.
 Use -d to make the program a daemon (run in the background).
 
-Example: ekeys pad stylus -d
+Example: expresskeys pad stylus -d
 
 The names are the "Identifier" strings in your X config file (xorg.conf)
-Myself I start ekeys just before the window manager in my .xinitrc with:
-/usr/local/bin/ekeys pad stylus -d
+Myself I start expresskeys just before the window manager in my 
+.xinitrc with: /usr/local/bin/expresskeys pad stylus -d
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -56,8 +56,8 @@ recreated whenever a configuration file is missing on program start.
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 * The configuration file is re-read upon receipt of the signal SIGUSR1.
-Do a "kill -USR1 <pid-of-ekeys>" after a config file edit (or -USR2).
-The included shell script "ekeys-reread.sh" will do it for you.
+Do a "kill -USR1 <pid-of-expresskeys>" after a config file edit (or -USR2).
+The included shell script "expresskeys-reread.sh" will do it for you.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

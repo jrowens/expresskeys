@@ -53,12 +53,15 @@ void re_read_file_config(int signum)
 			break;
 
 			case 1:
+			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Reread - No complete record found in %s\n", our_prog_name, total_config_file);
 			
 			case 2:
+			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Reread - Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
 			
 			default:
+			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Reread - Unknown error while parsing %s\n", our_prog_name, total_config_file);
 		}
 	}
@@ -69,7 +72,7 @@ void re_read_file_config(int signum)
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /* Function acts as a signal handler replacement for SIGINT, SIGHUP and */
 /* SIGTERM. All are normal exit signals. We want to trap them in order to */
-/* perform some house keeping pre-exit. Here it deletes a possible PID file */
+/* perform some house keeping pre-exit. Delete a PID file and free memory */
 /* Since it takes care of several signals, it could get invoked recursively */
 /* if some other signal comes in. We use this "volatile" variable to track */
 /* the case. At the end we restore the default signal handler and raise it */
@@ -78,6 +81,10 @@ void re_read_file_config(int signum)
 volatile sig_atomic_t clean_up_exit_in_progress = 0;
 void clean_up_exit(int signum)
 {
+	int i;
+	struct program *p;
+	p = external_list;
+
 	if (clean_up_exit_in_progress) {
 		raise(signum);
 	}
@@ -86,8 +93,52 @@ void clean_up_exit(int signum)
 	if (go_daemon) {
 		unlink(total_pid_file);
 	}
-	
+
+	if (total_config_dir) {
+		free(total_config_dir);
+	}
+
+	if (total_config_file) {
+		free(total_config_file);
+	}
+
+	if (total_pid_file) {
+		free(total_pid_file);
+	}
+
+	if (total_error_file) {
+		free(total_error_file);
+	}
+
+	if (num_list) {
+		for (i = 0; i < num_list; i++, p++) {
+			free(p->class_name);
+		}
+	}
+
+	if (pad_info_block) {
+		XFreeDeviceList(pad_info_block);
+	}
+
+	if (pen_info_block) {
+		XFreeDeviceList(pen_info_block);
+	}
+
+	if (pad_device) {
+		XCloseDevice(display, pad_device);
+	}
+
+	if (pen_device) {
+		XCloseDevice(display, pen_device);
+	}
+
+	if (display) {
+		XCloseDisplay(display);
+	}
+
 	signal(signum, SIG_DFL);
 	raise(signum);
 }
+
+/* End Code */
 
