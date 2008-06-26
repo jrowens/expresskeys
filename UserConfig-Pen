@@ -1,0 +1,13 @@
+
+/* ++++++++++ Begin user Pen area ++++++++++ */
+
+#define HANDLE_PEN 0	/* Main switch: 1 = yes handle a pen, 0 = no please */
+#define PEN_NAME "stylus"	/* Identifier name as configured in xorg.conf */
+#define PEN_MODE "Absolute"	/* The mode we should expect the pen to be in */
+			/* when starting this program. Default usually */
+			/* is Absolute. The "mousy" feeling is Relative */
+
+/* ++++++++++ End user Pen area ++++++++++ */
+
+/* End Code */
+
