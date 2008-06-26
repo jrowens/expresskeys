@@ -1,23 +1,22 @@
 /*
- * main_setup.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
- *
- * Copyright (C) 2005 - Mats Johannesson
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
- *
- */
+ main_setup.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
+ 
+ Copyright (C) 2005 - Mats Johannesson
+ 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 #include "globals.h"
 
@@ -49,9 +48,9 @@ int main (int argc, char *argv[])
 		exit_on_error(errorfp, "%s ERROR: Can not find your HOME directory!\n", our_prog_name, "");
 	}
 
-/* Concatenate the home directory string with the string of our preferred*/
-/* configuration file directory. The address to the whole string is then */
-/* copied to a global pointer, so we won't have to perform this part again */
+/* Concatenate the home directory string with the string of our preferred
+   configuration file directory. The address to the whole string is then
+   copied to a global pointer, so we won't have to perform this part again */
 
 	char *total_config_dir_block;
 	len = strlen(user_homedir) + strlen(config_dir) + 1;
@@ -95,10 +94,9 @@ int main (int argc, char *argv[])
 
 	char pid_buffer [MAXBUFFER];
 
-/* Try to open the the configuration directory for */
-/* reading, just as a test to see if it exists. A failure */
-/* here can mean many things, but we then try to create */
-/* it as a means to rule out a true lack of existence */
+/* Try to open the the configuration directory for reading, just as a
+   test to see if it exists. A failure here can mean many things, but we
+   then try to create it as a means to rule out a true lack of existence */
 
 	if ((fp = fopen(total_config_dir, "r")) == NULL) {
 		if ((mkdir(total_config_dir, 0777)) == NON_VALID) {
@@ -108,12 +106,12 @@ int main (int argc, char *argv[])
 		fclose(fp);
 	}
 
-/* If a pid file exists it is a sign of either A) program already runs, or */
-/* B) a crash/brutal kill not handled by our exit routine has occured */
-/* previously. We therefore read in such a PID and perform a "fake" kill */
-/* with it (signal number 0). If -1 (error) is returned we just carry on. */
-/* Otherwise our kill test detected a process with that PID and we exit, */
-/* based on the assumption that another instance is running */
+/* If a pid file exists it is a sign of either A) program already runs, or
+   B) a crash/brutal kill not handled by our exit routine has occured
+   previously. We therefore read in such a PID and perform a "fake" kill
+   with it (signal number 0). If -1 (error) is returned we just carry on.
+   Otherwise our kill test detected a process with that PID and we exit,
+   based on the assumption that another instance is running */
 
 	if ((fp = fopen(total_pid_file, "r")) != NULL) {
 		fgets(pid_buffer, MAXBUFFER, fp);
@@ -152,11 +150,12 @@ int main (int argc, char *argv[])
 
 	if (argc < 2) {
 		fprintf(stderr, "\n");
-		fprintf(stderr, "Usage: %s <pad-device-name> [<pen-device-name>] [-d]\n", our_prog_name);
+		fprintf(stderr, "Usage: %s <pad-device-name> [<pen-device-name>] [-d] [-v]\n", our_prog_name);
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Where the pad name is mandatory. Specify a pen name\n");
 		fprintf(stderr, "if you want the program to handle pen mode switches.\n");
 		fprintf(stderr, "Use -d to make the program a daemon (run in the background).\n");
+		fprintf(stderr, "Use -v to print info to the screen at many execution points\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Example: %s pad stylus -d\n", our_prog_name);
 		fprintf(stderr, "\n");
@@ -170,8 +169,8 @@ int main (int argc, char *argv[])
 		exit_on_error(errorfp, "%s ERROR: Can not find pad device: %s\n", our_prog_name, argv[1]);
 	}
 
-/* Set a flag if we should run as a daemon. Also register */
-/* and check a pen device, should such an action be requested */
+/* Set a flag if we should run as a daemon or/and in verbose mode. Also
+   register and check a pen device, should such an action be requested */
 
 	if (argc > 2) {
 		for (i = 2; i < argc; i++) {
@@ -181,7 +180,14 @@ int main (int argc, char *argv[])
 			}
 		}
 		for (i = 2; i < argc; i++) {
-			if (strcmp(argv[i], "-d") != 0) {
+			if (strcmp(argv[i], "-v") == 0) {
+				be_verbose = 1;
+				break;
+			}
+		}
+		for (i = 2; i < argc; i++) {
+			if ((strcmp(argv[i], "-d")) != 0 &&
+			((strcmp(argv[i], "-v")) != 0)) {
 				pen_name = argv[i];
 				handle_pen = 1;
 				pen_info = (void *) get_device_info(display, pen_info_block, argv[i]);
@@ -190,6 +196,18 @@ int main (int argc, char *argv[])
 				}
 				break;
 			}
+		}
+	}
+
+	if (be_verbose) {
+		fprintf(stderr, "USR HOMEDIR = %s\n", user_homedir);
+		fprintf(stderr, "OUR CNF-DIR = %s\n", total_config_dir);
+		fprintf(stderr, "OUR CNFFILE = %s\n", total_config_file);
+		fprintf(stderr, "OUR PIDFILE = %s\n", total_pid_file);
+		fprintf(stderr, "OUR LOGFILE = %s\n", total_error_file);
+		fprintf(stderr, "OUR PADNAME = %s\n", argv[1]);
+		if (pen_name) {
+			fprintf(stderr, "OUR PENNAME = %s\n", pen_name);
 		}
 	}
 
@@ -202,15 +220,15 @@ int main (int argc, char *argv[])
 		}
 	}
 
-/* If no configuration file exists, write out a short one from an internal */
-/* memory structure. Also tag it with a version number - for future use */
+/* If no configuration file exists, write out a short one from an internal
+   memory structure. Also tag it with a Config File Version number */
 
 	if ((fp = fopen(total_config_file, "a+")) == NULL) {
 		exit_on_error(errorfp, "%s ERROR: Can not open %s in read/write mode\n", our_prog_name, total_config_file);
 	} else {
 		rewind(fp);
 		if (fgetc(fp) == EOF) {
-			fprintf(fp, "Version: %d\n\n", CONFIG_VERSION);
+			write_file_config_header(fp);
 			for (p = internal_list; p < internal_list + num_list; p++) {
 				write_file_config((void *)&p, fp);
 				if (ferror(fp)) {
@@ -240,16 +258,20 @@ int main (int argc, char *argv[])
 			case 2:
 			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
-			
+
+			case 3:
+			fclose(fp);
+			exit_on_error(errorfp, "%s ERROR: Config File Version %d not found\n", our_prog_name, (void *)CONFIG_VERSION);
+
 			default:
 			fclose(fp);
 			exit_on_error(errorfp, "%s ERROR: Unknown error while parsing %s\n", our_prog_name, total_config_file);
 		}
 	}
 
-/* Replace some of the normal signal handlers with our own functions. We */
-/* want SIGUSR1 and SIGUSR2 to read in the config file after a modification, */
-/* and all the normal program exits should first clean up a bit */
+/* Replace some of the normal signal handlers with our own functions. We
+   want SIGUSR1 and SIGUSR2 to read in the config file after a modification,
+   and all the normal program exits should first clean up a bit */
 
 	if ((signal(SIGUSR1, re_read_file_config) == SIG_ERR)
 		|| (signal(SIGUSR2, re_read_file_config) == SIG_ERR)
@@ -259,10 +281,11 @@ int main (int argc, char *argv[])
 		exit_on_error(errorfp, "%s ERROR: Failed to modify signal handling!\n", our_prog_name, "");
 	}
 
-/* Ready to launch in the foreground or as a daemon after one last check. */
-/* In daemon mode we also take care of storing our PID in the config dir */
-/* Observe that with a (0, 0) standard input/output/error goes to /dev/null */
-/* I've found it better to use (0, 1) and see errors while writing the code */
+/* Ready to launch in the foreground or as a daemon after one last check.
+   In daemon mode we also take care of storing our PID in the config dir
+   Observe that with a (0, 0) standard input/output/error goes to /dev/null
+   I've found it better to use (0, 1) and see errors while writing the code
+   It also comes in handy when running in (-v) verbose mode */
 
 	if (register_events(display, pad_info, argv[1])) {
 		if (go_daemon) {
@@ -273,6 +296,9 @@ int main (int argc, char *argv[])
 				if ((fp = fopen(total_pid_file, "w")) == NULL) {
 					exit_on_error(errorfp, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_pid_file);
 				} else {
+					if (be_verbose) {
+						fprintf(stderr, "OUR RUN-PID = %s\n", pid_buffer);
+					}
 					fprintf(fp, "%s", pid_buffer);
 					if (ferror(fp)) {
 						exit_on_error(errorfp, "%s ERROR: Write error in %s\n", our_prog_name, total_pid_file);

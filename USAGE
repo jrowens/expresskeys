@@ -28,11 +28,12 @@ USAGE of expresskeys:
 
 * Command line can be:
 
-expresskeys <pad-device-name> [<pen-device-name>] [-d]
+expresskeys <pad-device-name> [<pen-device-name>] [-d] [-v]
 
 Where the pad name is mandatory. Specify a pen name
 if you want the program to handle pen mode switches.
 Use -d to make the program a daemon (run in the background).
+Use -v to print info to the screen at many execution points.
 
 Example: expresskeys pad stylus -d
 
@@ -52,6 +53,11 @@ recreated whenever a configuration file is missing on program start.
 
 * A file with the program PID number is written if run with -d in:
 ~/.expresskeys/expresskeys.pid
+
+The pid-file is deleted on normal program exit like "kill <pid>",
+"killall expresskeys", "kill -TERM <pid>" etc. A brutal "kill -9 <pid>"
+or a program crash will leave the pid-file undeleted. This is also
+the case if the program is terminated by X close-down on some systems.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -76,15 +82,13 @@ It's the last string we would use, the "OpenOffice.org 1.1.4". We always
 use the last part, and the spelling is case sensitive. Putting
 "openoffice.org 1.1.4" in the configuration file would not match up.
 
-Also, since spaces are accepted as part of a class name, make sure there are
-no space _before or after_ the name, prior to the terminating field comma:
+Also, since spaces are accepted as part of a class name, make sure there
+are no space _before or after_ the name, within the double quotes:
 
-{"A ProgramName", or {A ProgramName,    <-- OK
-{"A ProgramName" , or { A ProgramName,  <-- NOT-OK
+"A ProgramName" <-- OK
+" A ProgramName" or "A ProgramName " <-- NOT-OK
 
 The extra space/s would become part of the class name. Not what you want.
-If you absolutely must put some space before the comma, use TAB instead.
-Those are discarded while parsing the string.
 
 The very first entry (at the top) in the configuration file is named
 "default" and holds a key definition for all programs not specified
@@ -97,23 +101,24 @@ and programs lacking a class name in their WM_CLASS.
 
 The "default" entry holds keycodes to make the pad buttons behave just
 as Wacom list them in the Quick Start Guide: Shift, Alt, Ctrl and Space
-mirrored on both sides. Touch Strip support is turned off by default.
-Use the number 1 in the handle_touch field to turn it on. You then get
+mirrored on both sides. Touch Strip support is turned off by default. Use
+the number 1 in the "Handle Touch Strips" field to turn it on. You then get
 Arrow-key Up/Down on the left strip and Arrow-key Right/Left on the right.
-Change direction of the movement by switching the _up and _down values.
+Change direction of the movement by switching the "Up" and "Down" values.
+
+Both pad buttons and touch strips can send two keys at a time if so
+configured through usage of the "Plus" keycode fields.
 
 If you want a button to do pen mode toggling between Absolute and Relative,
 use the value 999 in the corresponding keycode field. To be able to switch
-mode anywhere, each program block must contain one 999 definition. And,
+mode anywhere each program block must contain one 999 definition. And,
 of course, a pen name must be used on the command line when starting the
-program.
+program. OBS: The pen mode toggle can only be assigned to a "real" button,
+not the "Plus" version :OBS.
 
-Both pad buttons and touch strips can send two keys at a time if so
-configured through usage of the _plus keycode fields.
-
-Please don't alter or remove the commas (,) after the class name or keycodes.
-They must be there to separate the fields, just like the { and } are used to
-separate and define the program blocks.
+Please don't alter or remove the colons ":" before the class name or
+keycodes. They must be there to separate the fields, just like the "%%" is
+used to separate and define the program blocks.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

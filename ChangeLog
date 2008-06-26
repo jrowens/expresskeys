@@ -1,4 +1,47 @@
 
+_Version 0.2.0 29 April 2005_
+
+(NOTE: A version of this archive was pulled from the website after a
+few hours of exposure on April 28, based on the suspicion that it
+contained a corrupt file due to some file system issues on my machine.
+Both fears were unfounded. I've spent this interim on further
+restructuring of the text files outside of the code directories)
+
+* New configuration file format. Incompatible with the old one, hence
+the version bump from 0.1 to 0.2
+
+Move/rename the old file and run the program to get a new. Then edit...
+
+The old format was basically just a transcript of how a C structure
+is initialized. It had nothing in common with how a configuration
+file in *nix should be construed.
+
+Rules for the new configuration file is: Blank lines and everything
+after a "#" is discarded. Full program records begin and end with
+a double percentage sign "%%". A program field begins after a colon ":".
+The program names must be within two double quotes "". Like so:
+
+"A ProgramName" <-- OK
+" A ProgramName" or "A ProgramName " <-- NOT-OK
+
+This is in accordance with the old rule about how to deal with spaces
+in that field.
+
+I can only vouch for parsing sanity if each line in the file is kept
+below 160 bytes in length (see the BUGS file). That's the equiv of
+two old style terminal lines. If you want more, change the MAXBUFFER
+value in globals.h
+
+* Another command line option: "-v". Will turn on the be_verbose flag
+which prints info to the screen from plenty of program execution points.
+An aid for debugging, or just checking out the runtime state.
+
+* Got rid of the ugly switch routines in event_loop.c and config_read.c.
+I've done extensive benchmarking and see no difference in code speed.
+Advantage, apart from code simplicity, is that the compiled program
+size was reduced by ca 4000 bytes - before the 0.2.0 additions.
+
+
 _Version 0.1.4 24 April 2005_
 
 * Memory bugfix. Running the program under Valgrind to catch memory

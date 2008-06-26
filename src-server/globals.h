@@ -1,23 +1,22 @@
 /*
- * globals.h -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
- *
- * Copyright (C) 2005 - Mats Johannesson
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
- *
- */
+ globals.h -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
+ 
+ Copyright (C) 2005 - Mats Johannesson
+ 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 /* Standard Program includes */
 #include <stdio.h>
@@ -50,9 +49,8 @@
 #define TOGGLE_PEN 999	/* String signaling the key's use as a mode toggle */
 #define MAXRECORDS 64	/* Max program definitions to handle (enough? ;-) */
 #define MAXFIELDS 25	/* Max entries (minus program name) in each record */
-#define MAXDIGITS 3	/* Max number of digits in a key entry */
-#define MAXBUFFER 64	/* Scratch buffer. Also sets program name length limit*/
-#define CONFIG_VERSION 1 /* Config file version - for future format changes */
+#define MAXBUFFER 160	/* Scratch buffer. Two full terminal lines */
+#define CONFIG_VERSION 2 /* Config file version - for future format changes */
 
 /* Our global variables */
 extern char *our_prog_name;	/* This program's file name */
@@ -70,6 +68,7 @@ extern int screen;	/* Active screen. An X thing */
 extern int num_list;	/* Number of programs we currently handle */
 
 extern int go_daemon;	/* Flag to see if this program is in daemon mode */
+extern int be_verbose;	/* Flag to see if we should be spitting out info */
 extern int reread_config; /* Flag for memory release if redoing the config */
 extern int handle_pen;	/* Flag (main switch) to see if a pen is handled */
 extern int pen_mode;	/* Flag to keep track of the pen mode we are in */
@@ -89,6 +88,7 @@ extern XDevice *pad_device;	/* The actual pointer to the pad device */
 extern XDevice *pen_device;	/* The actual pointer to the pen device */
 
 /* Our global (internal) functions */
+extern int write_file_config_header(FILE *fp);
 extern int write_file_config(int *ip, FILE *fp);
 extern int read_file_config(int *ip, FILE *fp);
 extern int get_device_info(Display *display, XDeviceInfo *info, char *name);
@@ -100,8 +100,8 @@ extern void re_read_file_config(int signum);
 extern void clean_up_exit(int signum);
 
 /* Our global structures */
-/* The internal_list is initialized in globals.c */
-/* The external_list is initialized from file reads */
+/* The internal_list is initialized in globals.c
+   The external_list is initialized from file reads */
 extern struct program {
 	char *class_name;
 	int handle_touch;

@@ -1,0 +1,9 @@
+
+_Changes since last version. Executive edition_
+
+- New configuration file format.
+
+- Another command line option: "-v" (verbose mode).
+
+- Some code simplifications.
+

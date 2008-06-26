@@ -4,7 +4,7 @@ all:
 	mv src-server/expresskeys .
 
 #	$(MAKE) -C src-client
-#	mv src-client/cekeys .
+#	mv src-client/expresskeys-conf .
 clean:
-	rm -f expresskeys cekeys src-server/*.o src-client/*.o
+	rm -f expresskeys expresskeys-conf src-server/*.o src-client/*.o
 

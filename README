@@ -7,7 +7,13 @@ http://web.telia.com/~u46133770/wacom/index.html
 The USAGE file lists all the important and current key points for
 program configuration and execution.
 
+NEWS gives a quick view of changes. Expanded in ChangeLog.
+
 The INSTALL file keeps compilation information.
+
+BUGS lists the known cases.
+
+TODO is a wish-list, not a promise.
 
 AUTHORS and Copyright speak of who it was that wrote the code. The
 latter also gives explicit permission for the code and program usage.
