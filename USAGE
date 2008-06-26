@@ -22,7 +22,9 @@ USAGE of expresskeys:
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-* Program can not be started unless X is running.
+* Program can not be started unless X is running, and refuses to start
+if another active instance of the program is detected (through a live
+pid-file).
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -63,7 +65,8 @@ the case if the program is terminated by X close-down on some systems.
 
 * The configuration file is re-read upon receipt of the signal SIGUSR1.
 Do a "kill -USR1 <pid-of-expresskeys>" after a config file edit (or -USR2).
-The included shell script "expresskeys-reread.sh" will do it for you.
+The included shell script "expresskeys-reread.sh" will do it for you if
+a pid-file from a daemon instance is present.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

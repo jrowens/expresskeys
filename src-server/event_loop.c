@@ -1,7 +1,7 @@
 /*
  event_loop.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson
+ Copyright (C) 2005 - Mats Johannesson, Denis DerSarkisian
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -342,6 +342,12 @@ Right ExpressKey Pad
 					}
 					toggle_pen_mode(display, pen_name);
 				}
+			} else if ((*button_index >= PEN_CURVE_DOWNWARD) &&
+						(*button_index <= PEN_CURVE_UPWARD)) {
+				if (be_verbose) {
+					fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+				}
+				call_xsetwacom(*button_index);
 			} else {
 				if (*button_index) {
 					fake_event(display, *button_index, True, CurrentTime );
@@ -373,6 +379,11 @@ Right ExpressKey Pad
 			}
 
 			if (*button_index == TOGGLE_PEN) {
+				if (be_verbose) {
+					fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+				}
+			} else if ((*button_index >= PEN_CURVE_DOWNWARD) &&
+						(*button_index <= PEN_CURVE_UPWARD)) {
 				if (be_verbose) {
 					fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
 				}

@@ -1,9 +1,5 @@
 
 _Changes since last version. Executive summary_
 
-- Support for faking mouse button events.
-
-- Expanded the "-v" (verbose mode) printing.
-
-- Added some more knowledge to the BUGS file.
+- Sample xsetwacom utilization (pen pressure sensitivity).
 

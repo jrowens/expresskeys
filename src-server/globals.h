@@ -56,7 +56,10 @@ enum {                 /* Strings signaling key's use as a mouse button */
 	MOUSE_6,
 	MOUSE_7,
 	MOUSE_BUTTON_MAX
-};	
+};
+#define PEN_CURVE_DOWNWARD 1001	/* Pen Sensitivity. Sample xsetwacom usage */
+#define PEN_CURVE_DEFAULT 1002
+#define PEN_CURVE_UPWARD 1003
 #define TOGGLE_PEN 999	/* String signaling the key's use as a mode toggle */
 #define MAXRECORDS 64	/* Max program definitions to handle (enough? ;-) */
 #define MAXFIELDS 25	/* Max entries (minus program name) in each record */
@@ -84,6 +87,7 @@ extern int reread_config; /* Flag for memory release if redoing the config */
 extern int handle_pen;	/* Flag (main switch) to see if a pen is handled */
 extern int pen_mode;	/* Flag to keep track of the pen mode we are in */
 extern int pen_open;	/* Flag to make sure we only open the pen once */
+extern int pen_presscurve; /* Pen Sensitivity. Sample xsetwacom usage */
 
 extern int motion_type;		/* Event type to keep track of - Touch Strips */
 extern int button_press_type;	/* Event type to keep track of - Pad Buttons */
@@ -106,6 +110,7 @@ extern int get_device_info(Display *display, XDeviceInfo *info, char *name);
 extern int register_events(Display *display, XDeviceInfo *pad_info, char *name);
 extern int toggle_pen_mode(Display *display, char *name);
 extern int use_events(Display *display);
+extern int call_xsetwacom(int num);
 extern void exit_on_error(FILE *fp, char *string1, char *string2, char *string3);
 extern void re_read_file_config(int signum);
 extern void clean_up_exit(int signum);

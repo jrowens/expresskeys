@@ -1,8 +1,72 @@
 
+_Version 0.2.2 5 May 2005_
+
+* Included an example of how to use an external program through
+the simple "system" command (see exec_shell.c). The sample
+"xsetwacom" utilization (pen pressure sensitivity) is not particularly
+exciting as a new feature, but nevertheless an opening for future
+implementations.
+
+It's hard to imagine someone wasting three full expresskeys to get
+a comfortable workflow, but here you are:
+
+Keycode field value (regular button only, not touch strips or Plus)
+1001 <-- Pen sensitivity gets lower with each press, until roll over.
+1002 <-- Pen sensitivity is set to wacom default, a middle curve.
+1003 <-- Pen sensitivity gets higher with each press, until roll over.
+
+A pen name must be specified on the command line, of course.
+
+Since both the 1001 and 1003 flip over in a carousel fashion at the
+top and bottom values, you could manage the operation with only one
+button. But if you go too far, there are 6 presses to be made until
+next rendezvous in the 7 state circle. Not good.
+
+The curve values are picked from how the "wacomcpl" program sets them
+(the tcl utility) in Feel -> Sensitivity [1 to 7].
+
+I've refrained from documenting the 1001 - 1003 in the USAGE file, and
+a new configuration file won't have them listed in the header. The real
+world usability is too limited, I feel. Better things will hopefully
+come in the future.
+
+The old pen mode toggle code could be rewritten so it was handled by
+this external xsetwacom functionality, in good *nix tradition of reuse.
+But what if the user environment doesn't have the xsetwacom program
+installed? Better leave the code as is, I think.
+
+-------------------------------------------------------------------------
+Speaking of the future, this 0.2.2 version will be the last one (from me
+at least) for quite some time. When I began the project, more than 1 1/2
+months ago, it was out of pure necessity. I had a brand new (expensive)
+Wacom tablet with semi functional hardware. Extensive web searches didn't
+reveal any program to unlock the enticing ExpressKeys and Touch Strips,
+so I reluctantly opened a C language book and set to work.
+
+I never planned to enter the "programmer" domain in earnest. Neither
+did I anticipate a perpetual development. When the job was done, it
+would be done...
+
+And now it's done, from my point of view. Core functions are rather
+complete, and the program runs without hiccups. Ideas have dried up
+and I am frankly getting bored with code hacking. Now I want to USE
+the tablet, finally.
+
+The code is free as in beer and freedom. If anyone feels like expanding
+or even forking it, just do so (according to the GPL). There's the whole
+bag of internationalization, installation and graphical configuration
+left to a fresh mind. I'm too tired right now.
+
+Though, I'll dive in again if a pressing issue turns up ;-)
+
+Bye for now,
+Mats
+-------------------------------------------------------------------------
+
+
 _Version 0.2.1 2 May 2005_
 
-* Added support for faking mouse button events. "Anonymous1"
-(I have not received permission to use his real name or e-mail)
+* Added support for faking mouse button events. Denis DerSarkisian
 sent a function called "fake_event" (top of event_loop.c) which
 in essence acts like a traffic cop, steering true keycodes to
 XTestFakeKeyEvent and a set of false ones to XTestFakeButtonEvent.

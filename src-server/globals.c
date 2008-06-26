@@ -46,6 +46,7 @@ int reread_config = 0;	/* No memory should be freed on the first read */
 int handle_pen = 0;	/* Pen should not be handled per default */
 int pen_mode = 1;	/* Assume pen is in Absolute mode initially */
 int pen_open = 0;	/* Pen device hasn't been opened */
+int pen_presscurve = 4; /* Pen default Sensitivity. Sample xsetwacom usage */
 
 int motion_type = NON_VALID;
 int button_press_type = NON_VALID;
