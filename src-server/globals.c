@@ -31,6 +31,9 @@ XDevice *pen_device;
 char *our_prog_name;
 char *pen_name;
 char *total_config_dir;
+char *total_config_file;
+char *total_pid_file;
+char *total_error_file;
 char *config_dir = "/.expresskeys";	/* This is where in the user home */
 char *config_file = "/expresskeys.conf";/* directory we'd like to reside, */
 char *pid_file = "/expresskeys.pid"; 	/* and what our different status */

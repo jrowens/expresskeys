@@ -55,6 +55,12 @@ recreated whenever a configuration file is missing on program start.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+* The configuration file is re-read upon receipt of the signal SIGUSR1.
+Do a "kill -USR1 <pid-of-ekeys>" after a config file edit (or -USR2).
+The included shell script "ekeys-reread.sh" will do it for you.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 * Use the X program "xev" to find keycodes when changing the configuration.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

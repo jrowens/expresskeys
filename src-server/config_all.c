@@ -42,17 +42,22 @@ int read_file_config(int *ip, FILE *fp)
 	int num_field = 0;
 
 	char buffer [MAXBUFFER];
-	char *prog_name [MAXRECORDS];
-	char *prog_field [MAXFIELDS];
 	char *heap_protect;
+
+/* Put a dummy heap protection in place... */
+
+	if ((heap_protect = (char *)malloc(1024)) == NULL) {
+		return 2; 
+	}
 
 /* Previously allocated memory for the program names must be released */
 /* on subsequent reads of the config file. At program start the flag is 0 */
 
 	if (reread_config) {
-		for (i = 0; i < num_list; i++) {
-			free(prog_name [i]);
+		for (i = 0; i < num_list; i++, p++) {
+			free(p->class_name);
 		}
+		p = (void *)*ip;
 	}
 	reread_config = 1;
 
@@ -76,21 +81,10 @@ int read_file_config(int *ip, FILE *fp)
 				buffer [j] = '\0';
 				i = 0;
 				j = 0;
-				if ((heap_protect = (char *)malloc(1024)) == NULL) {
-					for (i = 0; i < num_record; i++) {
-						free(prog_name [i]);
-					}
-					return 2; 
-				}
-				if ((prog_name [num_record] = (char *)malloc(strlen(buffer)+1)) == NULL) {
-					for (i = 0; i < num_record; i++) {
-						free(prog_name [i]);
-					}
-					free(heap_protect);
+				if ((p->class_name = (char *)malloc(strlen(buffer)+1)) == NULL) {
 					return 2;
 				}
-				free(heap_protect);
-				memcpy(prog_name [num_record], buffer, (strlen(buffer)+1));
+				sprintf(p->class_name, "%s", buffer);
 				while ((c = fgetc(fp)) != EOF && (c != '}')) {
 					if (num_field < MAXFIELDS) {
 						if ((c != ',') && (isdigit(c))) {
@@ -102,67 +96,95 @@ int read_file_config(int *ip, FILE *fp)
 						if (c == ',') {
 							buffer [i] = '\0';
 							i=0;
-							if ((heap_protect = (char *)malloc(1024)) == NULL) {
-								for (i = 0; i < num_field; i++) {
-									free(prog_field [i]);
-								}
-								for (i = 0; i <= num_record; i++) {
-									free(prog_name [i]);
-								}
-								return 2; 
+
+							switch (num_field) {
+								case 0:
+								p->handle_touch = atoi(buffer);
+								break;
+								case 1:
+								p->l_touch_up = atoi(buffer);
+								break;
+								case 2:
+								p->l_touch_up_plus = atoi(buffer);
+								break;
+								case 3:
+								p->l_touch_down = atoi(buffer);
+								break;
+								case 4:
+								p->l_touch_down_plus = atoi(buffer);
+								break;
+								case 5:
+								p->r_touch_up = atoi(buffer);
+								break;
+								case 6:
+								p->r_touch_up_plus = atoi(buffer);
+								break;
+								case 7:
+								p->r_touch_down = atoi(buffer);
+								break;
+								case 8:
+								p->r_touch_down_plus = atoi(buffer);
+								break;
+								case 9:
+								p->key_9 = atoi(buffer);
+								break;
+								case 10:
+								p->key_9_plus = atoi(buffer);
+								break;
+								case 11:
+								p->key_10 = atoi(buffer);
+								break;
+								case 12:
+								p->key_10_plus = atoi(buffer);
+								break;
+								case 13:
+								p->key_11 = atoi(buffer);
+								break;
+								case 14:
+								p->key_11_plus = atoi(buffer);
+								break;
+								case 15:
+								p->key_12 = atoi(buffer);
+								break;
+								case 16:
+								p->key_12_plus = atoi(buffer);
+								break;
+								case 17:
+								p->key_13 = atoi(buffer);
+								break;
+								case 18:
+								p->key_13_plus = atoi(buffer);
+								break;
+								case 19:
+								p->key_14 = atoi(buffer);
+								break;
+								case 20:
+								p->key_14_plus = atoi(buffer);
+								break;
+								case 21:
+								p->key_15 = atoi(buffer);
+								break;
+								case 22:
+								p->key_15_plus = atoi(buffer);
+								break;
+								case 23:
+								p->key_16 = atoi(buffer);
+								break;
+								case 24:
+								p->key_16_plus = atoi(buffer);
+								break;
+								default:
+								break;
 							}
-							if ((prog_field [num_field] = (char *)malloc(strlen(buffer)+1)) == NULL) {
-								for (i = 0; i < num_field; i++) {
-									free(prog_field [i]);
-								}
-								for (i = 0; i <= num_record; i++) {
-									free(prog_name [i]);
-								}
-								free(heap_protect);
-								return 2;
-							}
-							free(heap_protect);
-							memcpy(prog_field [num_field], buffer, (strlen(buffer)+1));
 							num_field++;
 						}
 					}
 				}
 				if (num_field == MAXFIELDS) {
-
-					p->class_name = prog_name [num_record];
-					p->handle_touch = (atoi(prog_field [0]));
-					p->l_touch_up = (atoi(prog_field [1]));
-					p->l_touch_up_plus = (atoi(prog_field [2]));
-					p->l_touch_down = (atoi(prog_field [3]));
-					p->l_touch_down_plus = (atoi(prog_field [4]));
-					p->r_touch_up = (atoi(prog_field [5]));
-					p->r_touch_up_plus = (atoi(prog_field [6]));
-					p->r_touch_down = (atoi(prog_field [7]));
-					p->r_touch_down_plus = (atoi(prog_field [8]));
-					p->key_9 = (atoi(prog_field [9]));
-					p->key_9_plus = (atoi(prog_field [10]));
-					p->key_10 = (atoi(prog_field [11]));
-					p->key_10_plus = (atoi(prog_field [12]));
-					p->key_11 = (atoi(prog_field [13]));
-					p->key_11_plus = (atoi(prog_field [14]));
-					p->key_12 = (atoi(prog_field [15]));
-					p->key_12_plus = (atoi(prog_field [16]));
-					p->key_13 = (atoi(prog_field [17]));
-					p->key_13_plus = (atoi(prog_field [18]));
-					p->key_14 = (atoi(prog_field [19]));
-					p->key_14_plus = (atoi(prog_field [20]));
-					p->key_15 = (atoi(prog_field [21]));
-					p->key_15_plus = (atoi(prog_field [22]));
-					p->key_16 = (atoi(prog_field [23]));
-					p->key_16_plus = (atoi(prog_field [24]));
-
 					num_record++;
 					p++;
 				} else {
-						free(prog_name [num_record]);
-				}
-				for (i = 0; i < num_field; i++) {
-					free(prog_field [i]);
+					free(p->class_name);
 				}
 				num_field = 0;
 			}
@@ -171,6 +193,7 @@ int read_file_config(int *ip, FILE *fp)
 	if (!num_record) {
 		return 1;
 	}
+	free(heap_protect);
 	num_list = num_record;
 	return 0;
 }
