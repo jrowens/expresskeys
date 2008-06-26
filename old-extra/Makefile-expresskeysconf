@@ -1,16 +1,14 @@
 CC = gcc
-CFLAGS = -O2 -Wall
+CFLAGS = -O -g3 -Wall
 # Use -g3 to get full debug info
 
 INCLUDES = -I/usr/X11R6/lib
 LDFLAGS = -L/usr/X11R6/lib
-LIBS = -lX11 -lXext -lXi -lXtst
+LIBS = -lX11
 
-TARGET = expresskeys
+TARGET = expresskeysconf
 
-SRCS = globals.c config_read.c config_write.c on_error.c on_signal.c \
-	pen_mode.c get_device.c reg_events.c event_loop.c exec_shell.c \
-	main_setup.c
+SRCS = main_dummy.c
 
 OBJS = $(SRCS:.c=.o)
 ALL =  $(SRCS)

@@ -68,6 +68,7 @@ enum {                 /* Strings signaling key's use as a mouse button */
 
 /* Our global variables */
 extern char *our_prog_name;	/* This program's file name */
+extern char *our_prog_version; /* Our version. Change it in globals.c! */
 extern char *pen_name;		/* Identifier as set in the X config file */
 extern char *total_config_dir;	/* The "~/" of the user, plus our config_dir */
 extern char *total_config_file;	/* total_config_dir plus config_file */

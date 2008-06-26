@@ -150,6 +150,8 @@ int main (int argc, char *argv[])
 
 	if (argc < 2) {
 		fprintf(stderr, "\n");
+		fprintf(stderr, "%s Version: %s\n", our_prog_name, our_prog_version);
+		fprintf(stderr, "\n");
 		fprintf(stderr, "Usage: %s <pad-device-name> [<pen-device-name>] [-d] [-v]\n", our_prog_name);
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Where the pad name is mandatory. Specify a pen name\n");

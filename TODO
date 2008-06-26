@@ -6,8 +6,6 @@ the server to re-read it when done. Should optimally fill in the
 keycodes when user pushes a key (maybe just show the key) and fill
 in the class name as well when user clicks on a window.
 
-+ Autotool the build and install process?
-
 + Replace ASCII with something more international, like UTF-8.
 
 + Make the code 64-bit clean.

@@ -1,4 +1,17 @@
 
+_Version 0.2.3 13 May 2005_
+
+* The project now uses the GNU Autotools to:
+"./configure", "make" and "make install".
+
+* Print out a version number with the "Usage" info if the program is
+run with an empty command line.
+
+* Corrected the Blender entry (undo/redo in both edit and object mode).
+Yes, that's a cryptic line ;-) Try Blender for yourself. Next version,
+(2.37) due this month or so, will be something extra.
+
+
 _Version 0.2.2 5 May 2005_
 
 * Included an example of how to use an external program through

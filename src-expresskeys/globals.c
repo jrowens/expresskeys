@@ -29,6 +29,7 @@ XDevice *pad_device;
 XDevice *pen_device;
 
 char *our_prog_name;
+char *our_prog_version = "0.2.3"; /* Our version. Remember to change it! */
 char *pen_name;
 char *total_config_dir;
 char *total_config_file;
@@ -98,7 +99,7 @@ struct program internal_list[] = {
 /*		key_11		key_11_plus	key_12		key_12_plus */
 		50,		0,		23,		0,
 /*		key_13		key_13_plus	key_14		key_14_plus */
-		50,		30,		30,		0,
+		37,		29,		37,		52,
 /*		key_15		key_15_plus	key_16		key_16_plus */
 		999,		0,		65,		0	},
 

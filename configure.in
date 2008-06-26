@@ -1,0 +1,118 @@
+dnl --- Process this file with autoconf to produce a configure script ---
+
+dnl --- Style and most code below nicked from the linuxwacom package ;-) ---
+
+AC_INIT(src-expresskeys/main_setup.c)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(expresskeys, 0.2.3)
+AM_MAINTAINER_MODE
+AC_PROG_CC
+
+dnl --- Specify our source directories. OBS: If they change, AC_OUTPUT must
+dnl also be changed accordingly (at the end of this file) ---
+
+SRC_DIRS=""
+SRC_EXPRESSKEYS=src-expresskeys
+SRC_EXPRESSKEYSCONF=src-expresskeysconf
+
+dnl --- Begin function for checking Xlib development environment ---
+
+XLIBDIR_DEFAULT=/usr/X11R6/lib
+ENV_XLIB=no
+
+AC_DEFUN([AC_CHECK_XLIB],[
+XLIBDIR=
+AC_ARG_WITH(xlib,
+AS_HELP_STRING([--with-xlib=dir], [uses a specified X11R6 directory]),
+[XLIBDIR=$withval])
+
+AC_MSG_CHECKING(for Xlib directory)
+if test "$XLIBDIR" == "" || test "$XLIBDIR" == "yes"; then
+	if test -d $XLIBDIR_DEFAULT; then
+		XLIBDIR=$XLIBDIR_DEFAULT
+		ENV_XLIB=yes
+		AC_MSG_RESULT(found)
+	else
+		ENV_XLIB=no
+		AC_MSG_RESULT(not found - tried $XLIBDIR_DEFAULT)
+	fi
+elif test -d $XLIBDIR; then
+	ENV_XLIB=yes
+	AC_MSG_RESULT(found)
+else
+	ENV_XLIB=no
+	AC_MSG_RESULT(not found - tried $XLIBDIR)
+fi
+])
+
+dnl --- End function for checking Xlib development environment ---
+
+dnl --- Call function to check Xlib ---
+
+AC_CHECK_XLIB
+
+dnl --- Check if we should build expresskeys (default yes) ---
+
+EXPRESSKEYS_DEFAULT=yes
+OPTION_EXPRESSKEYS=no
+AC_ARG_ENABLE(expresskeys,
+AC_HELP_STRING([--enable-expresskeys], [Enable building expresskeys [[default=yes]]]),
+	, enable_expresskeys=$EXPRESSKEYS_DEFAULT)
+if test "$enable_expresskeys" != "no"; then
+	if test x$ENV_XLIB != xyes; then
+		echo "***"; echo "*** WARNING:";
+		echo "*** expresskeys requires Xlib environment."
+		echo "*** expresskeys will not be built."
+		echo "***"
+	else
+		OPTION_EXPRESSKEYS=yes
+		EXPRESSKEYS_LIBS="-L$XLIBDIR -lX11 -lXi -lXtst"
+		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYS"
+	fi
+fi
+
+dnl --- Check if we should build expresskeysconf (default no - not ready) ---
+
+EXPRESSKEYSCONF_DEFAULT=no
+OPTION_EXPRESSKEYSCONF=no
+AC_ARG_ENABLE(expresskeysconf,
+AC_HELP_STRING([--enable-expresskeysconf], [Enable building expresskeysconf [[default=no]]]),
+	, enable_expresskeysconf=$EXPRESSKEYSCONF_DEFAULT)
+if test "$enable_expresskeysconf" != "no"; then
+	if test x$ENV_XLIB != xyes; then
+		echo "***"; echo "*** WARNING:";
+		echo "*** expresskeysconf requires Xlib environment."
+		echo "*** expresskeysconf will not be built."
+		echo "***"
+	else
+		OPTION_EXPRESSKEYSCONF=yes
+		EXPRESSKEYSCONF_LIBS="-L$XLIBDIR -lX11"
+		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYSCONF"
+	fi
+fi
+
+dnl --- Separate test output from file-generation output ---
+
+AC_SUBST(SRC_DIRS)
+AC_SUBST(EXPRESSKEYS_LIBS)
+AC_SUBST(EXPRESSKEYSCONF_LIBS)
+
+dnl --- Create the files ---
+
+AC_OUTPUT(Makefile
+	src-expresskeys/Makefile
+	src-expresskeysconf/Makefile)
+
+dnl --- Show the result ---
+
+echo ""
+echo "----------------------------------------"
+echo "  BUILD ENVIRONMENT:"
+echo "		   Xlib - $ENV_XLIB $XLIBDIR"
+echo ""
+echo "  BUILD OPTIONS:"
+echo "	expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- OBS Not ready yet!"
+echo "	    expresskeys - $OPTION_EXPRESSKEYS"
+echo "----------------------------------------"
+echo ""
+

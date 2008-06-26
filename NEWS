@@ -1,5 +1,5 @@
 
 _Changes since last version. Executive summary_
 
-- Sample xsetwacom utilization (pen pressure sensitivity).
+- The project now uses the GNU Autotools.
 

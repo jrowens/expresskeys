@@ -1,10 +1,29 @@
 
-Take a look in the extremely simple Makefile in the src-server
-directory if setting CFLAGS is your want. Next step is to type:
+Just type:
 
+./configure
 make
+make install
 
-Then copy the binary to a suitable location. There's also the
-option to type "make clean", which deletes all the .o files after
-a compilation (it will also remove the binary).
+Default installation directory is /usr/local/bin so you must be root
+for the "make install" part. Change the target directory if this is
+undesirable, eg:
+
+./configure --prefix=/home/user
+
+The binary will then be installed to a /home/user/bin directory instead.
+
+Use the "--with-xlib=" option if your Xlib environment is nonstandard.
+By default we look for /usr/X11R6/lib
+
+The old-extra directory holds the expresskeys-reread.sh and
+expresskeys-terminate.sh shell scripts. They are not installed by the
+GNU Autotools. Copy them manually if you want them.
+
+--------------------------------------------------------------------------
+
+I've also left the old style Makefiles in the old-extra directory. If the
+GNU Autotools fail for some reason, those are easier to understand and
+edit. Then just copy them over to each Makefile in the source directories.
+Type "make" and copy the binary to a suitable location.
 
