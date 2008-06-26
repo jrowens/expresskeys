@@ -21,6 +21,17 @@ button 1 or react to mouse button 2 and 3 presses until the Wacom stylus
 has come into proximity for the first time. After the first proximity,
 the mouse and puck react normally. Strange...
 
+! If the expresskeys program is started before any usage of the
+X program "xmodmap" in eg .xinitrc, it can crash with the message:
+
+X Error of failed request:  BadWindow (invalid Window parameter)
+  Major opcode of failed request:  15 (X_QueryTree)
+  Resource id in failed request:  0x1
+  Serial number of failed request:  20
+  Current serial number in output stream:  20
+
+Reason, totally unknown...
+
 _Known bugs, unmarked_
 
 ! Should check that only valid keycodes (and our fake ones) are used

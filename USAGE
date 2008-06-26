@@ -43,6 +43,10 @@ The names are the "Identifier" strings in your X config file (xorg.conf)
 Myself I start expresskeys just before the window manager in my 
 .xinitrc with: /usr/local/bin/expresskeys pad stylus -d
 
+OBS! I just found out that it should be started AFTER any usage of
+the X program "xmodmap", else expresskeys could crash. Reason unknown.
+See the BUGS file for further info.
+
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 * A minimal configuration file is written on first run to the user home
@@ -71,6 +75,104 @@ a pid-file from a daemon instance is present.
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 * Use the X program "xev" to find keycodes when changing the configuration.
+
+Since I've received a request for an explanation, I'll quote the reply:
+
+--Begin Letter--
+
+> I'm using your expresskeys for my intous3 but I'm
+> a linux newbie and now I'm a bit confused, what is
+> the right keycode or config for the arrow key.
+>
+> I want Space on 12
+> Left arrow on 9
+> Right arrow on 10
+
+Keycodes are both confusing and simple, at the same time ;-) They are
+different depending on your language and keyboard design, and also
+different if you are in X or not, but share some common details.
+
+To find how they are organized on your own keyboard, you must use a
+program. First (if you are in X as you should be) open a terminal. The
+only one I have per default is "xterm" since I don't use gnome or kde or
+anything like that, where a terminal window can be called just
+"terminal"... Other standalone terminals are "aterm", "rxvt", "eterm"
+etc.
+
+Now start a program from within the open terminal. One that _must_ be
+present on your system (I think) is "xev". It comes as standard with X.
+When you start xev it spawns another window (small white square) and
+spits out a lot of info in the terminal window. You must move the mouse
+pointer to the square window before doing any key presses.
+
+Ok, now I'll press Space, Left Arrow and Right Arrow:
+
+KeyPress event, serial 27, synthetic NO, window 0x1200001,
+    root 0x115, subw 0x0, time 5261195, (128,125), root:(138,145),
+    state 0x0, keycode 65 (keysym 0x20, space), same_screen YES,
+    XLookupString gives 1 bytes: (20) " "
+    XmbLookupString gives 1 bytes: (20) " "
+    XFilterEvent returns: False
+
+The important information here is the "keycode 65 (keysym 0x20, space)".
+There will be another information dump when you release the space key,
+called KeyRelease.
+
+So on my Swedish keyboard, X uses the keycode 65 to represent the
+spacebar. Ok, here's Left Arrow:
+
+KeyPress event, serial 27, synthetic NO, window 0x1200001,
+    root 0x115, subw 0x0, time 5281166, (128,125), root:(138,145),
+    state 0x0, keycode 100 (keysym 0xff51, Left), same_screen YES,
+    XLookupString gives 0 bytes: 
+    XmbLookupString gives 0 bytes: 
+    XFilterEvent returns: False
+
+Keycode is 100 here. Let's go to Right Arrow:
+
+KeyPress event, serial 27, synthetic NO, window 0x1200001,
+    root 0x115, subw 0x0, time 5283438, (128,125), root:(138,145),
+    state 0x0, keycode 102 (keysym 0xff53, Right), same_screen YES,
+    XLookupString gives 0 bytes: 
+    XmbLookupString gives 0 bytes: 
+    XFilterEvent returns: False
+
+So it's 102. When you are finished looking for the keycodes, give the
+terminal window focus (place the mouse cursor there or whatever) and
+press Ctrl-c (you can also click on the close button of the white square
+window).
+
+That's how it looks on this Swedish keyboard. Now open the expresskeys
+configuration file with any editor. The location is a hidden directory
+in your home directory. Here's mine:
+
+/home/loke/.expresskeys/expresskeys.conf
+
+Replace the keycodes in the section you are interested in, I'd do:
+
+10 Left Pad - Button 9:         100     # Button 9 Left Arrow
+11 Left Pad - Button 9 Plus:    0       # Extra key
+
+12 Left Pad - Button 10:        102     # Button 10 Right Arrow
+13 Left Pad - Button 10 Plus:   0       # Extra key
+
+14 Left Pad - Button 11:        37      # Button 11
+15 Left Pad - Button 11 Plus:   0       # Extra key
+
+16 Left Pad - Button 12:        65      # Button 12 Space (was default)
+17 Left Pad - Button 12 Plus:   0       # Extra key
+
+Save the file and read in the new values with the shell script I
+supplied (expresskeys-reread.sh)
+
+The extra key are for when you want two keys pressed. First the normal,
+then the extra, like Ctrl-s or so. I've been informed that a US keyboard
+doesn't have a single + key, it's shifted on their = key. So they must
+use Shift-= in the expresskeys gimp section to zoom in, thereby wasting
+the extra key. A workaround is to configure gimp itself to zoom by the =
+key instead of +.
+
+--End Letter--
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

@@ -1,5 +1,5 @@
 
 _Changes since last version. Executive summary_
 
-- The project now uses the GNU Autotools.
+- Cleaned up gcc warnings on a x86_64 system.
 

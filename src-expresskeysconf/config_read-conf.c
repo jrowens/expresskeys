@@ -1,5 +1,5 @@
 /*
- config_read.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
+ config_read-conf.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
  Copyright (C) 2005 - Mats Johannesson
  
@@ -18,7 +18,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include "globals.h"
+#include "globals-conf.h"
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Function reads a configuration file containing program names and
@@ -35,7 +35,6 @@ int read_file_config(int *ip, FILE *fp)
 	/* Convert to long for x86_64 systems */
 	p = (void *)(long)*ip;
 
-	int i;
 	int num_record = 0;
 	int num_field = 0;
 	
@@ -46,19 +45,6 @@ int read_file_config(int *ip, FILE *fp)
 	const char ignore[] = " \t\n";
 	const char *delimiter_first, *delimiter_last;
 	char *token;
-
-/* Previously allocated memory for the program names must be released
-   on subsequent reads of the config file. At program start the flag is 0 */
-
-	if (reread_config) {
-		for (i = 0; i < num_list; i++, p++) {
-			free(p->class_name);
-		}
-		/* Convert to long for x86_64 systems */
-		p = (void *)(long)*ip;
-	}
-	reread_config = 1;
-	num_list = 0;
 
 /* Begin by making sure that the Config File Version number is present before
    a record begins. We exit if it's lacking or the number doesn't match up */

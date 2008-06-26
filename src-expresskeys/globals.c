@@ -29,7 +29,7 @@ XDevice *pad_device;
 XDevice *pen_device;
 
 char *our_prog_name;
-char *our_prog_version = "0.2.3"; /* Our version. Remember to change it! */
+char *our_prog_version = "0.2.4"; /* Our version. Remember to change it! */
 char *pen_name;
 char *total_config_dir;
 char *total_config_file;

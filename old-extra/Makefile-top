@@ -1,10 +1,10 @@
 
 all:
-	$(MAKE) -C src-expresskeys
-	mv src-expresskeys/expresskeys .
+#	$(MAKE) -C src-expresskeys
+#	mv src-expresskeys/expresskeys .
 
-#	$(MAKE) -C src-expresskeysconf
-#	mv src-expresskeysconf/expresskeysconf .
+	$(MAKE) -C src-expresskeysconf
+	mv src-expresskeysconf/expresskeysconf .
 clean:
 	rm -f expresskeys expresskeysconf src-expresskeys/*.o src-expresskeysconf/*.o
 
