@@ -50,6 +50,7 @@
 #define MAXFIELDS 25	/* Max entries (minus program name) in each record */
 #define MAXDIGITS 3	/* Max number of digits in a key entry */
 #define MAXBUFFER 64	/* Scratch buffer. Also sets program name length limit*/
+#define CONFIG_VERSION 1 /* Config file version - for future format changes */
 
 /* Our global variables */
 extern char *our_prog_name;	/* This program's file name */
@@ -85,20 +86,23 @@ extern XDevice *pad_device;	/* The actual pointer to the pad device */
 extern XDevice *pen_device;	/* The actual pointer to the pen device */
 
 /* Our global (internal) functions */
-/* In config_all.c */
+/* In config_read.c */
 extern int read_file_config(int *ip, FILE *fp);
+/* In config_write.c */
 extern int write_file_config(int *ip, FILE *fp);
-/* In get_device.c */
-extern int get_device_info(Display *display, char *name);
-/* In reg_events.c */
-extern int register_events(Display *display, XDeviceInfo *pad_info, char *name);
-/* In pen_mode.c */
-extern int toggle_pen_mode(Display *display, char *name);
 /* In event_loop.c */
 extern int use_events(Display *display);
-/* In signal_all.c */
+/* In get_device.c */
+extern int get_device_info(Display *display, char *name);
+/* In on_error.c */
+extern int exit_on_error(FILE *fp, char *string1, char *string2, char *string3);
+/* In on_signal.c */
 extern void re_read_file_config(int signum);
 extern void clean_up_exit(int signum);
+/* In pen_mode.c */
+extern int toggle_pen_mode(Display *display, char *name);
+/* In reg_events.c */
+extern int register_events(Display *display, XDeviceInfo *pad_info, char *name);
 
 /* Our global structures */
 /* The internal_list is initialized in globals.c */

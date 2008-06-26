@@ -1,5 +1,5 @@
 /*
- * signal_all.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
+ * on_signal.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  *
  * Copyright (C) 2005 - Mats Johannesson
  *
@@ -37,19 +37,14 @@ void re_read_file_config(int signum)
 /* Open (and truncate) an error log for future reference */
 	
 	if ((errorfp = fopen(total_error_file, "w")) == NULL) {
-		fprintf(stderr, "%s ERROR: Reread - Can not open %s in write mode\n", our_prog_name, total_error_file);
-		XCloseDisplay(display);
-		exit(EXIT_KO);
+		exit_on_error(errorfp, "%s ERROR: Reread - Can not open %s in write mode\n", our_prog_name, total_error_file);
 	}
 
 /* Read in an existing configuration file */
 
 	p = external_list;
 	if ((fp = fopen(total_config_file, "r")) == NULL) {
-		fprintf(stderr, "%s ERROR: Reread - Can not open %s in read mode\n", our_prog_name, total_config_file);
-		fprintf(errorfp, "%s ERROR: Reread - Can not open %s in read mode\n", our_prog_name, total_config_file);
-		XCloseDisplay(display);
-		exit(EXIT_KO);
+		exit_on_error(errorfp, "%s ERROR: Reread - Can not open %s in read mode\n", our_prog_name, total_config_file);
 	} else {
 		switch (read_file_config((void *)&p, fp)){
 			
@@ -58,22 +53,13 @@ void re_read_file_config(int signum)
 			break;
 
 			case 1:
-			fprintf(stderr, "%s ERROR: Reread - No complete record found in %s\n", our_prog_name, total_config_file);
-			fprintf(errorfp, "%s ERROR: Reread - No complete record found in %s\n", our_prog_name, total_config_file);
-			XCloseDisplay(display);
-			exit(EXIT_KO);
+			exit_on_error(errorfp, "%s ERROR: Reread - No complete record found in %s\n", our_prog_name, total_config_file);
 			
 			case 2:
-			fprintf(stderr, "%s ERROR: Reread - Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
-			fprintf(errorfp, "%s ERROR: Reread - Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
-			XCloseDisplay(display);
-			exit(EXIT_KO);
+			exit_on_error(errorfp, "%s ERROR: Reread - Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
 			
 			default:
-			fprintf(stderr, "%s ERROR: Reread - Unknown error while parsing %s\n", our_prog_name, total_config_file);
-			fprintf(errorfp, "%s ERROR: Reread - Unknown error while parsing %s\n", our_prog_name, total_config_file);
-			XCloseDisplay(display);
-			exit(EXIT_KO);
+			exit_on_error(errorfp, "%s ERROR: Reread - Unknown error while parsing %s\n", our_prog_name, total_config_file);
 		}
 	}
 	

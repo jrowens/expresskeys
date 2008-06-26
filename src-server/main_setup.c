@@ -28,17 +28,17 @@ int main (int argc, char *argv[])
 
 	struct program *p;
 
-	int i;
-	int len;
+	int i = 0;
+	int len = 0;
 
-	FILE *fp;
-	FILE *errorfp;
+	FILE *fp = NULL;
+	FILE *errorfp = NULL;
 
 /* Prelaunch sanity checks: See if X is OK */
 
 	if ((display = XOpenDisplay(NULL)) == NULL) {
 		fprintf(stderr, "%s ERROR: Can not connect to your X Server\n", our_prog_name);
-		return EXIT_KO; 
+		exit(EXIT_KO); 
 	}
 	screen = DefaultScreen(display);
 
@@ -46,9 +46,7 @@ int main (int argc, char *argv[])
 
 	char *user_homedir;
 	if ((user_homedir = getenv("HOME")) == NULL) {
-		fprintf(stderr, "%s ERROR: Can not find your HOME directory!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Can not find your HOME directory!\n", our_prog_name, "");
 	}
 
 /* This is silly, but in order to keep the heap from being stomped on */
@@ -62,8 +60,7 @@ int main (int argc, char *argv[])
 
 	char *heap_protect;
 	if ((heap_protect = (char *)malloc(1024)) == NULL) {
-		fprintf(stderr, "%s ERROR: Memory allocation trouble at stage 1!\n", our_prog_name);
-		return EXIT_KO; 
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 1!\n", our_prog_name, "");
 	}
 
 /* Concatenate the home directory string with the string of our preferred*/
@@ -73,9 +70,7 @@ int main (int argc, char *argv[])
 	char *total_config_dir_block;
 	len = strlen(user_homedir) + strlen(config_dir) + 1;
 	if ((total_config_dir_block = (char *)malloc(len)) == NULL) {
-		fprintf(stderr, "%s ERROR: Memory allocation trouble at stage 2!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO; 
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 2!\n", our_prog_name, "");
 	}
 	sprintf(total_config_dir_block, "%s%s", user_homedir, config_dir);
 	total_config_dir = total_config_dir_block;
@@ -85,9 +80,7 @@ int main (int argc, char *argv[])
 	char *total_config_file_block;
 	len = strlen(total_config_dir) + strlen(config_file) + 1;
 	if ((total_config_file_block = (char *)malloc(len)) == NULL) {
-		fprintf(stderr, "%s ERROR: Memory allocation trouble at stage 3!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO; 
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 3!\n", our_prog_name, "");
 	}
 	sprintf(total_config_file_block, "%s%s", total_config_dir, config_file);
 	total_config_file = total_config_file_block;
@@ -97,9 +90,7 @@ int main (int argc, char *argv[])
 	char *total_pid_file_block;
 	len = strlen(total_config_dir) + strlen(pid_file) + 1;
 	if ((total_pid_file_block = (char *)malloc(len)) == NULL) {
-		fprintf(stderr, "%s ERROR: Memory allocation trouble at stage 4!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO; 
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 4!\n", our_prog_name, "");
 	}
 	sprintf(total_pid_file_block, "%s%s", total_config_dir, pid_file);
 	total_pid_file = total_pid_file_block;
@@ -109,9 +100,7 @@ int main (int argc, char *argv[])
 	char *total_error_file_block;
 	len = strlen(total_config_dir) + strlen(error_file) + 1;
 	if ((total_error_file_block = (char *)malloc(len)) == NULL) {
-		fprintf(stderr, "%s ERROR: Memory allocation trouble at stage 5!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO; 
+		exit_on_error(errorfp, "%s ERROR: Memory allocation trouble at stage 5!\n", our_prog_name, "");
 	}
 	sprintf(total_error_file_block, "%s%s", total_config_dir, error_file);
 	total_error_file = total_error_file_block;
@@ -127,9 +116,7 @@ int main (int argc, char *argv[])
 
 	if ((fp = fopen(total_config_dir, "r")) == NULL) {
 		if ((mkdir(total_config_dir, 0777)) == NON_VALID) {
-			fprintf(stderr, "%s ERROR: Can not read or create %s\n", our_prog_name, total_config_dir);
-			XCloseDisplay(display);
-			return EXIT_KO;
+			exit_on_error(errorfp, "%s ERROR: Can not read or create %s\n", our_prog_name, total_config_dir);
 		}
 	} else {
 		fclose(fp);
@@ -146,30 +133,23 @@ int main (int argc, char *argv[])
 		fgets(pid_buffer, MAXBUFFER, fp);
 		fclose(fp);
 		if ((kill(atoi(pid_buffer), 0)) != NON_VALID) {
-			fprintf(stderr, "%s ERROR: Another instance of %s seems to be running!\n", our_prog_name, our_prog_name);
-			XCloseDisplay(display);
-			return EXIT_KO;
+			exit_on_error(errorfp, "%s ERROR: Another instance of %s seems to be running!\n", our_prog_name, our_prog_name);
 		}
 	}
 
 /* Open (and truncate) an error log for future reference */
 
 	if ((errorfp = fopen(total_error_file, "w")) == NULL) {
-		fprintf(stderr, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_error_file);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_error_file);
 	}
-	
+
 /* Can we use XTest to send fake key presses */
 
 	int event_base, error_base;
 	int major_version, minor_version;
 	if (!XTestQueryExtension(display, &event_base, &error_base,
 		&major_version, &minor_version)) {
-		fprintf(stderr, "%s ERROR: XTest extension not present on your X server\n", our_prog_name);
-		fprintf(errorfp, "%s ERROR: XTest extension not present on your X server\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: XTest extension not present on your X server\n", our_prog_name, "");
 	}
 
 /* Can we use XInput to talk with the tablet */
@@ -179,10 +159,7 @@ int main (int argc, char *argv[])
 	if (xinputext && (xinputext != (XExtensionVersion*) NoSuchExtension)) {
 		XFree(xinputext);
 	} else {
-		fprintf(stderr, "%s ERROR: XInput extension not present on your X server\n", our_prog_name);
-		fprintf(errorfp, "%s ERROR: XInput extension not present on your X server\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: XInput extension not present on your X server\n", our_prog_name, "");
 	}
 
 /* We need at least the pad name specified... */
@@ -198,7 +175,7 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "Example: %s pad stylus -d\n", our_prog_name);
 		fprintf(stderr, "\n");
 		XCloseDisplay(display);
-		return EXIT_KO;
+		exit(EXIT_KO);
 	}
 
 /* See if the pad is for real, and if it is active */
@@ -206,10 +183,7 @@ int main (int argc, char *argv[])
 	pad_info = (void *) get_device_info(display, argv[1]);
 	XFreeDeviceList(info);
 	if (!pad_info) {
-		fprintf(stderr, "%s ERROR: Can not find pad device: %s\n", our_prog_name, argv[1]);
-		fprintf(errorfp, "%s ERROR: Can not find pad device: %s\n", our_prog_name, argv[1]);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Can not find pad device: %s\n", our_prog_name, argv[1]);
 	}
 
 /* Set a flag if we should run as a daemon. Also register */
@@ -229,10 +203,7 @@ int main (int argc, char *argv[])
 				pen_info = (void *) get_device_info(display, argv[i]);
 				XFreeDeviceList(info);
 				if (!pen_info) {
-					fprintf(stderr, "%s ERROR: Can not find pen device: %s\n", our_prog_name, pen_name);
-					fprintf(errorfp, "%s ERROR: Can not find pen device: %s\n", our_prog_name, pen_name);
-					XCloseDisplay(display);
-					return EXIT_KO;
+					exit_on_error(errorfp, "%s ERROR: Can not find pen device: %s\n", our_prog_name, pen_name);
 				}
 				break;
 			}
@@ -244,31 +215,23 @@ int main (int argc, char *argv[])
 	if (handle_pen) {
 		pen_mode = Relative;
 		if (toggle_pen_mode(display, pen_name)) {
-			fprintf(stderr, "%s ERROR: Can not open pen device: %s\n", our_prog_name, pen_name);
-			fprintf(errorfp, "%s ERROR: Can not open pen device: %s\n", our_prog_name, pen_name);
-			XCloseDisplay(display);
-			return EXIT_KO;
+			exit_on_error(errorfp, "%s ERROR: Can not open pen device: %s\n", our_prog_name, pen_name);
 		}
 	}
 
-/* If no configuration file exists, write out a */
-/* short one from an internal memory structure */
+/* If no configuration file exists, write out a short one from an internal */
+/* memory structure. Also tag it with a version number - for future use */
 
 	if ((fp = fopen(total_config_file, "a+")) == NULL) {
-		fprintf(stderr, "%s ERROR: Can not open %s in read/write mode\n", our_prog_name, total_config_file);
-		fprintf(errorfp, "%s ERROR: Can not open %s in read/write mode\n", our_prog_name, total_config_file);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Can not open %s in read/write mode\n", our_prog_name, total_config_file);
 	} else {
 		rewind(fp);
 		if (fgetc(fp) == EOF) {
+			fprintf(fp, "Config File Version %d:\n\n", CONFIG_VERSION);
 			for (p = internal_list; p < internal_list + num_list; p++) {
 				write_file_config((void *)&p, fp);
 				if (ferror(fp)) {
-					fprintf(stderr, "%s ERROR: Write error in %s\n", our_prog_name, total_config_file);
-					fprintf(errorfp, "%s ERROR: Write error in %s\n", our_prog_name, total_config_file);
-					XCloseDisplay(display);
-					return EXIT_KO;
+					exit_on_error(errorfp, "%s ERROR: Write error in %s\n", our_prog_name, total_config_file);
 				}
 			}
 		}
@@ -279,10 +242,7 @@ int main (int argc, char *argv[])
 
 	p = external_list;
 	if ((fp = fopen(total_config_file, "r")) == NULL) {
-		fprintf(stderr, "%s ERROR: Can not open %s in read mode\n", our_prog_name, total_config_file);
-		fprintf(errorfp, "%s ERROR: Can not open %s in read mode\n", our_prog_name, total_config_file);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Can not open %s in read mode\n", our_prog_name, total_config_file);
 	} else {
 		switch (read_file_config((void *)&p, fp)){
 			
@@ -291,39 +251,26 @@ int main (int argc, char *argv[])
 			break;
 
 			case 1:
-			fprintf(stderr, "%s ERROR: No complete record found in %s\n", our_prog_name, total_config_file);
-			fprintf(errorfp, "%s ERROR: No complete record found in %s\n", our_prog_name, total_config_file);
-			XCloseDisplay(display);
-			return EXIT_KO;
+			exit_on_error(errorfp, "%s ERROR: No complete record found in %s\n", our_prog_name, total_config_file);
 			
 			case 2:
-			fprintf(stderr, "%s ERROR: Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
-			fprintf(errorfp, "%s ERROR: Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
-			XCloseDisplay(display);
-			return EXIT_KO;
+			exit_on_error(errorfp, "%s ERROR: Memory allocation error while parsing %s\n", our_prog_name, total_config_file);
 			
 			default:
-			fprintf(stderr, "%s ERROR: Unknown error while parsing %s\n", our_prog_name, total_config_file);
-			fprintf(errorfp, "%s ERROR: Unknown error while parsing %s\n", our_prog_name, total_config_file);
-			XCloseDisplay(display);
-			return EXIT_KO;
+			exit_on_error(errorfp, "%s ERROR: Unknown error while parsing %s\n", our_prog_name, total_config_file);
 		}
 	}
 
 /* Replace some of the normal signal handlers with our own functions. We */
 /* want SIGUSR1 and SIGUSR2 to read in the config file after a modification, */
-/* and all the normal program exits should first clean up a bit. The exit */
-/* could have been handled by a call to "atexit" but this was more fun :-) */
+/* and all the normal program exits should first clean up a bit */
 
 	if ((signal(SIGUSR1, re_read_file_config) == SIG_ERR)
 		|| (signal(SIGUSR2, re_read_file_config) == SIG_ERR)
 		|| (signal(SIGINT, clean_up_exit) == SIG_ERR)
 		|| (signal(SIGHUP, clean_up_exit) == SIG_ERR)
 		|| (signal(SIGTERM, clean_up_exit) == SIG_ERR)) {
-		fprintf(stderr, "%s ERROR: Failed to modify signal handling!\n", our_prog_name);
-		fprintf(errorfp, "%s ERROR: Failed to modify signal handling!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Failed to modify signal handling!\n", our_prog_name, "");
 	}
 
 /* Ready to launch in the foreground or as a daemon after one last check. */
@@ -334,24 +281,15 @@ int main (int argc, char *argv[])
 	if (register_events(display, pad_info, argv[1])) {
 		if (go_daemon) {
 			if ((daemon(0, 1)) == NON_VALID) {
-				fprintf(stderr, "%s ERROR: Failed to fork into daemon mode! EXITING!\n", our_prog_name);
-				fprintf(errorfp, "%s ERROR: Failed to fork into daemon mode! EXITING!\n", our_prog_name);
-				XCloseDisplay(display);
-				return EXIT_KO;
+				exit_on_error(errorfp, "%s ERROR: Failed to fork into daemon mode! EXITING!\n", our_prog_name, "");
 			} else {
 				sprintf(pid_buffer, "%d", getpid());
 				if ((fp = fopen(total_pid_file, "w")) == NULL) {
-					fprintf(stderr, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_pid_file);
-					fprintf(errorfp, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_pid_file);
-					XCloseDisplay(display);
-					exit(EXIT_KO);
+					exit_on_error(errorfp, "%s ERROR: Can not open %s in write mode\n", our_prog_name, total_pid_file);
 				} else {
 					fprintf(fp, "%s", pid_buffer);
 					if (ferror(fp)) {
-						fprintf(stderr, "%s ERROR: Write error in %s\n", our_prog_name, total_pid_file);
-						fprintf(errorfp, "%s ERROR: Write error in %s\n", our_prog_name, total_pid_file);
-						XCloseDisplay(display);
-						exit(EXIT_KO);
+						exit_on_error(errorfp, "%s ERROR: Write error in %s\n", our_prog_name, total_pid_file);
 					} else {
 						fclose(fp);
 					}
@@ -362,14 +300,12 @@ int main (int argc, char *argv[])
 		free(heap_protect); /* free the dummy heap protect */
 		use_events(display); /* <-- Our true launch! The event loop */
 	} else {
-		fprintf(stderr, "%s ERROR: Could not register any events!\n", our_prog_name);
-		fprintf(errorfp, "%s ERROR: Could not register any events!\n", our_prog_name);
-		XCloseDisplay(display);
-		return EXIT_KO;
+		exit_on_error(errorfp, "%s ERROR: Could not register any events!\n", our_prog_name, "");
 	}
 
 	XCloseDisplay(display);
-	return EXIT_OK;
+	exit(EXIT_OK);
+
 }
 
 /* End Code */
