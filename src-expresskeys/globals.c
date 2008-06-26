@@ -1,7 +1,7 @@
 /*
  globals.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson
+ Copyright (C) 2005-2006 - Mats Johannesson
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ XDevice *pad_device;
 XDevice *pen_device;
 
 char *our_prog_name;
-char *our_prog_version = "0.2.4"; /* Our version. Remember to change it! */
+char *our_prog_version = "0.2.5"; /* Our version. Remember to change it! */
 char *pen_name;
 char *total_config_dir;
 char *total_config_file;
@@ -78,15 +78,15 @@ struct program internal_list[] = {
 /*		l_touch_up	l_touch_up_plus	l_touch_down	l_touch_down_plus */
 		20,		0,		61,		0,
 /*		r_touch_up	r_touch_up_plus	r_touch_down	r_touch_down_plus */
-		20,		0,		61,		0,
+		64,		20,		64,		61,
 /*		key_9		key_9_plus	key_10		key_10_plus */
 		50,		0,		64,		0,
 /*		key_11		key_11_plus	key_12		key_12_plus */
 		37,		0,		65,		0,
 /*		key_13		key_13_plus	key_14		key_14_plus */
-		50,		0,		64,		0,
+		37,		29,		37,		52,
 /*		key_15		key_15_plus	key_16		key_16_plus */
-		37,		0,		65,		0	},
+		999,		0,		65,		0	},
 
 /*	Name	handle_touch */
 {"Blender",	1,

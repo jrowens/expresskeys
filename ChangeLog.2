@@ -1,0 +1,341 @@
+
+_Version 0.2.4 23 Aug 2005_
+
+* Began code transfer/reuse from src-expresskeys to src-expresskeysconf
+as a scaffold for some kind of graphical utility. Long way to go...
+
+* Explained the X "xev" program and keycodes a little better in
+the USAGE file.
+
+* Put a warning regarding the X program "xmodmap" in the BUGS and
+in the USAGE file.
+
+* Cleaned up gcc warnings on a x86_64 system.
+
+_Data Type Sizes (for my own reference)_
+
+Type		x86	x86_64
+
+char		8	8
+short		16	16
+int		32	32
+long		32	64
+long long	64	64
+float		32	32
+double		64	64
+long double	96	128
+void*		32	64
+
+In short, a programmer should NOT assume that:
+sizeof(int) == sizeof(long) == sizeof(void*)
+
+
+_Version 0.2.3 13 May 2005_
+
+* The project now uses the GNU Autotools to:
+"./configure", "make" and "make install".
+
+* Print out a version number with the "Usage" info if the program is
+run with an empty command line.
+
+* Corrected the Blender entry (undo/redo in both edit and object mode).
+Yes, that's a cryptic line ;-) Try Blender for yourself. Next version,
+(2.37) due this month or so, will be something extra.
+
+
+_Version 0.2.2 5 May 2005_
+
+* Included an example of how to use an external program through
+the simple "system" command (see exec_shell.c). The sample
+"xsetwacom" utilization (pen pressure sensitivity) is not particularly
+exciting as a new feature, but nevertheless an opening for future
+implementations.
+
+It's hard to imagine someone wasting three full expresskeys to get
+a comfortable workflow, but here you are:
+
+Keycode field value (regular button only, not touch strips or Plus)
+1001 <-- Pen sensitivity gets lower with each press, until roll over.
+1002 <-- Pen sensitivity is set to wacom default, a middle curve.
+1003 <-- Pen sensitivity gets higher with each press, until roll over.
+
+A pen name must be specified on the command line, of course.
+
+Since both the 1001 and 1003 flip over in a carousel fashion at the
+top and bottom values, you could manage the operation with only one
+button. But if you go too far, there are 6 presses to be made until
+next rendezvous in the 7 state circle. Not good.
+
+The curve values are picked from how the "wacomcpl" program sets them
+(the tcl utility) in Feel -> Sensitivity [1 to 7].
+
+I've refrained from documenting the 1001 - 1003 in the USAGE file, and
+a new configuration file won't have them listed in the header. The real
+world usability is too limited, I feel. Better things will hopefully
+come in the future.
+
+The old pen mode toggle code could be rewritten so it was handled by
+this external xsetwacom functionality, in good *nix tradition of reuse.
+But what if the user environment doesn't have the xsetwacom program
+installed? Better leave the code as is, I think.
+
+-------------------------------------------------------------------------
+Speaking of the future, this 0.2.2 version will be the last one (from me
+at least) for quite some time. When I began the project, more than 1 1/2
+months ago, it was out of pure necessity. I had a brand new (expensive)
+Wacom tablet with semi functional hardware. Extensive web searches didn't
+reveal any program to unlock the enticing ExpressKeys and Touch Strips,
+so I reluctantly opened a C language book and set to work.
+
+I never planned to enter the "programmer" domain in earnest. Neither
+did I anticipate a perpetual development. When the job was done, it
+would be done...
+
+And now it's done, from my point of view. Core functions are rather
+complete, and the program runs without hiccups. Ideas have dried up
+and I am frankly getting bored with code hacking. Now I want to USE
+the tablet, finally.
+
+The code is free as in beer and freedom. If anyone feels like expanding
+or even forking it, just do so (according to the GPL). There's the whole
+bag of internationalization, installation and graphical configuration
+left to a fresh mind. I'm too tired right now.
+
+Though, I'll dive in again if a pressing issue turns up ;-)
+
+Bye for now,
+Mats
+-------------------------------------------------------------------------
+
+
+_Version 0.2.1 2 May 2005_
+
+* Added support for faking mouse button events. Denis DerSarkisian
+sent a function called "fake_event" (top of event_loop.c) which
+in essence acts like a traffic cop, steering true keycodes to
+XTestFakeKeyEvent and a set of false ones to XTestFakeButtonEvent.
+The fake codes can be entered as 991 to 997 in the configuration
+file, simulating mouse buttons 1 to 7.
+
+Only existing mouse buttons, defined through the driver of the
+active core pointer, can be simulated. I added discovery code to
+prevent a crash if someone tries to use a nonexistent mouse button
+in the range 1 to 7.
+
+The code author wanted his touch strips to act like a mouse's scroll
+wheel through the use of mouse buttons 4 - 5 (Up/Down) and 6 - 7
+(Left/Right). I only have a three button mouse, the Wacom puck is
+not a core pointer, but can make good use of the new functionality
+in eg the web browser Opera:
+
+[...]
+20 Right Pad - Button 14:	993		# Button 14
+21 Right Pad - Button 14 Plus:	991		# Extra key
+[...]
+24 Right Pad - Button 16:	991		# Button 16
+25 Right Pad - Button 16 Plus:	993		# Extra key
+[...]
+
+With those definitions I step backwards (14) and forwards (16) in
+the visited page history. Opera's "forward" can also take me to
+the "Next" linked page, so it's very convenient when having a long
+reading session.
+
+* Expanded the "-v" (verbose mode) printing to cover more execution
+points and be a lot more detailed.
+
+* Racked my brain and added some more knowledge to the BUGS file.
+
+
+_Version 0.2.0 29 April 2005_
+
+(NOTE: A version of this archive was pulled from the website after a
+few hours of exposure on April 28, based on the suspicion that it
+contained a corrupt file due to some file system issues on my machine.
+Both fears were unfounded. I've spent this interim on further
+restructuring of the text files outside of the code directories)
+
+* New configuration file format. Incompatible with the old one, hence
+the version bump from 0.1 to 0.2
+
+Move/rename the old file and run the program to get a new. Then edit...
+
+The old format was basically just a transcript of how a C structure
+is initialized. It had nothing in common with how a configuration
+file in *nix should be construed.
+
+Rules for the new configuration file is: Blank lines and everything
+after a "#" is discarded. Full program records begin and end with
+a double percentage sign "%%". A program field begins after a colon ":".
+The program names must be within two double quotes "". Like so:
+
+"A ProgramName" <-- OK
+" A ProgramName" or "A ProgramName " <-- NOT-OK
+
+This is in accordance with the old rule about how to deal with spaces
+in that field.
+
+I can only vouch for parsing sanity if each line in the file is kept
+below 160 bytes in length (see the BUGS file). That's the equiv of
+two old style terminal lines. If you want more, change the MAXBUFFER
+value in globals.h
+
+* Another command line option: "-v". Will turn on the be_verbose flag
+which prints info to the screen from plenty of program execution points.
+An aid for debugging, or just checking out the runtime state.
+
+* Got rid of the ugly switch routines in event_loop.c and config_read.c.
+I've done extensive benchmarking and see no difference in code speed.
+Advantage, apart from code simplicity, is that the compiled program
+size was reduced by ca 4000 bytes - before the 0.2.0 additions.
+
+
+_Version 0.1.4 24 April 2005_
+
+* Memory bugfix. Running the program under Valgrind to catch memory
+leaks and other errors I finally saw the reason for me needing
+heap_protect kludges. Doing XFreeDeviceList on a structure and then
+reading data from the freed memory only works through luck...
+
+* Took the opportunity to free lingering memory allocations at program
+exit. It's not strictly necessary since the OS should reclaim it all,
+but looks nice in the Valgrind summary. There's still one left that
+I can't find the souce of. It belongs to XextCreateExtension apparently.
+
+* Bugfix: Had forgotten to close the error.log after writing to it in
+the exit_on_error function. Also, that function shouldn't do a final
+exit(EXIT_KO) but instead jump to clean_up_exit(SIGTERM). However,
+doing that it won't return the EXIT_KO to any parent. I'd have to
+change the signal handling to achieve this.
+
+* Bugfix: The config file version tag was meant to look like:
+
+Version: 1
+
+and nothing else, for now... The confusion and uncertainty stems from
+doing this before a final format has been chosen. There are many factors
+to consider, so bear with me.
+
+* Reverted to the "expresskeys" base name on compile output and shell
+files. When writing code it's more convenient with a short name, but
+any final product should have a consistent naming.
+
+
+_Version 0.1.3 21 April 2005_
+
+* Just internal code cleanup/restructuring after having begun reading
+"The Art of Unix Programming" by Eric Steven Raymond:
+http://www.catb.org/~esr/writings/taoup/html/
+
+* Now tags a new configuration file with a version number according to
+his advice: "Always, _always_ either include a version number, or ...".
+Expect more internal changes when I'm done reading. In an already
+existing configuration file you'll have to add it manually. Put a:
+
+Config File Version 1:
+
+on a line by itself at the very top.
+
+
+_Version 0.1.2 20 April 2005_
+
+* Signal handling in place. Not much in itself, but:
+
+* Re-reads the configuration file upon receipt of the signal SIGUSR1.
+Do a "kill -USR1 <pid-of-ekeys>" after a config file edit. That's USR
+and the digit 1. I've also modified USR2 to do the same thing, for
+now at least.
+
+Included is a shell script called ekeys-reread.sh which does it for you
+if ekeys is running in daemon mode. Also included is ekeys-terminate.sh
+which replaces the former ekeys-kill.sh (a bit smarter).
+
+* The program will now refuse to start if it detects another instance
+running. Only works if there is a pid-file to examine of course.
+A pid-file left by a crash (will never happen...) and not connected
+with any process by that number is ignored, and the program continues.
+
+* A properly terminated program deletes the pid-file upon exit. Proper
+means a normal "kill <pid>", "killall ekeys", "kill -TERM <pid>" etc.
+Doing a brutal "kill -9 <pid>" or if the program crashes (cough, cough)
+will leave the pid-file undeleted.
+
+* Any error, encountered by the code, which terminates the program is
+written to the file "error.log" as well as to the screen. A restart
+truncates the file (it becomes size 0). This means that there always
+will be an error.log present, but empty in normal cases.
+
+
+_Version 0.1.1 17 April 2005_
+
+* Now reads an external configuration file at program launch. It
+searches in the user home directory under the hidden "/.expresskeys"
+directory. File is called "expresskeys.conf". If none is found, or
+the directory doesn't exist yet, it makes the dir, then creates and
+populates a minimal file from an internal list. The original "default",
+"Gimp", "Blender" and "XTerm" entries. It then goes on and reads in
+that file immediately. A limit of 64 different program definitions
+has been set (easily altered in the code). It's way more than most
+would need, since the "default" is fine for a huge group of programs.
+
+Rules for the configuration file is: Don't use { or } in comments,
+and preferably keep comments outside of program definitions. The
+comma (,) inside a definition is still used to separate all the
+fields. Program names don't need the embracing quotes "" but I
+kept the default list using them. Since spaces are accepted as part
+of a class name, make sure there are no space _before or after_ the
+name, prior to the terminating field comma:
+
+{"A ProgramName", or {A ProgramName,    <-- OK
+{"A ProgramName" , or { A ProgramName,  <-- NOT-OK
+
+The extra space/s would become part of the class name. Not what you want.
+If you absolutely must put some space before the comma, use TAB instead.
+Those are discarded while parsing the string.
+
+* Pen handling is now specified on the command line, eg:
+
+ekeys pad stylus
+
+The value for pen mode switch in the configuration file is still 999.
+
+Yes, "ekeys" :-) I changed the compile output to that name. The code
+tarball will still be named expresskeys though. Doing a web search
+revealed it to be rather unique to the Intuos3, while ekeys turned
+up music hardware and relatives. But, naturally, feel free to name it
+badzilla or VincentVanGogh instead. Program behaviour is not dependent
+on the file name.
+
+* Another command line change, to make it run in the background:
+
+ekeys pad stylus -d
+
+It then runs in "daemon" mode. The difference between pushing it
+with a terminating & or letting internal code "fork" it is beyond
+most peoples interest. I can already hear the snores building up...
+But in terms of how I've coded stuff it still matters.
+
+If the program is launched into daemon mode, it writes out another
+file in the configuration directory: "expresskeys.pid". A
+process identification (PID) is a unique number, separating the
+program from all the other stuff you have running. The number can
+be used, for example, to do an easy kill.
+
+I've included a simple shell script (called ekeys-kill.sh) which reads the
+expresskeys.pid and tries to kill whatever process that has the pid,
+so do a "ps aux | grep ekeys" beforehand to be sure it's running
+(and don't confuse your "grep ekeys" with an actual "ekeys" instance).
+Add a line to start ekeys directly after a kill and you have an easy
+path when doing config file changes. The pid file is not automatically
+deleted by internal code on exit (yet).
+
+* For any programmer out there, or curious user, I've now filled the
+code with comments. It had to be done at some point...
+
+
+_Version 0.1.0 5 April 2005_
+
+Just internal changes. A massive rewrite to get rid of cruft, and
+put my own stink on the whole code structure. Ah yes, I then GPL-d
+the result...
+

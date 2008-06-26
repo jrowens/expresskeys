@@ -1,3 +1,7 @@
+
+Please direct any bug reports or questions to the top address in
+the AUTHORS file. This program is _not_ a linuxwacom project.
+
 ///////////////////////////////////////////////////////////////////////////
 
 Important: If you use the linuxwacom-0.6.7-beta or in the future
@@ -237,12 +241,31 @@ used to separate and define the program blocks.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The "Gimp" entry has the touch strips turned on by default. The keycodes
-used are:
-20 = "+" = Gimp Zoom In. Left/Right touch strip up motion
-61 = "-" = Gimp Zoom Out. Left/Right touch strip down motion.
+The "Gimp" entry has the touch strips turned on by default, and I've
+populated it with keycodes that I actually use myself. This was done to
+minimize confusion about how to fill in the fields. As it stands, they
+are (for my Swedish keyboard):
 
-The "Blender" entry is a private choice for the 3D program blender...
+20 = "+" = Gimp Zoom In. Left touch strip up motion
+61 = "-" = Gimp Zoom Out. Left touch strip down motion
+
+64 = "Alt" plus 20 = "+" = Gimp Next Brush. Right touch strip up motion
+64 = "Alt" plus 61 = "-" = Gimp Previous Brush. Right touch strip down motion
+
+(The above has been configured through the Gimp menu: File -> Preferences ->
+Interface -> Configure Keyboard Shortcuts -> Context)
+
+50 = "Shift" = Button 9
+64 = "Alt"   = Button 10 (Holding this, copies Right touch strip to Left!)
+37 = "Ctrl"  = Button 11
+65 = "Space" = Button 12
+
+37 = "Ctrl" plus 29 = "y" = Gimp Redo. Button 13
+37 = "Ctrl" plus 52 = "z" = Gimp Undo. Button 14
+999 = "Pen Mode Toggle" = Button 15
+65 = "Space" = Button 16
+
+The "Blender" entry is similarly a private choice for the 3D program blender.
 
 I felt, and feel, that an "XTerm" is too important a window to have _any_
 interference from the pad. But observe that I want to be able to switch

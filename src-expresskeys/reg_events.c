@@ -1,7 +1,7 @@
 /*
  reg_events.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson
+ Copyright (C) 2005-2006 - Mats Johannesson
  
  Based on test.c 1996 by Frederic Lepied (xinput-1.2)
  

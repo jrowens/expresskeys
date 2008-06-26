@@ -1,5 +1,7 @@
 
-Just type:
+(Look at the end of this file if there is a problem compiling)
+
+Normally just type:
 
 ./configure
 make
@@ -26,4 +28,20 @@ I've also left the old style Makefiles in the old-extra directory. If the
 GNU Autotools fail for some reason, those are easier to understand and
 edit. Then just copy them over to each Makefile in the source directories.
 Type "make" and copy the binary to a suitable location.
+
+--------------------------------------------------------------------------
+
+Problems?
+
+Make sure that the dependencies for compiling this program are met.
+Apart from the normal libraries and header files used for any
+program development, we need what loosely can be called an
+"X development environment". Specifically the following libraries
+must be available for linking: libX11.so libXext.so libXi.so and
+libXtst.so Header files from X that we must be able to include are:
+X11/Xlib.h X11/Xutil.h X11/extensions/XInput.h and X11/extensions/XTest.h
+Some distributions do not provide this environment by default and
+therefore require additional packages to be installed before
+compiling. Example names from one distribution are libxi-dev and
+libxtst-dev for the xinput and xtest packages.
 

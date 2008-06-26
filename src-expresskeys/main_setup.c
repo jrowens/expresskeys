@@ -1,7 +1,7 @@
 /*
  main_setup.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson
+ Copyright (C) 2005-2006 - Mats Johannesson
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -156,9 +156,12 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "Where the pad name is mandatory. Specify a pen name\n");
 		fprintf(stderr, "if you want the program to handle pen mode switches.\n");
 		fprintf(stderr, "Use -d to make the program a daemon (run in the background).\n");
-		fprintf(stderr, "Use -v to print info to the screen at many execution points\n");
+		fprintf(stderr, "Use -v to print info to the screen at many execution points.\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Example: %s pad stylus -d\n", our_prog_name);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Please direct any bug reports or questions to the top address\n");
+		fprintf(stderr, "in the AUTHORS file. This program is _not_ a linuxwacom project.\n");
 		fprintf(stderr, "\n");
 		exit_on_error(errorfp, "", "", "");
 	}

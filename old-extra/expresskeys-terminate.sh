@@ -6,9 +6,9 @@ if [ -f ~/.expresskeys/expresskeys.pid ]; then
 
    echo "Will try to terminate expresskeys."
 
-   /bin/kill -TERM `/bin/cat ~/.expresskeys/expresskeys.pid | /bin/head -n 1`
+   kill -TERM `cat ~/.expresskeys/expresskeys.pid | head -n 1`
 
-   /bin/sleep 1
+   sleep 1
 
    if ! [ -f ~/.expresskeys/expresskeys.pid ]; then
       echo "Success!"
@@ -18,7 +18,7 @@ if [ -f ~/.expresskeys/expresskeys.pid ]; then
 
 else
 
-   echo "expresskeys doesn't seem to be running..."
+   echo "expresskeys doesn't seem to be running as a daemon..."
 
 fi
 

@@ -1,7 +1,7 @@
 /*
  pen_mode.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson
+ Copyright (C) 2005-2006 - Mats Johannesson
  
  Based on setmode.c 1996 by Frederic Lepied (xinput-1.2)
  
@@ -45,6 +45,7 @@ int toggle_pen_mode(Display *display, char *name)
 		pen_device = XOpenDevice(display, pen_info->id);
 		pen_open = 1;
 	}
+	
 	if ((pen_device) && (pen_open)) {
 		XSetDeviceMode(display, pen_device, pen_mode);
 		return 0;

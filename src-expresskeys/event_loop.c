@@ -1,7 +1,7 @@
 /*
  event_loop.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson, Denis DerSarkisian
+ Copyright (C) 2005-2006 - Mats Johannesson, Denis DerSarkisian
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

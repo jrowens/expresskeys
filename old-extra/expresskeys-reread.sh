@@ -6,11 +6,11 @@ if [ -f ~/.expresskeys/expresskeys.pid ]; then
 
    echo "Re-reading expresskeys config file."
 
-   /bin/kill -USR1 `/bin/cat ~/.expresskeys/expresskeys.pid | /bin/head -n 1`
+   kill -USR1 `cat ~/.expresskeys/expresskeys.pid | head -n 1`
 
 else
 
-   echo "expresskeys doesn't seem to be running..."
+   echo "expresskeys doesn't seem to be running as a daemon..."
 
 fi
 

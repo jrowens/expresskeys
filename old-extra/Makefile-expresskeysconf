@@ -8,8 +8,7 @@ LIBS = -lX11
 
 TARGET = expresskeysconf
 
-SRCS = globals-conf.c config_read-conf.c on_error-conf.c on_signal-conf.c \
-	event_loop-conf.c main_setup-conf.c
+SRCS = main_dummy.c
 
 OBJS = $(SRCS:.c=.o)
 ALL =  $(SRCS)

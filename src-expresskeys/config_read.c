@@ -1,7 +1,7 @@
 /*
  config_read.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
  
- Copyright (C) 2005 - Mats Johannesson
+ Copyright (C) 2005-2006 - Mats Johannesson
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -95,7 +95,8 @@ int read_file_config(int *ip, FILE *fp)
    between record start "%%" and record end "%%". Recognize field beginnings
    by a colon ":". Each full record is written to a global memory structure,
    while partial records are discarded and excessive fields are truncated.
-   No sanity check on program names or keycode functionality is performed
+   No sanity check on program names is performed and only a basic control
+   of the keycodes is in place - it filters out anything below 9 [Esc]. 
    A global counter variable of full record instances is updated before the
    function exits to reflect the new state. */
 
@@ -150,7 +151,28 @@ int read_file_config(int *ip, FILE *fp)
 										token = strtok(buffer, ":");
 										token = strtok(NULL, ignore);
 										strcpy(buffer, token);
-										*field_index = atoi(buffer);
+
+/* FIXME Only a basic control of the keycodes is in place - it filters out anything below 9 [Esc] and above 0 */
+
+										if (field_index == &p->handle_touch) {
+											if ((atoi(buffer) == 1) || (atoi(buffer) == 0)) {
+												*field_index = atoi(buffer);
+											} else {
+												*field_index = 0;
+												if (be_verbose) {
+													fprintf(stderr, "Illegal keycode (not 0 or 1) in Handle Touch Strips field <-- keycode IGNORED\n");
+												}
+											}
+										} else {
+											if ((atoi(buffer) > 8) || (atoi(buffer) == 0)) {
+												*field_index = atoi(buffer);
+											} else {
+												*field_index = 0;
+												if (be_verbose) {
+													fprintf(stderr, "Illegal keycode (not 0 or above 8) encountered in a field <-- keycode IGNORED\n");
+												}
+											}
+										}
 										field_index++;
 										num_field++;
 									}

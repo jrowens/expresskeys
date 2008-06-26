@@ -4,7 +4,7 @@ dnl --- Style and most code below nicked from the linuxwacom package ;-) ---
 
 AC_INIT(src-expresskeys/main_setup.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(expresskeys, 0.2.3)
+AM_INIT_AUTOMAKE(expresskeys, 0.2.5)
 AM_MAINTAINER_MODE
 AC_PROG_CC
 
@@ -43,6 +43,95 @@ else
 	ENV_XLIB=no
 	AC_MSG_RESULT(not found - tried $XLIBDIR)
 fi
+
+dnl --- Make sure we can use all required X libraries and header files ---
+
+if test x$ENV_XLIB != xno; then
+
+SOMEERROR=0
+
+echo $'\nChecking the X compiling environment in detail...\n'
+
+echo $'main(){}'|$CC -L$XLIBDIR -lX11 -xc - -o dum 2> /dev/null
+if test $? != 0 ; then
+   echo "Can not link with X11 (libX11.so) library!"
+   SOMEERROR=1
+else
+   echo "X11 OK"
+fi
+
+echo $'main(){}'|$CC -L$XLIBDIR -lXext -xc - -o dum 2> /dev/null
+if test $? != 0 ; then
+   echo "Can not link with Xext (libXext.so) library!"
+   SOMEERROR=1
+else
+   echo "Xext OK"
+fi
+
+echo $'main(){}'|$CC -L$XLIBDIR -lXi -xc - -o dum 2> /dev/null
+if test $? != 0 ; then
+   echo "Can not link with Xi (libXi.so) library!"
+   SOMEERROR=1
+else
+   echo "Xi OK"
+fi
+
+echo $'main(){}'|$CC -L$XLIBDIR -lXtst -xc - -o dum 2> /dev/null
+if test $? != 0 ; then
+   echo "Can not link with Xtst (libXtst.so) library!"
+   SOMEERROR=1
+else
+   echo "Xtst OK"
+fi
+
+echo $'#include <X11/Xlib.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2> /dev/null
+if test $? != 0 ; then
+   echo "Can not include <X11/Xlib.h> header file!"
+   SOMEERROR=1
+else
+   echo "Xlib.h OK"
+fi
+
+echo $'#include <X11/Xutil.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2> /dev/null
+if test $? != 0 ; then
+   echo "Can not include <X11/Xutil.h> header file!"
+   SOMEERROR=1
+else
+   echo "Xutil.h OK"
+fi
+
+echo $'#include <X11/extensions/XInput.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2>/dev/null
+if test $? != 0 ; then
+   echo "Can not include <X11/extensions/XInput.h> header file!"
+   SOMEERROR=1
+else
+   echo "XInput.h OK"
+fi
+
+echo $'#include <X11/extensions/XTest.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2>/dev/null
+if test $? != 0 ; then
+   echo "Can not include <X11/extensions/XTest.h> header file!"
+   SOMEERROR=1
+else
+   echo "XTest.h OK"
+fi
+
+rm -f dum
+
+if test $SOMEERROR != 0 ; then
+   echo $'\nThe X compiling environment is NOT complete!
+Some linux distributions omit parts of, or sometimes
+the whole, X development environment. Based on the
+error message(s) above you should be able to hunt down
+which package(s) you need to install. For example, one
+distribution call their xinput and xtest packages
+libxi-dev and libxtst-dev\n'
+   exit
+else
+   echo $'\nThe X compiling environment seems to be all OK\n'
+fi
+
+fi
 ])
 
 dnl --- End function for checking Xlib development environment ---
@@ -63,7 +152,11 @@ if test "$enable_expresskeys" != "no"; then
 		echo "***"; echo "*** WARNING:";
 		echo "*** expresskeys requires Xlib environment."
 		echo "*** expresskeys will not be built."
+                echo "*** Try ./configure --with-xlib=/some/directory"
+                echo "*** if your Xlib environment is nonstandard."
+                echo "*** By default we look for /usr/X11R6/lib"
 		echo "***"
+                exit
 	else
 		OPTION_EXPRESSKEYS=yes
 		EXPRESSKEYS_LIBS="-L$XLIBDIR -lX11 -lXi -lXtst"
@@ -76,14 +169,18 @@ dnl --- Check if we should build expresskeysconf (default no - not ready) ---
 EXPRESSKEYSCONF_DEFAULT=no
 OPTION_EXPRESSKEYSCONF=no
 AC_ARG_ENABLE(expresskeysconf,
-AC_HELP_STRING([--enable-expresskeysconf], [Enable building expresskeysconf [[default=no]]]),
+AC_HELP_STRING([--enable-expresskeysconf], [Enable building a non-working dummy file [[default=no]]]),
 	, enable_expresskeysconf=$EXPRESSKEYSCONF_DEFAULT)
 if test "$enable_expresskeysconf" != "no"; then
 	if test x$ENV_XLIB != xyes; then
 		echo "***"; echo "*** WARNING:";
 		echo "*** expresskeysconf requires Xlib environment."
 		echo "*** expresskeysconf will not be built."
+                echo "*** Try ./configure --with-xlib=/some/directory"
+                echo "*** if your Xlib environment is nonstandard."
+                echo "*** By default we look for /usr/X11R6/lib"
 		echo "***"
+                exit
 	else
 		OPTION_EXPRESSKEYSCONF=yes
 		EXPRESSKEYSCONF_LIBS="-L$XLIBDIR -lX11"
@@ -111,7 +208,7 @@ echo "  BUILD ENVIRONMENT:"
 echo "		   Xlib - $ENV_XLIB $XLIBDIR"
 echo ""
 echo "  BUILD OPTIONS:"
-echo "	expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- OBS Not ready yet!"
+echo "	expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- (Non-working dummy file)"
 echo "	    expresskeys - $OPTION_EXPRESSKEYS"
 echo "----------------------------------------"
 echo ""

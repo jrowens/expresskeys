@@ -13,6 +13,11 @@ written in a field line. Possibly other cases.
 clean_up_exit. It becomes a normal EXIT_OK signal for any controlling
 parent.
 
+! Should check that only valid keycodes (and our fake ones) are used
+in a program definition. It is only partially fixed by filtering out
+anything below the keycode 9 [Esc]. Should ignore erroneous spaces in
+the class name field.
+
 _Possible bugs, unmarked_
 
 ! In eg Gimp, if expresskeys is started with the option to handle a pen,
@@ -33,10 +38,6 @@ X Error of failed request:  BadWindow (invalid Window parameter)
 Reason, totally unknown...
 
 _Known bugs, unmarked_
-
-! Should check that only valid keycodes (and our fake ones) are used
-in a program definition. Should ignore erroneous spaces in the class
-name field.
 
 ! Pressing a pad button with one program window in focus, moving the
 focus to another program window and then releasing the button, leaves
