@@ -1,7 +1,7 @@
 /*
  expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
- Copyright (C) 2005-2006 - Mats Johannesson, Denis DerSarkisian
+ Copyright (C) 2005-2007 - Mats Johannesson, Denis DerSarkisian
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -925,13 +925,25 @@ static void do_motion(void* base_address, void* record_address,
 "0 or below keycode 9, above keycode 1023, or in other out-of-bounds areas.\n"
 "Perhaps it is not defined at all in the configuration file.";
 
-/* Set the Touch Strip state histories to some 'smart' values. This is an
- effort to prevent action on the very first touch, before a real history is
- recorded. Top is 1, Bottom is 4096 (prev x*2, ie 13 finger/stylus positions):*/
-	static int elder_rotation = 2048;
-	static int old_rotation = 4096;
-	static int elder_throttle = 2048;
-	static int old_throttle = 4096;
+/* Set the Touch Strip state histories to 'smart' values. This is to prevent
+ action on the very first touch, before a real history is recorded. Top is 1,
+ Bottom is 4096 (previous x*2, ie 13 finger/stylus positions):*/
+	static int elder_rotation = 1;
+	static int old_rotation = 1;
+	static int elder_throttle = 1;
+	static int old_throttle = 1;
+
+/* This might be unnecessary, but the following variables are targets of
+ right/left shifted unsigned values. Make them unsigned as well...:*/
+	unsigned static int more_rotation = 1;
+	unsigned static int less_rotation = 1;
+	unsigned static int more_throttle = 1;
+	unsigned static int less_throttle = 1;
+
+/* We right/left shift these values. Keep them unsigned so that vacant bits
+ become zero no matter which size machine we run on: */
+	unsigned int rotation = 0;
+	unsigned int throttle = 0;
 
 /* We always begin by faking a button "down": */
 	int button_state = 1;
@@ -940,9 +952,6 @@ static void do_motion(void* base_address, void* record_address,
 	int repeat_left_down = 0;
 	int repeat_right_up = 0;
 	int repeat_right_down = 0;
-
-	int rotation = 0;
-	int throttle = 0;
 
 	if (motion->axes_count >= 5) {
 		rotation = motion->axis_data[3];
@@ -994,8 +1003,9 @@ defined/enabled in configuration file *\n");
 			if (*tdp->repeat_left_up) {
 				repeat_left_up = 1;
 			}
-			if ((rotation < old_rotation)
-			&& (old_rotation <= elder_rotation)) {
+			if ((rotation == less_rotation)
+			&& (rotation < old_rotation)
+			&& (rotation != elder_rotation)) {
 				if (be_verbose) {
 					fprintf(stderr,
 					"(Left Touch Strip Up) value %i\n",
@@ -1021,8 +1031,9 @@ defined/enabled in configuration file *\n");
 			if (*tdp->repeat_left_down) {
 				repeat_left_down = 1;
 			}
-			if ((rotation > old_rotation)
-			&& (old_rotation >= elder_rotation)) {
+			if ((rotation == more_rotation)
+			&& (rotation > old_rotation)
+			&& (rotation != elder_rotation)) {
 				if (be_verbose) {
 					fprintf(stderr,
 					"(Left Touch Strip Down) value %i\n",
@@ -1046,6 +1057,8 @@ defined/enabled in configuration file *\n");
 		}
 		elder_rotation = old_rotation;
 		old_rotation = rotation;
+		more_rotation = rotation << 1;
+		less_rotation = rotation >> 1;
 	}
 
 /* Right Touch Strip: */
@@ -1058,8 +1071,9 @@ defined/enabled in configuration file *\n");
 			if (*tdp->repeat_right_up) {
 				repeat_right_up = 1;
 			}
-			if ((throttle < old_throttle)
-			&& (old_throttle <= elder_throttle)) {
+			if ((throttle == less_throttle)
+			&& (throttle < old_throttle)
+			&& (throttle != elder_throttle)) {
 				if (be_verbose) {
 					fprintf(stderr,
 					"(Right Touch Strip Up) value %i\n",
@@ -1085,8 +1099,9 @@ defined/enabled in configuration file *\n");
 			if (*tdp->repeat_right_down) {
 				repeat_right_down = 1;
 			}
-			if ((throttle > old_throttle)
-			&& (old_throttle >= elder_throttle)) {
+			if ((throttle == more_throttle)
+			&& (throttle > old_throttle)
+			&& (throttle != elder_throttle)) {
 				if (be_verbose) {
 					fprintf(stderr,
 					"(Right Touch Strip Down) value %i\n",
@@ -1110,6 +1125,8 @@ defined/enabled in configuration file *\n");
 		}
 		elder_throttle = old_throttle;
 		old_throttle = throttle;
+		more_throttle = throttle << 1;
+		less_throttle = throttle >> 1;
 	}
 
 	if (repeat_left_up && rotation == 1) {

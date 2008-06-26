@@ -4,7 +4,7 @@ dnl --- Style and some code below nicked from the linuxwacom package ;-) ---
 
 AC_INIT(src-expresskeys/main_setup.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(expresskeys, 0.4.0)
+AM_INIT_AUTOMAKE(expresskeys, 0.4.1)
 AM_MAINTAINER_MODE
 AC_PROG_CC
 
@@ -168,6 +168,14 @@ if test $? != 0 ; then
    SOMEERROR=1
 else
    echo "$XINCDIR/X11/extensions/XInput.h OK"
+fi
+
+echo $'#include <X11/extensions/XIproto.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2>/dev/null
+if test $? != 0 ; then
+   echo "Can not include $XINCDIR/X11/extensions/XIproto.h header file!"
+   SOMEERROR=1
+else
+   echo "$XINCDIR/X11/extensions/XIproto.h OK"
 fi
 
 echo $'#include <X11/extensions/XTest.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2>/dev/null

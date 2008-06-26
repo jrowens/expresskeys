@@ -1,7 +1,7 @@
 /*
  expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
- Copyright (C) 2005-2006 - Mats Johannesson
+ Copyright (C) 2005-2007 - Mats Johannesson
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@
 
 #include <stdio.h> /* NULL, FILE, fprintf, fopen, fclose */
 #include <signal.h> /* SIGINT */
-#include <X11/Xlib.h>
+#include <X11/Xlib.h> /* XErrorEvent also pulls in X11/X.h with BadWindow def.*/
+#include <X11/extensions/XIproto.h> /* Minor opcode error: X_OpenDevice */
 
 #include "defines.h"
 
@@ -57,14 +58,20 @@ void exit_on_error(FILE* errorfp, char* string1, const char* string2,
 
 int xerror_handler(Display* display, XErrorEvent* error_event)
 {
-/* We just return on "BadDevice, invalid or uninitialized input device"
- (codes 169 and 170) when trying to open devices which aren't plugged in.
- Also, in rare cases we might hit "BadWindow (invalid Window parameter)"
+/* There seems to be no standard way to catch an "BadDevice, invalid or
+ uninitialized input device" error when trying to open devices which aren't
+ plugged in. The extension error code varies (I've seen 169 and 170 myself)
+ and the message string could be localized as well. Therefore we take a
+ two-pronged approach here: Just return if the error code falls within the
+ extension error range (>= 128) and at the same time is a X_OpenDevice
+ "Minor opcode" as defined in X11/extensions/XIproto.h
+   Also, in rare cases we might hit "BadWindow (invalid Window parameter)"
  (code 3) when looking for the present focus-window. I've only seen it with
- the "Firefox Preferences" window, but we better ignore any such case: */
-	if ((error_event->error_code == 169)
-	|| (error_event->error_code == 170)
-	|| (error_event->error_code == 3)) {
+ the "Firefox Preferences" window, but we better ignore any such case
+ (standard error code from X11/X.h pulled in through X11/Xlib.h): */
+	if (((error_event->error_code >= 128)
+	&& (error_event->minor_code == X_OpenDevice))
+	|| (error_event->error_code == BadWindow)) {
 		return 0;
 	}
 

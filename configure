@@ -2027,7 +2027,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=expresskeys
- VERSION=0.4.0
+ VERSION=0.4.1
 
 
 cat >>confdefs.h <<_ACEOF
@@ -4464,6 +4464,14 @@ if test $? != 0 ; then
    SOMEERROR=1
 else
    echo "$XINCDIR/X11/extensions/XInput.h OK"
+fi
+
+echo $'#include <X11/extensions/XIproto.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2>/dev/null
+if test $? != 0 ; then
+   echo "Can not include $XINCDIR/X11/extensions/XIproto.h header file!"
+   SOMEERROR=1
+else
+   echo "$XINCDIR/X11/extensions/XIproto.h OK"
 fi
 
 echo $'#include <X11/extensions/XTest.h>\nmain(){}'|$CC -I$XINCDIR -xc - -o dum 2>/dev/null

@@ -1,8 +1,7 @@
 
 _Changes since last version. Executive summary_
 
-- Total rewrite. Can handle 3 tablets of 5 different 'models' (sum 15) and 2
-styli per tablet. User defined auto-repeat for each button and touch strip.
+- Implemented a slightly better logic for Touch Strip movement detection.
 
 OBSERVE: linuxwacom-0.7.5-2 or greater is now required for ALL tablets!
 

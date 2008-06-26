@@ -1,7 +1,7 @@
 /*
  expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
- Copyright (C) 2005-2006 - Mats Johannesson
+ Copyright (C) 2005-2007 - Mats Johannesson
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ int send_sigusr1;
 int send_sigusr2;
 
 /* Our version. Remember to change it: */
-const char* our_prog_version = "0.4.0";
+const char* our_prog_version = "0.4.1";
 
 /* Generic strings used in comparisons,
  and for flow control in some functions: */

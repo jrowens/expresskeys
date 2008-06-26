@@ -1,7 +1,7 @@
 /*
  expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
- Copyright (C) 2005-2006 - Mats Johannesson
+ Copyright (C) 2005-2007 - Mats Johannesson
 
  register_events() based on test.c 1996 by Frederic Lepied (xinput-1.2)
 
@@ -120,12 +120,15 @@ static int identify_device(char* device_name)
 	int i;
 	int j = 0;
 	int len = 0;
+	int ok_value = 0;
 
 	FILE* execfp = NULL;
+	read_buffer[0] = '\0';
 
 	if ((execfp = popen("xsetwacom -V", "r")) != NULL) {
 		fgets(read_buffer, MAXBUFFER, execfp);
-		if ((pclose(execfp)) == 0) {
+		if (((pclose(execfp)) != NON_VALID)
+		&& (isdigit(read_buffer[0]))) {
 			len = strcspn(read_buffer, " \t\n");
 			for (i = 0; i < len; i++) {
 				if (isdigit(read_buffer[i])) {
@@ -140,41 +143,55 @@ static int identify_device(char* device_name)
 		}
 	}
 
+/* linuxwacom-0.7.7-3 changed GetTabletID to plain TabletID. Later, support
+ for both strings were introduced. We follow the same pattern here, defaulting
+ to the new way, should the old format disappear in a linuxwacom future: */
 	if (ok_xsetwacom) {
-		snprintf(write_buffer,MAXBUFFER, "xsetwacom get %s GetTabletID",
+		read_buffer[0] = '\0';
+		snprintf(write_buffer,MAXBUFFER, "xsetwacom get %s TabletID",
 								device_name);
 		if ((execfp = popen(write_buffer, "r")) != NULL) {
 			fgets(read_buffer, MAXBUFFER, execfp);
-			if ((pclose(execfp)) == 0) {
-				len = strcspn(read_buffer, " \t\n");
-				if ((strncmp(read_buffer, cintiq_21UX,
-								len)) == 0) {
-					return i3;
+			if (((pclose(execfp)) != NON_VALID)
+			&& (isdigit(read_buffer[0]))) {
+				ok_value = 1;
+			} else {
+				read_buffer[0] = '\0';
+				snprintf(write_buffer,MAXBUFFER,
+				"xsetwacom get %s GetTabletID", device_name);
+				if ((execfp = popen(write_buffer, "r"))
+								!= NULL) {
+					fgets(read_buffer, MAXBUFFER, execfp);
+					if (((pclose(execfp)) != NON_VALID)
+					&& (isdigit(read_buffer[0]))) {
+						ok_value = 1;
+					}
 				}
-				if (((strncmp(read_buffer, i3_6x8, len)) == 0)
-					|| ((strncmp(read_buffer, i3_9x12,
-								len)) == 0)
-					|| ((strncmp(read_buffer, i3_12x12,
-								len)) == 0)
-					|| ((strncmp(read_buffer, i3_12x19,
-								len)) == 0)
-					|| ((strncmp(read_buffer, i3_6x11,
-								len)) == 0)) {
-					return i3;
-				}
-				if (((strncmp(read_buffer, i3s_4x5, len)) == 0)
-					|| ((strncmp(read_buffer, i3s_4x6,
-								len)) == 0)) {
-					return i3s;
-				}
-				if (((strncmp(read_buffer, g4_4x5, len)) == 0)
-					|| ((strncmp(read_buffer, g4_6x8,
-								len)) == 0)) {
-					return g4;
-				}
-				if ((strncmp(read_buffer, g4b_6x8, len)) == 0) {
-					return g4b;
-				}
+			}
+		}
+
+		if (ok_value) {
+			len = strcspn(read_buffer, " \t\n");
+			if ((strncmp(read_buffer, cintiq_21UX, len)) == 0) {
+				return i3;
+			}
+			if (((strncmp(read_buffer, i3_6x8, len)) == 0)
+				|| ((strncmp(read_buffer, i3_9x12, len)) == 0)
+				|| ((strncmp(read_buffer, i3_12x12, len)) == 0)
+				|| ((strncmp(read_buffer, i3_12x19, len)) == 0)
+				|| ((strncmp(read_buffer, i3_6x11, len)) == 0)){
+				return i3;
+			}
+			if (((strncmp(read_buffer, i3s_4x5, len)) == 0)
+				|| ((strncmp(read_buffer, i3s_4x6, len)) == 0)){
+				return i3s;
+			}
+			if (((strncmp(read_buffer, g4_4x5, len)) == 0)
+				|| ((strncmp(read_buffer, g4_6x8, len)) == 0)) {
+				return g4;
+			}
+			if ((strncmp(read_buffer, g4b_6x8, len)) == 0) {
+				return g4b;
 			}
 		}
 	}

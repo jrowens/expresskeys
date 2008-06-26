@@ -29,9 +29,26 @@ the normal libraries and header files used for any program development, we need
 what loosely can be called an "X development environment". Specifically the
 following libraries must be available for linking: libX11.so libXext.so libXi.so
 and libXtst.so Header files from X that we must be able to include are:
-X11/Xlib.h X11/Xutil.h X11/extensions/XInput.h and X11/extensions/XTest.h
+X11/Xlib.h X11/Xutil.h X11/extensions/XInput.h X11/extensions/XIproto.h
+and X11/extensions/XTest.h
+
 Some distributions do not provide this environment by default and therefore
 require additional packages to be installed before compiling. Example names
 from one distribution are libxi-dev and libxtst-dev for the xinput and xtest
 packages.
+
+Example: A "beginner-friendly" distribution like Ubuntu lacks practically
+every development package needed for program compilation, in the default
+installation. What must to be done, in eg Ubuntu 7.04 (Feisty Fawn) is:
+
+1) Start the Adept package manager and click on the icon to update the list
+of available packages - otherwise you won't find the ones we need.
+
+2) Search for libc6-dev and mark it (linux-libc-dev will also get marked).
+These packages are required for any C-program compilation.
+
+3) Search for and mark xorg-dev (MANY additional packages will get marked).
+This metapackage contains the rest of our requirements - and more.
+
+4) Install.
 

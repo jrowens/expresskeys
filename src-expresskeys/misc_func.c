@@ -1,7 +1,7 @@
 /*
  expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
- Copyright (C) 2005-2006 - Mats Johannesson
+ Copyright (C) 2005-2007 - Mats Johannesson
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -149,6 +149,7 @@ void check_pid(const char* pidfile, const char* statusfile,
 		}
 	}
 
+/* The /proc "status" file truncates program name after only 15 chars... */
 	if ((pid_buffer[0]) && (status_buffer[0])
 		&& ((kill(atoi(pid_buffer), 0)) != NON_VALID)) {
 
@@ -163,6 +164,24 @@ void check_pid(const char* pidfile, const char* statusfile,
 				}
 			}
 			fclose(fp);
+		}
+
+/* Checking /proc "cmdline" to catch program names longer than 15 chars: */
+/* Doing it _redundantly_ with loop etc, should the file format change... */
+		if (!live_pid) {
+			snprintf(write_buffer, MAXBUFFER, "/proc/%s/cmdline",
+								pid_buffer);
+			if ((fp = fopen(write_buffer, "r")) != NULL) {
+				while ((fgets(write_buffer, MAXBUFFER, fp))
+								!= NULL) {
+					if ((strstr(write_buffer,status_buffer))
+								!=NULL) {
+						live_pid = atoi(pid_buffer);
+						break;
+					}
+				}
+				fclose(fp);
+			}
 		}
 	}
 

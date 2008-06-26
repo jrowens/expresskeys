@@ -1,7 +1,7 @@
 /*
  expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
- Copyright (C) 2005-2006 - Mats Johannesson
+ Copyright (C) 2005-2007 - Mats Johannesson
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

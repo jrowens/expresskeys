@@ -1,4 +1,70 @@
 
+_Version 0.4.1 28 Mar 2007_
+
+* Implemented a slightly better logic for Touch Strip movement detection.
+This cuts down on "false positives" that can happen when the user lifts a
+finger and places it on another spot, instead of dragging the finger there.
+
+But even with this improved logic, false positives still happen if the touched
+spots are too close to each other (one position up/down), and at the same time
+have been recorded as being in the same "direction" in relation to the previous
+movement.
+
+To make it perfect we would have to examine Proximity Out events as well as
+finger position. But that is not feasible - from what I've seen - since both
+buttons and strips generate identical out of proximity events, coming from the
+same "pad" device.
+
+* With linuxwacom-0.7.7-3, xsetwacom got a parametre named TabletID (as a
+synonym for GetTabletID). Since we base our whole tablet identification routine
+on a correct return from that program, and don't know if the old form will
+disappear in the future, TabletID henceforth is our first choice - with
+GetTabletID as a backup.
+
+This means that users with an older linuxwacom package will see a harmless
+message from xsetwacom, for each detected device, when running directly in a
+console: "Get: Unknown parameter 'TabletID'".
+
+* Bugfix: While looking for a daemon instance of expresskeys, we parse the file
+/proc/[PID-nr]/status and compare the program name there with the one read from
+our own status.log. Unfortunately, the /proc file truncates program names to
+15 chars, so an executable named eg expresskeys-0.4.0 would not be seen as
+running even when it was.
+
+We now also examine /proc/[PID-nr]/cmdline to catch such long names.
+
+* The xerror_handler() in on_error.c used static numbers when checking
+error_event->error_code Not good... Now changed to a better approach. And
+having searched the net _extensively_ for solutions to this elusive X
+programming problem, coming up with precious little, I've decided to quote
+myself right here. Perhaps some search engine will index it for other hunters:
+
+[...]
+#include <X11/Xlib.h> /* XErrorEvent also pulls in X11/X.h with BadWindow def.*/
+#include <X11/extensions/XIproto.h> /* Minor opcode error: X_OpenDevice */
+[...]
+int xerror_handler(Display* display, XErrorEvent* error_event)
+{
+/* There seems to be no standard way to catch an "BadDevice, invalid or
+ uninitialized input device" error when trying to open devices which aren't
+ plugged in. The extension error code varies (I've seen 169 and 170 myself)
+ and the message string could be localized as well. Therefore we take a
+ two-pronged approach here: Just return if the error code falls within the
+ extension error range (>= 128) and at the same time is a X_OpenDevice
+ "Minor opcode" as defined in X11/extensions/XIproto.h
+   Also, in rare cases we might hit "BadWindow (invalid Window parameter)"
+ (code 3) when looking for the present focus-window. I've only seen it with
+ the "Firefox Preferences" window, but we better ignore any such case
+ (standard error code from X11/X.h pulled in through X11/Xlib.h): */
+	if (((error_event->error_code >= 128)
+	&& (error_event->minor_code == X_OpenDevice))
+	|| (error_event->error_code == BadWindow)) {
+		return 0;
+	}
+[...]
+}
+
+
 _Version 0.4.0 28 Nov 2006_
 
 OBSERVE: linuxwacom-0.7.5-2 or greater is now required for ALL tablets!
