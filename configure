@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP SRC_DIRS EXPRESSKEYS_LIBS EXPRESSKEYS_INCL EXPRESSKEYSCONF_LIBS EXPRESSKEYSCONF_INCL LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP SRC_DIRS EXPRESSKEYS_LIBS EXPRESSKEYS_INCL LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -850,9 +850,6 @@ Optional Features:
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
   --enable-expresskeys    Enable building expresskeys [default=yes]
-  --enable-expresskeysconf
-                          Enable building a non-working dummy file
-                          [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1616,7 +1613,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=expresskeys
- VERSION=0.2.6
+ VERSION=0.3.0
 
 
 cat >>confdefs.h <<_ACEOF
@@ -3521,7 +3518,6 @@ done
 
 SRC_DIRS=""
 SRC_EXPRESSKEYS=src-expresskeys
-SRC_EXPRESSKEYSCONF=src-expresskeysconf
 
 
 if test -d /usr/X11R6/lib64 ; then
@@ -3684,57 +3680,6 @@ if test "$enable_expresskeys" != "no"; then
 fi
 
 
-EXPRESSKEYSCONF_DEFAULT=no
-OPTION_EXPRESSKEYSCONF=no
-# Check whether --enable-expresskeysconf or --disable-expresskeysconf was given.
-if test "${enable_expresskeysconf+set}" = set; then
-  enableval="$enable_expresskeysconf"
-
-else
-  enable_expresskeysconf=$EXPRESSKEYSCONF_DEFAULT
-fi;
-if test "$enable_expresskeysconf" != "no"; then
-	if test x$ENV_XLIB != xyes; then
-                echo "***"; echo "*** WARNING libraries:";
-                echo "*** We failed to locate a full Xlib environment,"
-                echo "*** and will therefore not build expresskeysconf."
-                echo "*** Try './configure --with-xlib=/some/directory'"
-                echo "*** where your Xlib libraries can be found."
-                echo "*** By default we test what is returned from the"
-                echo "*** command 'pkg-config --variable=libdir x11'"
-                echo "*** which works in the modular X11R7 releases."
-                echo "*** If that fails, we try a hardcoded $XLIBDIR_X11R6"
-                echo "*** for the monolithic X11R6 releases. Both these"
-                echo "*** tests have obviously failed to produce a path."
-                echo "*** "
-                echo "***"
-                exit
-	else
-		OPTION_EXPRESSKEYSCONF=yes
-		EXPRESSKEYSCONF_LIBS="-L$XLIBDIR -lX11"
-		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYSCONF"
-	fi
-	if test x$ENV_XINC != xyes; then
-		echo "***"; echo "*** WARNING include files:";
-		echo "*** We failed to locate a full Xlib environment,"
-		echo "*** and will therefore not build expresskeysconf."
-		echo "*** Try './configure --with-xinc=/some/directory'"
-		echo "*** where your Xlib include files can be found."
-		echo "*** By default we test what is returned from the"
-		echo "*** command 'pkg-config --variable=includedir x11'"
-		echo "*** which works in the modular X11R7 releases."
-		echo "*** If that fails, we try a hardcoded $XINCDIR_X11R6"
-		echo "*** for the monolithic X11R6 releases. Both these"
-		echo "*** tests have obviously failed to produce a path."
-		echo "*** "
-		echo "***"
-		exit
-	else
-		EXPRESSKEYSCONF_INCL="-I$XINCDIR"
-	fi
-fi
-
-
 
 
 SOMEERROR=0
@@ -3828,9 +3773,7 @@ fi
 
 
 
-
-
-                              ac_config_files="$ac_config_files Makefile src-expresskeys/Makefile src-expresskeysconf/Makefile"
+                    ac_config_files="$ac_config_files Makefile src-expresskeys/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -4389,7 +4332,6 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src-expresskeys/Makefile" ) CONFIG_FILES="$CONFIG_FILES src-expresskeys/Makefile" ;;
-  "src-expresskeysconf/Makefile" ) CONFIG_FILES="$CONFIG_FILES src-expresskeysconf/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -4523,8 +4465,6 @@ s,@EGREP@,$EGREP,;t t
 s,@SRC_DIRS@,$SRC_DIRS,;t t
 s,@EXPRESSKEYS_LIBS@,$EXPRESSKEYS_LIBS,;t t
 s,@EXPRESSKEYS_INCL@,$EXPRESSKEYS_INCL,;t t
-s,@EXPRESSKEYSCONF_LIBS@,$EXPRESSKEYSCONF_LIBS,;t t
-s,@EXPRESSKEYSCONF_INCL@,$EXPRESSKEYSCONF_INCL,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
@@ -5251,7 +5191,6 @@ echo "      X libraries - $ENV_XLIB $XLIBDIR"
 echo "       X includes - $ENV_XINC $XINCDIR"
 echo ""
 echo "  BUILD OPTIONS:"
-echo "  expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- (Non-working dummy file)"
 echo "      expresskeys - $OPTION_EXPRESSKEYS"
 echo "----------------------------------------"
 echo ""

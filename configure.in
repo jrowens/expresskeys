@@ -4,7 +4,7 @@ dnl --- Style and some code below nicked from the linuxwacom package ;-) ---
 
 AC_INIT(src-expresskeys/main_setup.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(expresskeys, 0.2.6)
+AM_INIT_AUTOMAKE(expresskeys, 0.3.0)
 AM_MAINTAINER_MODE
 AC_PROG_CC
 
@@ -16,7 +16,6 @@ dnl also be changed accordingly (at the end of this file) ---
 
 SRC_DIRS=""
 SRC_EXPRESSKEYS=src-expresskeys
-SRC_EXPRESSKEYSCONF=src-expresskeysconf
 
 dnl --- Specify some old monolithic X paths. 
 
@@ -251,54 +250,6 @@ if test "$enable_expresskeys" != "no"; then
 	fi
 fi
 
-dnl --- Check if we should build expresskeysconf (default no - not ready) ---
-
-EXPRESSKEYSCONF_DEFAULT=no
-OPTION_EXPRESSKEYSCONF=no
-AC_ARG_ENABLE(expresskeysconf,
-AC_HELP_STRING([--enable-expresskeysconf], [Enable building a non-working dummy file [[default=no]]]),
-	, enable_expresskeysconf=$EXPRESSKEYSCONF_DEFAULT)
-if test "$enable_expresskeysconf" != "no"; then
-	if test x$ENV_XLIB != xyes; then
-                echo "***"; echo "*** WARNING libraries:";
-                echo "*** We failed to locate a full Xlib environment,"
-                echo "*** and will therefore not build expresskeysconf."
-                echo "*** Try './configure --with-xlib=/some/directory'"
-                echo "*** where your Xlib libraries can be found."
-                echo "*** By default we test what is returned from the"
-                echo "*** command 'pkg-config --variable=libdir x11'"
-                echo "*** which works in the modular X11R7 releases."
-                echo "*** If that fails, we try a hardcoded $XLIBDIR_X11R6"
-                echo "*** for the monolithic X11R6 releases. Both these"
-                echo "*** tests have obviously failed to produce a path."
-                echo "*** "
-                echo "***"
-                exit
-	else
-		OPTION_EXPRESSKEYSCONF=yes
-		EXPRESSKEYSCONF_LIBS="-L$XLIBDIR -lX11"
-		SRC_DIRS="$SRC_DIRS $SRC_EXPRESSKEYSCONF"
-	fi
-	if test x$ENV_XINC != xyes; then
-		echo "***"; echo "*** WARNING include files:";
-		echo "*** We failed to locate a full Xlib environment,"
-		echo "*** and will therefore not build expresskeysconf."
-		echo "*** Try './configure --with-xinc=/some/directory'"
-		echo "*** where your Xlib include files can be found."
-		echo "*** By default we test what is returned from the"
-		echo "*** command 'pkg-config --variable=includedir x11'"
-		echo "*** which works in the modular X11R7 releases."
-		echo "*** If that fails, we try a hardcoded $XINCDIR_X11R6"
-		echo "*** for the monolithic X11R6 releases. Both these"
-		echo "*** tests have obviously failed to produce a path."
-		echo "*** "
-		echo "***"
-		exit
-	else
-		EXPRESSKEYSCONF_INCL="-I$XINCDIR"
-	fi
-fi
-
 dnl --- Call function to check X in detail ---
 
 AC_CHECK_XDETAIL
@@ -308,14 +259,11 @@ dnl --- Separate test output from file-generation output ---
 AC_SUBST(SRC_DIRS)
 AC_SUBST(EXPRESSKEYS_LIBS)
 AC_SUBST(EXPRESSKEYS_INCL)
-AC_SUBST(EXPRESSKEYSCONF_LIBS)
-AC_SUBST(EXPRESSKEYSCONF_INCL)
 
 dnl --- Create the files ---
 
 AC_OUTPUT(Makefile
-	src-expresskeys/Makefile
-	src-expresskeysconf/Makefile)
+	src-expresskeys/Makefile)
 
 dnl --- Show the result ---
 
@@ -326,7 +274,6 @@ echo "      X libraries - $ENV_XLIB $XLIBDIR"
 echo "       X includes - $ENV_XINC $XINCDIR"
 echo ""
 echo "  BUILD OPTIONS:"
-echo "  expresskeysconf - $OPTION_EXPRESSKEYSCONF <-- (Non-working dummy file)"
 echo "      expresskeys - $OPTION_EXPRESSKEYS"
 echo "----------------------------------------"
 echo ""

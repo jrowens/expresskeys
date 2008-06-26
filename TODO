@@ -1,10 +1,9 @@
 
 _Wish-list_
 
-+ Graphical client for editing the configuration file, signalling
-the server to re-read it when done. Should optimally fill in the
-keycodes when user pushes a key (maybe just show the key) and fill
-in the class name as well when user clicks on a window.
++ Graphire4 support of their 2 buttons and 1 wheel.
+
++ Multi-device support (more than 1 stylus and 1 pad).
 
 + Replace ASCII with something more international, like UTF-8.
 

@@ -1,4 +1,116 @@
 
+_Version 0.3.0 27 Jul 2006_
+
+* Finally and totally obliterated the src-expresskeysconf directory.
+Such a tool will never be written by me. But there is hope balancing
+on the horizon! At http://alavaliant.googlepages.com you'll find
+"wacom-config", which is a pygtk (2.8+) point-and-click program for
+configuration of the linuxwacom driver (through "xsetwacom") and
+expresskeys version 0.2.x config file editing.
+
+No more manual wrangling with "xprop" and "xev"! A future version
+will support expresskeys 0.3.x (I've been assured).
+
+* New configuration file (version 3), incompatible with version 2. The
+reasoning around this switch can be read about in the USAGE file, ca
+2/3 down under the heading "NEW in expresskeys version 0.3.0".
+
+This will hopefully be the _last_ config file change that impacts the
+user in a negative way. Future changes can be done non-destructively.
+
+* New configuration _file name_. Depending on devices identified, either
+a "padless.conf1" or an "intuos3.conf1" file is written out. Apart from
+only containing relevant record fields, the headers of these files are
+tagged with device "Identifier" strings from xorg.conf, like:
+
+_intuos3.conf1_						_padless.conf1_
+
+ConfigVersion 3						ConfigVersion 3
+Identifier1Pad 1stIntuos3Pad		Identifier1Pad LACKING
+Identifier1Sty 1stIntuos3Stylus1	Identifier1Sty Stylus1
+
+The TODO file - better known as the "Wish-list" - hints towards why this
+filename change has become desirable...
+
+* Automatic detection and use of the first 'pad' and/or 'stylus' device found
+through the XListInputDevices call. This happens unconditionally, but can be
+overridden by specifically naming a device on the command line.
+
+We still only allow one device of each kind (for now) so eg an automatically
+picked stylus, say 1stIntuos3Stylus1, gets dropped if the user specifies the
+1stIntuos3Stylus2 or a 2ndIntuos3Stylus1.
+
+Anyone with a little programming understanding can change a copy of the code
+in globals.c and alter the config_dir string to eg "/.expresskeys2". Then
+that program copy can support another set of pad/stylus (until expresskeys
+properly handles multi-devices).
+
+* Expresskeys can now trace the stylus usage and automatically change
+the pressure sensitivity (PressCurve) depending on which program window
+that has focus. We call "xsetwacom" for the actual change, but the
+implementation has minimal overhead - can't be felt or seen on my machine:
+
+NOTE: To partially overcome a limitation in any Qt3 program (see the BUGS
+file; they swallow all stylus button presses) we also have to judge the
+state _every time_ the pen comes within operational height of the tablet,
+aka ProximityIn.
+
+1a) Stylusbutton - tip or rocker - pressed (doesn't matter which),
+1b) or stylus reports itself as having entered proximity of the tablet.
+2) Is the current focuswindow in our program list (plus "default")? = True.
+3) Does the program name differ from the name in a historybuffer (1 back)?
+4) Does the program presscurve differ from a historybuffer curve (1 back)?
+5) Call xsetwacom only if these are true.
+
+The above mentioned USAGE entry has all the important details.
+
+So... now the program enters a more generic stage where it's beneficial
+to any Wacom tablet user. Though, the name will remain expresskeys ;-)
+
+* Deleted the old-extra directory with the small scripts for re-reading the
+configuration file or terminating the program.
+
+It is actually quite embarrassing, but the two options have been available
+from _within_ the main_setup.c file since... forever. We already did a signal
+send to check for a running daemon, so all it took was a slight rearrangement
+and a few extra code lines. I _am_ myopic, but this oversight borders on
+blindness.
+
+It is now possible to do an "expresskeys -r" or "expresskeys -k" against
+a daemon instance. (BLUSH)!
+
+* A few more command line switches have been introduced:
+
+-x sets -v and exits after some important info blocks.
+-s tells a daemon instance to report status (info block).
+
+The 'status' signal is triggered through SIGUSR2 (re-read of the config file
+has always been linked with SIGUSR1). The information printed out by -s
+is almost exactly how -x displays it during a non-daemon run. Difference
+being that -s also gives the "OUR RUN-PID" field.
+
+OBSERVE: If expresskeys is started from the "outside" by use of .xinitrc or
+similar methods, the output of -s will be seen on that first text terminal
+(most often back at "Ctrl-Alt-F1" when in X). To get visibility from a terminal
+_inside_ X, first do an "expresskeys -k" then "expresskeys -d" and THEN the
+"expresskeys -s" ;-)
+
+* Finally remembered to give a warning about Gimp and the pad device.
+The USAGE file has it as a top item, and I'll copy the text here:
+
+"Important: Gimp doesn't know _anything_ about a "pad" device, so the option
+File --> Preferences --> Input Devices --> Configure Extended Input Devices...
+--> [Device: pad  Mode: Disabled] is how it should be set. If you change it
+to Sceen or Window, pressing pad buttons or using touch strips will NOT work."
+
+* Updated to a working email address in the AUTHORS file and removed the
+obsolete private project page from README. The canonical page now is:
+
+http://freshmeat.net/projects/wacomexpresskeys
+
+It has been so since version 0.2.1, I just never got around to mentioning it.
+
+
 _Version 0.2.6 25 Feb 2006_
 
 * Continuation of the maintenance by future proofing the ./configure phase

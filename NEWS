@@ -1,5 +1,6 @@
 
 _Changes since last version. Executive summary_
 
-- X11R6 monolithic and X11R7 modular X discovery at ./configure time.
+- New configuration file structure (open-ended). Automatic stylus PressCurve
+  usage. Automatic device detection on program start-up.
 

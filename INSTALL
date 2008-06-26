@@ -15,22 +15,11 @@ undesirable, eg:
 
 The binary will then be installed to a /home/user/bin directory instead.
 
-The old-extra directory holds the expresskeys-reread.sh and
-expresskeys-terminate.sh shell scripts. They are not installed by the
-GNU Autotools. Copy them manually if you want them.
-
 Use the "--with-xlib=" and/or "--with-xinc=" options if your Xlib environment
 is nonstandard. By default we test what is returned from the commands
 "pkg-config --variable=libdir x11" and "pkg-config --variable=includedir x11"
 which works in the modular X11R7 releases. If that fails, we try a hardcoded
 /usr/X11R6/lib[64] and /usr/X11R6/include for the monolithic X11R6 releases.
-
---------------------------------------------------------------------------
-
-I've also left the old style Makefiles in the old-extra directory. If the
-GNU Autotools fail for some reason, those are easier to understand and
-edit. Then just copy them over to each Makefile in the source directories.
-Type "make" and copy the binary to a suitable location.
 
 --------------------------------------------------------------------------
 

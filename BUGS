@@ -1,13 +1,74 @@
 
+_NOTABUG_
+
+Any program built with the Qt3 toolkit (like eg the KDE desktop...)
+completely swallows the 'stylus' DeviceButtonPress event that we've
+registered to be notified of, through the Xlib XSelectExtensionEvent
+call. The same event coming from the 'pad' device is all OK, though.
+
+This is a (deliberate?) Qt pattern where only other Qt programs,
+with difficulty, can get deliverance of these low-level events. At
+least that's my impression after a first round of bug-report emails
+between here and there --> Qt producer company Trolltech.
+
+Why they let 'pad' button events pass through is probably due to lack
+of knowledge. They recognize an oldtimer like the 'stylus', so BAM,
+grab it. But this strange 'pad' thing... better stay out of contact...
+
+Programs based on the GTK+ toolkit like the Gnome desktop (with the
+notable exception being the Gimp canvas - more about that below) do
+behave appropriate vis-a-vis both the 'stylus' and 'pad' button events.
+
+This situation has led to one design compromise (performance slippage)
+in expresskeys 0.3.0, and a not wholly ideal usability pattern when
+dealing with Qt3 programs.
+
+Performance wise we take a hit by also registering for and acting on
+a 'stylus' ProximityIn event. These events are not blocked by Qt3.
+
+Execution of the "automatic change of stylus pressure sensitivity"
+in a Qt3 program is achieved by first lifting the pen slightly (until
+it goes out of proximity - the cursor stops being effected by pen
+movement) and then lowering the pen again on the target window.
+
+If we happen to be in Gnome, it is enough to touch the Qt3 program on
+the titlebar or on its other borders (since they are GTK+ derived).
+
+GTK+ based programs suffer no such limitation. In those we just press
+the pen tip in the window, and by that action the pressure sensitivity
+change is performed. Unless the target is the Gimp canvas (at least as
+high as version 2.2.10)...
+
+The Gimp canvas is even _more_ broken (in regards to our expectations)
+than the Qt3 programs. Here both the 'stylus' DeviceButtonPress AND
+the ProximityIn events are filtered away from interested parties.
+
+So in order to get the automatic change of stylus pressure sensitivity
+when coming in from another program window, the pen tip or side button
+rocker first must engage _somwhere else_ than the canvas. Just touching
+the Gimp titlebar or touching an area outside of the canvas will work.
+
+If we happen to be in KDE while using Gimp, then a simple titlebar
+touch won't work (all the borders are Qt3 derived). Here we must do the
+proximity out/in trick on a part not being the canvas, or touch
+somewhere else than the window borders/Gimp canvas.
+
+Phew. But there's a mitigating factor to all this Qt3/Gimp canvas
+mess. We can use the "non-trigger" to our advantage.
+
+For example, I normally like the PressCurve to be "0 25 75 100"
+(sensitivity 3) in Gimp. But sometimes I'd like it to be a bit firmer.
+So if the root window (the "background" in X) or some other window
+nearby is set to sensitivity 4, it is a quick touch operation away to
+either stay with a level 3, or switch to a level 4 while painting.
+
 _Known bugs marked with FIXME in the code_
 
 ! Parsing of the configuration file still leaves some corner cases
-to chance. The behaviour when reading in the next line/part, after
-having cut a line longer than MAXBUFFER, is totally unpredictable.
+to chance.
 
-Also doesn't handle situations where multiple fields are specified
-on the same line, or if the program record begin/end "%%" sign is
-written in a field line. Possibly other cases.
+It doesn't handle situations where multiple fields are specified
+on the same line. Possibly other cases, see the FIXME markers.
 
 ! The exit_on_error function drops the EXIT_KO when callig
 clean_up_exit. It becomes a normal EXIT_OK signal for any controlling

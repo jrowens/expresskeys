@@ -1,18 +1,18 @@
 /*
  exec_shell.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
- 
+
  Copyright (C) 2005-2006 - Mats Johannesson
- 
+
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
@@ -26,11 +26,11 @@
  the linuxwacom.sourceforge.net driver package. Observe that it doesn't
  check whether the program gets executed or not, just that the shell gets
  forked without an error.
- 
+
  This sample utilization of xsetwacom alters the pen sensitivity to pressure
  just like setting the Feel -> Sensitivity in wacomcpl (the tcl utility
  program) between Soft (lower) and Firm (higher) values (1 to 7, 4 is
- default). Both PEN_CURVE_DOWNWARD and PEN_CURVE_UPWARD flip over in a
+ default). Both STYLUS1_CURVE_DOWNWARD and STYLUS1_CURVE_UPWARD flip over in a
  carousel fashion at the top and bottom values.
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -40,27 +40,27 @@ int call_xsetwacom(int num)
 	char buffer [MAXBUFFER];
 	char curve [12];
 
-	if ((num >= PEN_CURVE_DOWNWARD) &&
-		(num <= PEN_CURVE_UPWARD)) {
-		if (handle_pen) {
-			if (num == PEN_CURVE_DOWNWARD) {
-				if (pen_presscurve > 1) {
-					pen_presscurve--;
+	if ((num >= STYLUS1_CURVE_DOWNWARD) &&
+		(num <= STYLUS1_CURVE_UPWARD)) {
+		if (stylus1_info) {
+			if (num == STYLUS1_CURVE_DOWNWARD) {
+				if (padstylus1_presscurve > 1) {
+					padstylus1_presscurve--;
 				} else {
-					pen_presscurve = 7;
+					padstylus1_presscurve = 7;
 				}
 			}
-			if (num == PEN_CURVE_DEFAULT) {
-				pen_presscurve = 4;
+			if (num == STYLUS1_CURVE_DEFAULT) {
+				padstylus1_presscurve = 4;
 			}
-			if (num == PEN_CURVE_UPWARD) {
-				if (pen_presscurve < 7) {
-					pen_presscurve++;
+			if (num == STYLUS1_CURVE_UPWARD) {
+				if (padstylus1_presscurve < 7) {
+					padstylus1_presscurve++;
 				} else {
-					pen_presscurve = 1;
+					padstylus1_presscurve = 1;
 				}
 			}
-			switch (pen_presscurve) {
+			switch (padstylus1_presscurve) {
 
 				case 1:
 				sprintf(curve, "0 75 25 100");
@@ -93,19 +93,18 @@ int call_xsetwacom(int num)
 				default:
 				sprintf(curve, "0 0 100 100");
 				break;
-			
+
 			}
-			snprintf(buffer, MAXBUFFER, "xsetwacom set %s PressCurve %s", pen_name, curve);
+			snprintf(buffer, MAXBUFFER, "xsetwacom set %s PressCurve %s", stylus1_name, curve);
 			if ((system(buffer)) == NON_VALID) {
 				fprintf(stderr, "Failed to fork a shell for xsetwacom!\n");
 			} else {
 				if (be_verbose) {
-					fprintf(stderr, "%s Sensitivity = %d PressCurve = %s\n", pen_name, pen_presscurve, curve);
+					fprintf(stderr, "%s Sensitivity = %d PressCurve = %s\n", stylus1_name, padstylus1_presscurve, curve);
 				}
 			}
 		}
 	}
-
 	return 0;
 
 }

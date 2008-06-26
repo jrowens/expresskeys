@@ -1,9 +1,15 @@
 
-This program gives basic linux support for the ExpressKeys and
-Touch Strips of a Wacom Intuos3 tablet or a Cintiq 21UX Interactive
-Pen Display. Latest version can be found at:
+This program gives linux support for the ExpressKeys and Touch Strips
+of a Wacom Intuos3 tablet or a Cintiq 21UX Interactive Pen Display.
 
-http://web.telia.com/~u46133770/wacom/index.html
+It can also provide an automatic change of stylus pressure sensitivity
+- aka PressCurve - going from one program window to the next, by way
+of "xsetwacom" from the driver package at linuxwacom.sourceforge.net
+This feature is totally independent of the connected Wacom tablet model.
+
+Latest version can be found through the project page at:
+
+http://freshmeat.net/projects/wacomexpresskeys
 
 Please direct any bug reports or questions to the top address in
 the AUTHORS file. This program is _not_ a linuxwacom project.

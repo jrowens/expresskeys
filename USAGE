@@ -10,7 +10,7 @@ file to:
 
 Section "ServerLayout"
 [...]
-InputDevice "pad" # Intuos3 or Cintiq 21UX. It must NOT send core event
+InputDevice "pad" # Intuos3/Cintiq 21UX/Graphire4. It must NOT send core event
 [...]
 EndSection
 
@@ -22,59 +22,86 @@ in proximity.
 
 ///////////////////////////////////////////////////////////////////////////
 
+Important: Gimp doesn't know _anything_ about a "pad" device, so the option
+File --> Preferences --> Input Devices --> Configure Extended Input Devices...
+--> [Device: pad  Mode: Disabled] is how it should be set. If you change it
+to Sceen or Window, pressing pad buttons or using touch strips will NOT work.
+
+///////////////////////////////////////////////////////////////////////////
+
 USAGE of expresskeys:
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 * Program can not be started unless X is running, and refuses to start
-if another active instance of the program is detected (through a live
-pid-file).
+if a daemon instance of the program is detected (through a live pid-file).
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-* Command line can be:
+* Command line:
 
-expresskeys <pad-device-name> [<pen-device-name>] [-d] [-v]
+Usage: expresskeys [OPTION]... [DEVICE]...
+Any combination of pad and/or stylus can be specified.
+An empty command line means automatic device search.
+Options can be written like -dv or -d -v in any place.
 
-Where the pad name is mandatory. Specify a pen name
-if you want the program to handle pen mode switches.
-Use -d to make the program a daemon (run in the background).
-Use -v to print info to the screen at many execution points.
+  -d makes the program a daemon (runs in the background).
+  -k terminates (kills) an already running daemon instance.
+  -r re-reads the configuration file of a running daemon.
+  -v prints info to the screen at many execution points.
+  -x sets -v and exits after some important info blocks.
+  -s tells a daemon instance to report status (info block).
+  -h unconditionally brings up this help text.
 
-Example: expresskeys pad stylus -d
+Example1: expresskeys -d (first 'pad' and/or 'stylus' found get used)
+Example2: expresskeys 1stIntuos3Pad 1stIntuos3Stylus2 -d (named devices)
+Example3: expresskeys -rv (visibly re-read the configuration file)
 
-The names are the "Identifier" strings in your X config file (xorg.conf)
-Myself I start expresskeys just before the window manager in my 
-.xinitrc with: /usr/local/bin/expresskeys pad stylus -d
+The names of pad or stylus devices are the "Identifier" strings in your
+X config file (xorg.conf). Myself I start expresskeys just before the
+window manager in .xinitrc with: /usr/local/bin/expresskeys -d
 
-OBS! I just found out that it should be started AFTER any usage of
+OBS! I've found out that it should be started AFTER any usage of
 the X program "xmodmap", else expresskeys could crash. Reason unknown.
 See the BUGS file for further info.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 * A minimal configuration file is written on first run to the user home
-directory: ~/.expresskeys/expresskeys.conf
+directory: ~/.expresskeys/intuos3.conf1 (or padless.conf1)
 
 It contains "default", "Gimp", "Blender" and "XTerm" entries and is
-recreated whenever a configuration file is missing on program start.
+re-created whenever a configuration file is missing on program start.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 * A file with the program PID number is written if run with -d in:
 ~/.expresskeys/expresskeys.pid
 
-The pid-file is deleted on normal program exit like "kill <pid>",
-"killall expresskeys", "kill -TERM <pid>" etc. A brutal "kill -9 <pid>"
-or a program crash will leave the pid-file undeleted. This is also
-the case if the program is terminated by X close-down on some systems.
+The pid-file is deleted on normal program exit like "expresskeys -k"
+
+You can also type "kill <pid>", "killall expresskeys", "kill -TERM <pid>"
+etc. A brutal "kill -9 <pid>" or a program crash will leave the pid-file
+undeleted. This is also the case if the program is terminated by X
+close-down on some systems.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-* The configuration file is re-read upon receipt of the signal SIGUSR1.
-Do a "kill -USR1 <pid-of-expresskeys>" after a config file edit (or -USR2).
-The included shell script "expresskeys-reread.sh" will do it for you if
-a pid-file from a daemon instance is present.
+* The configuration file is re-read when you do an "expresskeys -r" and a
+daemon instance of the program is running.
+
+What happens then is that we send the SIGUSR1 signal, which has been
+defined to call the re_read_file_config function in on_signal.c The
+action can also be performed by doing a "kill -USR1 <pid-of-expresskeys>"
+after a config file edit.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NOTE: There's a graphical point-and-click program in the offing at:
+http://alavaliant.googlepages.com that already supports expresskeys 0.2.x
+config file editing. The pygtk (2.8+) program is called "wacom-config"
+and will be updated to support expresskeys 0.3.x. It really does obsolete
+the following explanations of how to find keycodes and program names :NOTE
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -128,8 +155,8 @@ spacebar. Ok, here's Left Arrow:
 KeyPress event, serial 27, synthetic NO, window 0x1200001,
     root 0x115, subw 0x0, time 5281166, (128,125), root:(138,145),
     state 0x0, keycode 100 (keysym 0xff51, Left), same_screen YES,
-    XLookupString gives 0 bytes: 
-    XmbLookupString gives 0 bytes: 
+    XLookupString gives 0 bytes:
+    XmbLookupString gives 0 bytes:
     XFilterEvent returns: False
 
 Keycode is 100 here. Let's go to Right Arrow:
@@ -137,8 +164,8 @@ Keycode is 100 here. Let's go to Right Arrow:
 KeyPress event, serial 27, synthetic NO, window 0x1200001,
     root 0x115, subw 0x0, time 5283438, (128,125), root:(138,145),
     state 0x0, keycode 102 (keysym 0xff53, Right), same_screen YES,
-    XLookupString gives 0 bytes: 
-    XmbLookupString gives 0 bytes: 
+    XLookupString gives 0 bytes:
+    XmbLookupString gives 0 bytes:
     XFilterEvent returns: False
 
 So it's 102. When you are finished looking for the keycodes, give the
@@ -150,24 +177,24 @@ That's how it looks on this Swedish keyboard. Now open the expresskeys
 configuration file with any editor. The location is a hidden directory
 in your home directory. Here's mine:
 
-/home/loke/.expresskeys/expresskeys.conf
+/home/loke/.expresskeys/intuos3.conf1
 
 Replace the keycodes in the section you are interested in, I'd do:
+[Original configfile version 2 text here updated to version 3. Ed.]
 
-10 Left Pad - Button 9:         100     # Button 9 Left Arrow
-11 Left Pad - Button 9 Plus:    0       # Extra key
+LeftPadButton9        100     # Button 9 Left Arrow
+LeftPadButton9Plus    0       # Extra keycode
 
-12 Left Pad - Button 10:        102     # Button 10 Right Arrow
-13 Left Pad - Button 10 Plus:   0       # Extra key
+LeftPadButton10       102     # Button 10 Right Arrow
+LeftPadButton10Plus   0       # Extra keycode
 
-14 Left Pad - Button 11:        37      # Button 11
-15 Left Pad - Button 11 Plus:   0       # Extra key
+LeftPadButton11       37      # Button 11
+LeftPadButton11Plus   0       # Extra keycode
 
-16 Left Pad - Button 12:        65      # Button 12 Space (was default)
-17 Left Pad - Button 12 Plus:   0       # Extra key
+LeftPadButton12       65      # Button 12 Space (was default)
+LeftPadButton12Plus   0       # Extra keycode
 
-Save the file and read in the new values with the shell script I
-supplied (expresskeys-reread.sh)
+Save the file and read in the new values with "expresskeys -r"
 
 The extra key are for when you want two keys pressed. First the normal,
 then the extra, like Ctrl-s or so. I've been informed that a US keyboard
@@ -191,6 +218,11 @@ It's the last string we would use, the "OpenOffice.org 1.1.4". We always
 use the last part, and the spelling is case sensitive. Putting
 "openoffice.org 1.1.4" in the configuration file would not match up.
 
+A cleaner looking output from xprop can be had by eg running:
+
+$ xprop | grep WM_CLASS | cut -d ',' -f2
+ "OpenOffice.org 1.1.4"
+
 Also, since spaces are accepted as part of a class name, make sure there
 are no space _before or after_ the name, within the double quotes:
 
@@ -204,19 +236,130 @@ The very first entry (at the top) in the configuration file is named
 in another entry. It also takes care of the root window (the "background")
 and programs lacking a class name in their WM_CLASS.
 
-"default" must always stay as the first entry in the configuration file!
+The "default" record must always exist in the configuration file! But it
+doesn't matter _where_. Put it last or first or wherever...
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NEW in expresskeys version 0.3.0:
+
+Config file version 3 is completely independent of how you organize the
+program fields or records. Only limitation is that all the fields must
+be _present_ somewhere in the record for it to be counted. In version 3
+that means 27 fields for a 'pad' device user ('stylus' field is included),
+and 2 fields for a 'stylus' device only user.
+
+This open-ended nature was enforced to facilitate the inclusion of
+future fields - or elimination of already existing ones - without
+invalidating what the user already has (which happens now when going
+from version 2 to 3).
+
+The new field introduced with version 3 is Stylus1PressCurve. Here's
+what I've written in the README file:
+
+"It can also provide an automatic change of stylus pressure sensitivity
+- aka PressCurve - going from one program window to the next, by way
+of "xsetwacom" from the driver package at linuxwacom.sourceforge.net
+This feature is totally independent of the connected Wacom tablet model."
+
+Finding good numbers (they must be in groups of four) for this field is
+not an intuitive act... The "wacomcpl" program - the tcl utility from
+linuxwacom - uses a slider (stylus/eraser --> Feel --> Sensitivity)
+with steps from 1 (Soft) to 7 (Firm) and 4 being the default. It then
+calls the "xsetwacom" program to actually set a true "Bezier curve".
+
+The seven curves chosen by wacomcpl are (Soft to Firm):
+
+1               2               3               4 (default)
+"0 75 25 100" | "0 50 50 100" | "0 25 75 100" | "0 0 100 100"
+5               6               7
+"25 0 100 75" | "50 0 100 50" | "75 0 100 25"
+
+Experimenting with other values can probably be a fun... activity on a
+rainy day. My thanks go to Pablo Gimenez, a user who wanted this
+automatic pressure sensitivity change. He made me start thinking about
+a possible implementation.
+
+It works really well but, as I've written in the BUGS file:
+
+--Quote--
+
+_NOTABUG_
+
+Any program built with the Qt3 toolkit (like eg the KDE desktop...)
+completely swallows the 'stylus' DeviceButtonPress event that we've
+registered to be notified of, through the Xlib XSelectExtensionEvent
+call. The same event coming from the 'pad' device is all OK, though.
+
+This is a (deliberate?) Qt pattern where only other Qt programs,
+with difficulty, can get deliverance of these low-level events. At
+least that's my impression after a first round of bug-report emails
+between here and there --> Qt producer company Trolltech.
+
+Why they let 'pad' button events pass through is probably due to lack
+of knowledge. They recognize an oldtimer like the 'stylus', so BAM,
+grab it. But this strange 'pad' thing... better stay out of contact...
+
+Programs based on the GTK+ toolkit like the Gnome desktop (with the
+notable exception being the Gimp canvas - more about that below) do
+behave appropriate vis-a-vis both the 'stylus' and 'pad' button events.
+
+This situation has led to one design compromise (performance slippage)
+in expresskeys 0.3.0, and a not wholly ideal usability pattern when
+dealing with Qt3 programs.
+
+Performance wise we take a hit by also registering for and acting on
+a 'stylus' ProximityIn event. These events are not blocked by Qt3.
+
+Execution of the "automatic change of stylus pressure sensitivity"
+in a Qt3 program is achieved by first lifting the pen slightly (until
+it goes out of proximity - the cursor stops being effected by pen
+movement) and then lowering the pen again on the target window.
+
+If we happen to be in Gnome, it is enough to touch the Qt3 program on
+the titlebar or on its other borders (since they are GTK+ derived).
+
+GTK+ based programs suffer no such limitation. In those we just press
+the pen tip in the window, and by that action the pressure sensitivity
+change is performed. Unless the target is the Gimp canvas (at least as
+high as version 2.2.10)...
+
+The Gimp canvas is even _more_ broken (in regards to our expectations)
+than the Qt3 programs. Here both the 'stylus' DeviceButtonPress AND
+the ProximityIn events are filtered away from interested parties.
+
+So in order to get the automatic change of stylus pressure sensitivity
+when coming in from another program window, the pen tip or side button
+rocker first must engage _somwhere else_ than the canvas. Just touching
+the Gimp titlebar or touching an area outside of the canvas will work.
+
+If we happen to be in KDE while using Gimp, then a simple titlebar
+touch won't work (all the borders are Qt3 derived). Here we must do the
+proximity out/in trick on a part not being the canvas, or touch
+somewhere else than the window borders/Gimp canvas.
+
+Phew. But there's a mitigating factor to all this Qt3/Gimp canvas
+mess. We can use the "non-trigger" to our advantage.
+
+For example, I normally like the PressCurve to be "0 25 75 100"
+(sensitivity 3) in Gimp. But sometimes I'd like it to be a bit firmer.
+So if the root window (the "background" in X) or some other window
+nearby is set to sensitivity 4, it is a quick touch operation away to
+either stay with a level 3, or switch to a level 4 while painting.
+
+--Unquote--
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The "default" entry holds keycodes to make the pad buttons behave just
 as Wacom list them in the Quick Start Guide: Shift, Alt, Ctrl and Space
 mirrored on both sides. Touch Strip support is turned off by default. Use
-the number 1 in the "Handle Touch Strips" field to turn it on. You then get
+the number 1 in the "HandleTouchStrips" field to turn it on. You then get
 Arrow-key Up/Down on the left strip and Arrow-key Right/Left on the right.
 Change direction of the movement by switching the "Up" and "Down" values.
 
 Both pad buttons and touch strips can send two keys at a time if so
-configured through usage of the "Plus" keycode fields.
+configured through usage of the "...Plus" keycode fields.
 
 If you want a button to do a mouse button press instead of a keypress,
 use a value between 991 and 997 in the corresponding keycode field, where
@@ -230,14 +373,10 @@ extra buttons on the mouse.
 
 If you want a button to do pen mode toggling between Absolute and Relative,
 use the value 999 in the corresponding keycode field. To be able to switch
-mode anywhere each program block must contain one 999 definition. And,
-of course, a pen name must be used on the command line when starting the
-program. OBS: The pen mode toggle can only be assigned to a "real" button,
-not the "Plus" version :OBS.
+mode anywhere each program block must contain one 999 definition.
 
-Please don't alter or remove the colons ":" before the class name or
-keycodes. They must be there to separate the fields, just like the "%%" is
-used to separate and define the program blocks.
+OBS: The pen mode toggle can only be assigned to a "real" button,
+not the "Plus" version :OBS.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -276,7 +415,7 @@ pen mode even with such a window in focus, so I've set 999 in one field.
 Below is some ASCII art showing the "default":
 
 Left ExpressKey Pad
------------- 
+------------
 |  |   |   |		Wacom Intuos3 defaults are:
 |  | 9 | T |
 |11|---| O |		Key 9  = (left) Shift	= keycode 50
@@ -286,7 +425,7 @@ Left ExpressKey Pad
 ------------
 
 Right ExpressKey Pad
------------- 
+------------
 |   |   |  |		Wacom Intuos3 defaults are:
 | T |13 |  |
 | O |---|15|		Key 13 = (left) Shift	= keycode 50

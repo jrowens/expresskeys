@@ -1,18 +1,18 @@
 /*
  event_loop.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
- 
+
  Copyright (C) 2005-2006 - Mats Johannesson, Denis DerSarkisian
- 
+
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
@@ -70,16 +70,24 @@ int fake_event(Display *display, unsigned int keycode, Bool is_press,
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Function waits perpetually for the X server to deliver information
- about events from the input device. Receipt of an event that we've
- registered for (button press/release and motion) triggers a good deal
- of activity in a setup phase, after which we send the fake key press.
- A button press or release will always cause first a motion and then 
- a button event. That's why you'll see the focus window name being
- printed twice if running with the verbose flag set.
+ about events from the input devices. Receipt of an event that we've
+ registered for ('pad' button press/release/motion and 'stylus'
+ button press/proximityin) triggers a good deal of activity in a
+ setup phase, after which we send the fake key press. A 'pad' button
+ press will always cause first a motion and then a button event.
+ That's why you'll see the focus window name being printed twice if
+ running with the verbose flag set.
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int use_events(Display *display)
 {
+
+	char curve1buffer [CURVEMAX];
+	char namebuffer [MAXBUFFER];
+	char execbuffer [MAXBUFFER];
+
+	snprintf(curve1buffer, CURVEMAX, "0 0 100 100");
+	snprintf(namebuffer, MAXBUFFER, "dummy");
 
 	XClassHint *class_hint;
 
@@ -112,74 +120,112 @@ int use_events(Display *display)
 
 		XNextEvent(display, &Event);
 
-		class_hint = XAllocClassHint();	/* Memory allocation. Free it later! */
+/* We've registered for 'stylus' ProximityIn events but will in fact also
+   see the ProximityOut events. Therefore list exactly what should be
+   reacted on, so that we at least can skip one focus window lookup */
 
-		focus_window = None;
-		in_list = 0;
+		if ((Event.type == button_press_type)
+			|| (Event.type == button_release_type)
+			|| (Event.type == motion_type)
+			||  (Event.type == proximity_in_type)) {
+
+			class_hint = XAllocClassHint();	/* Memory allocation. Free it later! */
+
+			focus_window = None;
+			in_list = 0;
 
 /* Locate which window that currently has the focus and get its list of
    related windows. Then pull its ClassHint into our allocated structure */
 
-		XGetInputFocus(display, &focus_window, &focus_state);
-		XQueryTree(display, focus_window, &root, &parent, &children, &num_children);
-		XGetClassHint(display, focus_window, class_hint);
+			XGetInputFocus(display, &focus_window, &focus_state);
+			XQueryTree(display, focus_window, &root, &parent, &children, &num_children);
+			XGetClassHint(display, focus_window, class_hint);
 
 /* If the class hint (aka WM_CLASS) contains no class string we free the
    allocated memory for each structure member and get the ClassHint of the
    window parent, if it has one. Observe that we must skip the root window */
 
-		if ((!class_hint->res_class) && (parent) && (focus_window != root)) {
-			XFree(class_hint->res_class);
-			XFree(class_hint->res_name);
-			XGetClassHint(display, parent, class_hint);
-		}
+			if ((!class_hint->res_class) && (parent) && (focus_window != root)) {
+				XFree(class_hint->res_class);
+				XFree(class_hint->res_name);
+				XGetClassHint(display, parent, class_hint);
+			}
 
 /* If the root window had the focus, or if the active window or its parent
-   had no class string at all, we use the top ("default") program definition
+   had no class string at all, we use the "default" program definition
    from the read in configuration file when evaluating the event. Otherwise
    we start scanning for a match between the class strings in our list and
    the found window class. Set a flag if a match is encountered */
 
-		if ((focus_window == root) || (class_hint->res_class == NULL)) {
-			p = external_list;
-		} else {
-			for (p = external_list; p < external_list + num_list; p++)
-				if (strcmp (class_hint->res_class, p->class_name) == 0) {
-					in_list = 1;
-					break;
+			if ((focus_window == root) || (class_hint->res_class == NULL)) {
+				p = default_program;
+			} else {
+				for (p = external_list; p < external_list + num_list; p++) {
+					if (strcmp (class_hint->res_class, p->class_name) == 0) {
+						in_list = 1;
+						break;
+					}
 				}
 			}
 
 /* Any program not found in our configuration gets the "default" treatment */
 
-		if (!in_list) {
-			p = external_list;
-		}
+			if (!in_list) {
+				p = default_program;
+			}
 
 /* The allocated memory for the ClassHint structure, and each of its
    members, must be freed here. Also, the call to XQueryTree to get a
    list of related windows might have allocated memory for child entries.
    It must be released as well */
-		
-		XFree(class_hint->res_class);
-		XFree(class_hint->res_name);
-		XFree(class_hint);
-		if (children) XFree((char *)children);
 
-		if (be_verbose) {
-			fprintf(stderr, "PGR FOCUS = %s\n", p->class_name);
-		}
+			XFree(class_hint->res_class);
+			XFree(class_hint->res_name);
+			XFree(class_hint);
+			if (children) XFree((char *)children);
 
-/* Finally start to look at the actual event. Touch Strips come first */
+			if (be_verbose) {
+				fprintf(stderr, "PGR FOCUS = %s\n", p->class_name);
+			}
 
-		if (Event.type == motion_type) {
+/* Finally start to look at the actual event. Stylus button events come first */
 
-			if (p->handle_touch) {
+			if ((Event.type == button_press_type)
+				|| (Event.type == proximity_in_type)) {
+				if (stylus1_info) {
+					button = (XDeviceButtonEvent *) &Event;
+					if (button->deviceid == stylus1_info->id) {
+						if (in_list || (strcmp ("default", p->class_name) == 0)) {
+							if (strcmp (namebuffer, p->class_name) != 0) {
+								if (strcmp (curve1buffer, p->stylus1_presscurve) != 0) {
+									snprintf(curve1buffer, CURVEMAX, "%s", p->stylus1_presscurve);
+									snprintf(execbuffer, MAXBUFFER, "xsetwacom set %s PressCurve %s", stylus1_name, curve1buffer);
+									if ((system(execbuffer)) == NON_VALID) {
+										fprintf(stderr, "Failed to fork a shell for xsetwacom to set PressCurve!\n");
+									} else {
+										if (be_verbose) {
+											fprintf(stderr, "ST1 PRCURVE = \"%s\"\n", p->stylus1_presscurve);
+										}
+									/* Save current program name with focus as a compare history */
+									snprintf(namebuffer, MAXBUFFER, "%s", p->class_name);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 
-    			motion = (XDeviceMotionEvent *) &Event;
+/* Next we look for Touch Strip events */
 
-				rotation = motion->axis_data[3];
-				throttle = motion->axis_data[4];
+			if (Event.type == motion_type) {
+				if (pad1_info) {
+
+					if (p->handle_touch) {
+						motion = (XDeviceMotionEvent *) &Event;
+						if (motion->deviceid == pad1_info->id) {
+							rotation = motion->axis_data[3];
+							throttle = motion->axis_data[4];
 
 /* As can be analyzed with Frederic Lepied's excellent xinput-1.2 program
    the touch strip data comes in on axis 3 and 4 (left and right strips).
@@ -196,105 +242,107 @@ int use_events(Display *display)
 
 /* Left Touch Strip */
 
-				if (rotation > 1) {
-					if ((rotation < old_rotation) && (old_rotation <= elder_rotation)) {
-						if (p->l_touch_up) {
-							fake_event(display, p->l_touch_up, True, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "LTCHUP = %d dn\n", p->l_touch_up);
-							}
-							if (p->l_touch_up_plus) {
-								fake_event(display, p->l_touch_up_plus, True, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "LTCHUP+ = %d dn\n", p->l_touch_up_plus);
+							if (rotation > 1) {
+								if ((rotation < old_rotation) && (old_rotation <= elder_rotation)) {
+									if (p->l_touch_up) {
+										fake_event(display, p->l_touch_up, True, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "LTCHUP = %d dn\n", p->l_touch_up);
+										}
+										if (p->l_touch_up_plus) {
+											fake_event(display, p->l_touch_up_plus, True, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "LTCHUP+ = %d dn\n", p->l_touch_up_plus);
+											}
+											fake_event(display, p->l_touch_up_plus, False, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "LTCHUP+ = %d up\n", p->l_touch_up_plus);
+											}
+										}
+										fake_event(display, p->l_touch_up, False, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "LTCHUP = %d up\n", p->l_touch_up);
+										}
+									}
+								} else if ((rotation > old_rotation) && (old_rotation >= elder_rotation)) {
+									if (p->l_touch_down) {
+										fake_event(display, p->l_touch_down, True, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "LTCHDN = %d dn\n", p->l_touch_down);
+										}
+										if (p->l_touch_down_plus) {
+											fake_event(display, p->l_touch_down_plus, True, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "LTCHDN+ = %d dn\n", p->l_touch_down_plus);
+											}
+											fake_event(display, p->l_touch_down_plus, False, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "LTCHDN+ = %d up\n", p->l_touch_down_plus);
+											}
+										}
+										fake_event(display, p->l_touch_down, False, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "LTCHDN = %d up\n", p->l_touch_down);
+										}
+									}
 								}
-								fake_event(display, p->l_touch_up_plus, False, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "LTCHUP+ = %d up\n", p->l_touch_up_plus);
-								}
+							elder_rotation = old_rotation;
+							old_rotation = rotation;
 							}
-							fake_event(display, p->l_touch_up, False, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "LTCHUP = %d up\n", p->l_touch_up);
-							}
-						}
-					} else if ((rotation > old_rotation) && (old_rotation >= elder_rotation)) {
-						if (p->l_touch_down) {
-							fake_event(display, p->l_touch_down, True, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "LTCHDN = %d dn\n", p->l_touch_down);
-							}
-							if (p->l_touch_down_plus) {
-								fake_event(display, p->l_touch_down_plus, True, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "LTCHDN+ = %d dn\n", p->l_touch_down_plus);
-								}
-								fake_event(display, p->l_touch_down_plus, False, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "LTCHDN+ = %d up\n", p->l_touch_down_plus);
-								}
-							}
-							fake_event(display, p->l_touch_down, False, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "LTCHDN = %d up\n", p->l_touch_down);
-							}
-						}
-					}
-				elder_rotation = old_rotation;
-				old_rotation = rotation;
-				}
 
 /* Right Touch Strip */
 
-				if (throttle > 1) {
-					if ((throttle < old_throttle) && (old_throttle <= elder_throttle)) {
-						if (p->r_touch_up) {
-							fake_event(display, p->r_touch_up, True, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "RTCHUP = %d dn\n", p->r_touch_up);
-							}
-							if (p->r_touch_up_plus) {
-								fake_event(display, p->r_touch_up_plus, True, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "RTCHUP+ = %d dn\n", p->r_touch_up_plus);
+							if (throttle > 1) {
+								if ((throttle < old_throttle) && (old_throttle <= elder_throttle)) {
+									if (p->r_touch_up) {
+										fake_event(display, p->r_touch_up, True, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "RTCHUP = %d dn\n", p->r_touch_up);
+										}
+										if (p->r_touch_up_plus) {
+											fake_event(display, p->r_touch_up_plus, True, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "RTCHUP+ = %d dn\n", p->r_touch_up_plus);
+											}
+											fake_event(display, p->r_touch_up_plus, False, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "RTCHUP+ = %d up\n", p->r_touch_up_plus);
+											}
+										}
+										fake_event(display, p->r_touch_up, False, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "RTCHUP = %d up\n", p->r_touch_up);
+										}
+									}
+								} else if ((throttle > old_throttle) && (old_throttle >= elder_throttle)) {
+									if (p->r_touch_down) {
+										fake_event(display, p->r_touch_down, True, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "RTCHDN = %d dn\n", p->r_touch_down);
+										}
+										if (p->r_touch_down_plus) {
+											fake_event(display, p->r_touch_down_plus, True, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "RTCHDN+ = %d dn\n", p->r_touch_down_plus);
+											}
+											fake_event(display, p->r_touch_down_plus, False, CurrentTime);
+											if (be_verbose) {
+												fprintf(stderr, "RTCHDN+ = %d up\n", p->r_touch_down_plus);
+											}
+										}
+										fake_event(display, p->r_touch_down, False, CurrentTime);
+										if (be_verbose) {
+											fprintf(stderr, "RTCHDN = %d up\n", p->r_touch_down);
+										}
+									}
 								}
-								fake_event(display, p->r_touch_up_plus, False, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "RTCHUP+ = %d up\n", p->r_touch_up_plus);
-								}
-							}
-							fake_event(display, p->r_touch_up, False, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "RTCHUP = %d up\n", p->r_touch_up);
-							}
-						}
-					} else if ((throttle > old_throttle) && (old_throttle >= elder_throttle)) {
-						if (p->r_touch_down) {
-							fake_event(display, p->r_touch_down, True, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "RTCHDN = %d dn\n", p->r_touch_down);
-							}
-							if (p->r_touch_down_plus) {
-								fake_event(display, p->r_touch_down_plus, True, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "RTCHDN+ = %d dn\n", p->r_touch_down_plus);
-								}
-								fake_event(display, p->r_touch_down_plus, False, CurrentTime);
-								if (be_verbose) {
-									fprintf(stderr, "RTCHDN+ = %d up\n", p->r_touch_down_plus);
-								}
-							}
-							fake_event(display, p->r_touch_down, False, CurrentTime);
-							if (be_verbose) {
-								fprintf(stderr, "RTCHDN = %d up\n", p->r_touch_down);
+							elder_throttle = old_throttle;
+							old_throttle = throttle;
 							}
 						}
 					}
-				elder_throttle = old_throttle;
-				old_throttle = throttle;
 				}
 			}
-		}
 
 /* Now see if the event concerned the pad buttons. Not much to talk about.
    We follow the configuration definitions, and handle a pen if requested
@@ -302,7 +350,7 @@ int use_events(Display *display)
    and 13, 14, 15, 16 on the right. Template:
 
 Left ExpressKey Pad
------------- 
+------------
 |  |   |   |		Wacom Intuos3 defaults are:
 |  | 9 | T |
 |11|---| O |		Key 9  = (left) Shift	= keycode 50
@@ -312,7 +360,7 @@ Left ExpressKey Pad
 ------------
 
 Right ExpressKey Pad
------------- 
+------------
 |   |   |  |		Wacom Intuos3 defaults are:
 | T |13 |  |
 | O |---|15|		Key 13 = (left) Shift	= keycode 50
@@ -324,82 +372,94 @@ Right ExpressKey Pad
 
 /* Pad Button Press */
 
-		if (Event.type == button_press_type) {
+			if (Event.type == button_press_type) {
+				if (pad1_info) {
 
-			button = (XDeviceButtonEvent *) &Event;
+					button = (XDeviceButtonEvent *) &Event;
+					if (button->deviceid == pad1_info->id) {
+						button_index = &p->key_9;
 
-			button_index = &p->key_9;
+						for (i = 9; i < button->button; i++) {
+							button_index++;
+							button_index++;
+						}
 
-			for (i = 9; i < button->button; i++) {
-				button_index++;
-				button_index++;
+						if (*button_index == TOGGLE_STYLUS1) {
+							if (stylus1_info) {
+								if (be_verbose) {
+									fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+								}
+								toggle_stylus1_mode(display, stylus1_name);
+							}
+						} else if ((*button_index >= STYLUS1_CURVE_DOWNWARD)
+									&& (*button_index <= STYLUS1_CURVE_UPWARD)
+									&& (stylus1_info)) {
+							if (be_verbose) {
+								fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+							}
+							call_xsetwacom(*button_index);
+
+						} else {
+							if (*button_index) {
+								fake_event(display, *button_index, True, CurrentTime );
+								if (be_verbose) {
+									fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
+								}
+							}
+							button_index++;
+							if (*button_index) {
+								fake_event(display, *button_index, True, CurrentTime );
+								if (be_verbose) {
+									fprintf(stderr, "BTN+ %d = %d dn\n", button->button, *button_index);
+								}
+							}
+						}
+					}
+				}
 			}
-
-			if (*button_index == TOGGLE_PEN) {
-				if (handle_pen) {
-					if (be_verbose) {
-						fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
-					}
-					toggle_pen_mode(display, pen_name);
-				}
-			} else if ((*button_index >= PEN_CURVE_DOWNWARD) &&
-						(*button_index <= PEN_CURVE_UPWARD)) {
-				if (be_verbose) {
-					fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
-				}
-				call_xsetwacom(*button_index);
-			} else {
-				if (*button_index) {
-					fake_event(display, *button_index, True, CurrentTime );
-					if (be_verbose) {
-						fprintf(stderr, "BTN %d = %d dn\n", button->button, *button_index);
-					}
-				}
-				button_index++;
-				if (*button_index) {
-					fake_event(display, *button_index, True, CurrentTime );
-					if (be_verbose) {
-						fprintf(stderr, "BTN+ %d = %d dn\n", button->button, *button_index);
-					}
-				}
-			}
-		}
 
 /* Pad Button Release */
 
-		if (Event.type == button_release_type) {
+			if (Event.type == button_release_type) {
+				if (pad1_info) {
 
-			button = (XDeviceButtonEvent *) &Event;
+					button = (XDeviceButtonEvent *) &Event;
+					if (button->deviceid == pad1_info->id) {
+						button_index = &p->key_9;
 
-			button_index = &p->key_9;
+						for (i = 9; i < button->button; i++) {
+							button_index++;
+							button_index++;
+						}
 
-			for (i = 9; i < button->button; i++) {
-				button_index++;
-				button_index++;
-			}
-
-			if (*button_index == TOGGLE_PEN) {
-				if (be_verbose) {
-					fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
-				}
-			} else if ((*button_index >= PEN_CURVE_DOWNWARD) &&
-						(*button_index <= PEN_CURVE_UPWARD)) {
-				if (be_verbose) {
-					fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
-				}
-			} else {
-				button_index++;
-				if (*button_index) {
-					fake_event(display, *button_index, False, CurrentTime );
-					if (be_verbose) {
-						fprintf(stderr, "BTN+ %d = %d up\n", button->button, *button_index);
-					}
-				}
-				button_index--;
-				if (*button_index) {
-					fake_event(display, *button_index, False, CurrentTime );
-					if (be_verbose) {
-						fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+						if (*button_index == TOGGLE_STYLUS1) {
+							if (stylus1_info) {
+								if (be_verbose) {
+									fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+								}
+							}
+						} else if ((*button_index >= STYLUS1_CURVE_DOWNWARD)
+									&& (*button_index <= STYLUS1_CURVE_UPWARD)
+									&& (stylus1_info)) {
+							if (be_verbose) {
+								fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+							}
+						} else {
+							button_index++;
+							if (*button_index) {
+								fake_event(display, *button_index, False, CurrentTime );
+								if (be_verbose) {
+									fprintf(stderr, "BTN+ %d = %d up\n", button->button, *button_index);
+								}
+							}
+							button_index--;
+							if (*button_index) {
+								fake_event(display, *button_index, False, CurrentTime );
+								if (be_verbose) {
+									fprintf(stderr, "BTN %d = %d up\n", button->button, *button_index);
+								}
+							}
+						}
 					}
 				}
 			}
