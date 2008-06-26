@@ -1,7 +1,8 @@
 
 _Changes since last version. Executive summary_
 
-- Graphire4 support adjusted for new button ordering in linuxwacom-0.7.5-2
+- Total rewrite. Can handle 3 tablets of 5 different 'models' (sum 15) and 2
+styli per tablet. User defined auto-repeat for each button and touch strip.
 
-OBSERVE: linuxwacom-0.7.5-2 or greater is _required_ for Graphire4 support!
+OBSERVE: linuxwacom-0.7.5-2 or greater is now required for ALL tablets!
 

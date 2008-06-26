@@ -1,242 +1,124 @@
 
-_Version 0.3.2 14 Sep 2006_
+_Version 0.4.0 28 Nov 2006_
 
-* Graphire4 button ordering was changed in linuxwacom-0.7.5-2 so that
-Left Button sends a 9 and Right Button a 10 internally, instead of the
-9 and 13 in previous drivers. Expresskeys has been updated accordingly.
-This is the only change in 0.3.2! I'm still busy with the large refactoring
-of a new codebase.
+OBSERVE: linuxwacom-0.7.5-2 or greater is now required for ALL tablets!
 
+I would most prominently like to thank Magnus Vigerlof. His initial code
+review of expresskeys 0.3.0 sparked an interest in refactoring. When Graphire4
+was tacked on in 0.3.1 it became obvious that the code needed a total rewrite.
+Since then I've forced myself on Magnus whenever a bit of guidance has been
+sought. His suggestions, always technically sound and never patronizing, have
+influenced my decisions to quite a degree. The resulting code however, can not
+be blamed on anyone but me. The Sorcerer's Apprentice from Fantasia conveys a
+proper guilt dispersion...
 
-_Version 0.3.1 1 Sep 2006_
+* A maximum of fifteen tablets (three of each model), and two styli per tablet,
+are now handled concurrently.
 
-* Graphire4 support. And what a chore it was! The task has revealed
-weaknesses in the overall code structuring which _must_ be attended to.
-So, a long time will pass on this end doing nothing but code refactoring.
-Graphire4 got hacked in by some serious "spaghetti"...
+'Models': nopad, Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3/Cintiq
 
-OBSERVE: linuxwacom-0.7.5-2 or greater is _required_ for Graphire4 support!
+Corresponding configuration files, for each connected tablet, are differentiated
+through their suffixes (.conf1 .conf2 .conf3): padless.conf1/2/3,
+graphire4bt.conf1/2/3, graphire4.conf1/2/3, intuos3s.conf1/2/3 and
+intuos3.conf1/2/3.
 
-In that release an option called GetTabletID was introduced (in xsetwacom
-version 0.0.7), which gives us a reliable and future proof way of identifying
-the tablet model any device belongs to (pad, stylus etc).
+Observe that the files _not_ are locked to specific tablets. On program start
+the first found tablet of a certain model gets to use the .conf1 file, etc.
 
-The function identify_device can be found in the exec_shell.c file, where
-presently only Graphire4 as a family is registered. A finer grained division
-is planned so that correct configuration files can be written out for the
-Graphire4 BlueTooth, which lacks a Scroll Wheel, and the Intuos3 4x5 with
-its single Touch Strip and 4 buttons.
+To aid in configuration/debugging and possibly help external programs to
+make an educated guess about the current connections, we print out easily
+parsed lines in the status.log (and to the screen in -v[erbose] mode) Eg:
 
-Thanks go to Carsten Schurig for e-mail access to a real Graphire4.
-Imagination and deducing can only produce the code, not verify it.
+/home/loke/.expresskeys/status.log
 
-And, as a sidenote to the verifying part, the Scroll Wheel of a Graphire4
-triggers button press/release events, (up = button 4, down = button 5) not
-axis motion events as has been stated on the linuxwacom web pages.
+[...]
+OUR CNFFILE = /home/loke/.expresskeys/intuos3.conf1
+ConfigVersion-user = 4
+ConfigVersion-ours = 4
+CurrentPad  = pad1i3
+CurrentSty1 = stylus1i3
+CurrentSty2 = LACKING
 
-* The -s switch to get status from a running program was added in the last
-24 hours before the 0.3.0 release, without much thought. It turns out not
-to be particularly useful in the intended manner. Standard error (stderr)
-where it prints the report is private to each shell session. So if the
-program already has been launched by one process, the next one who queries
-from another shell will see nothing.
+[...]
+OUR CNFFILE = /home/loke/.expresskeys/graphire4.conf1
+ConfigVersion-user = 4
+ConfigVersion-ours = 4
+CurrentPad  = pad1g4
+CurrentSty1 = stylus1g4
+CurrentSty2 = LACKING
 
-Therefore we now save a copy of the status output as a file as well in:
-~/.expresskeys/status.log The file gets created automatically at a daemon
-launch (updated with each -s query) and is deleted by a normal program exit.
+* A maximum of 32 keycodes can now be sent with each tablet button press
+(Touch Strip movement/Scroll Wheel up-down). Because of this, all the "Plus"
+fields from prior configuration file versions have been eliminated in
+ConfigVersion 4.
 
-* Inform the user about the different values for a PressCurve, as chosen by
-the wacomcpl program, already in the initial _configuration_ file. Nice to
-have a copy nearby when doing manual editing.
+Since a ConfigVersion 3 only will be correctly parsed on the first read,
+not on re-reads, we do not support that version at all. Sorry, it became too
+convoluted a code to retain backwards compatibility.
 
-* Implemented a rudimentary error handler (xerror_handler in on_error.c) for
-Xserver error returns. It is mostly a cosmetic thing, but now we can save the
-message in error.log as well. The downside is that some of the informative
-text from an unhandled X 'crash' is lost, like exactly which function call
-that was involved. This can of course be rectified with a more complete handler,
-but then the exit_on_error function needs additional parametres, and all the
-calls to it need adjustments... Some other day.
+* Control of button auto-repeat has been implemented. No longer is X in charge,
+wildly spewing out keycodes at the merest hint of a lingering button press.
+Henceforth each and every button can have auto-repeat turned off or on,
+depending on taste and target window (program). Also, as a sanity measure, the
+auto-repeat will teminate on a focus-window change:
 
-* Discover the real mode of a stylus at program start, instead of assuming it
-to be Absolute.
+RepeatButton9/etc (I3), RepeatLeft/RepeatRight (G4) - Switch 1/0
 
-* Fixed a bug where -d together with any of -h, -s, -r and -k would delete a
-live PID-file.
+Furthermore, we now have configurable delays:
 
+ButtonRepeatAfter (wait before starting auto-repeat) - 0.01 to 10 seconds
+DelayButtonRepeat (wait between each repetition) - 0.01 to 10 seconds
 
-_Version 0.3.0 27 Jul 2006_
+* Touch Strip auto-repeat has been implemented for the top and bottom positions:
 
-* Finally and totally obliterated the src-expresskeysconf directory.
-Such a tool will never be written by me. But there is hope balancing
-on the horizon! At http://alavaliant.googlepages.com you'll find
-"wacom-config", which is a pygtk (2.8+) point-and-click program for
-configuration of the linuxwacom driver (through "xsetwacom") and
-expresskeys version 0.2.x config file editing.
+RepeatLeftUp/RepeatLeftDown/etc - Switch 1/0
+TouchRepeatAfter (wait before starting auto-repeat) - 0.01 to 10 seconds
+DelayTouchRepeat (wait between each repetition) - 0.01 to 10 seconds
 
-No more manual wrangling with "xprop" and "xev"! A future version
-will support expresskeys 0.3.x (I've been assured).
+* To finalize the control aspect, a delay between each keycode sent can be
+added. While reading a Wacom support forum (Windows/Mac only) I saw a
+user asking for this feature. A target program of his would choke on the
+keys coming in, since they came too fast. He had tried delaying by the use of
+'dummy' keys like Escape and Space, but that could not rectify the problem.
 
-* New configuration file (version 3), incompatible with version 2. The
-reasoning around this switch can be read about in the USAGE file, ca
-2/3 down under the heading "NEW in expresskeys version 0.3.0".
+So here we have a feature not (yet) available in the Win/Mac experience:
 
-This will hopefully be the _last_ config file change that impacts the
-user in a negative way. Future changes can be done non-destructively.
+DelayEachKeycode (wait between sending of each keycode) - 0.01 to 10 seconds
 
-* New configuration _file name_. Depending on devices identified, either
-a "padless.conf1" or an "intuos3.conf1" file is written out. Apart from
-only containing relevant record fields, the headers of these files are
-tagged with device "Identifier" strings from xorg.conf, like:
+* More fake keycodes. This time to implement tablet rotation from a button.
+And, as I've gradually have seen a benefit to changing the stylus PressCurve
+interactively from a button, make the user aware of that option by writing
+it out in a first-time created configuration file (and in the USAGE file).
+The implementation has been available ever since version 0.2.2, but the
+documentation only in that ChangeLog entry - which nobody reads...
 
-_intuos3.conf1_                         _padless.conf1_
+Here is a verbatim quote from the USAGE file:
 
-ConfigVersion 3                         ConfigVersion 3
-Identifier1Pad 1stIntuos3Pad            Identifier1Pad LACKING
-Identifier1Sty 1stIntuos3Stylus1        Identifier1Sty Stylus1
++ Fake keycodes: 1001, 1002, 1003 +
+Instead of defining a fixed stylus PressCurve for different program blocks,
+you can use three values as keycodes to alter the curve interactively. 1001
+will decrease the PressCurve, while 1003 will increase it. 1002 restores the
+curve to its default state: "0 0 100 100". Both the upward and downward curve
+changes flip over in a carousel fashion at the top and bottom values.
 
-The TODO file - better known as the "Wish-list" - hints towards why this
-filename change has become desirable...
++ Fake keycodes: 1004, 1005, 1006, 1007, 1008, 1009 +
+Use the value 1004 to return from a tablet rotation (NONE), 1005 to flip a
+tablet 180 degrees (HALF), 1006 to rotate 90 degrees clock-wise (CW) and
+1007 to rotate 90 degrees counter-clock-wise (CCW). By using 1008 you can
+rotate the tablet endlessly in a clock-wise manner (CW-HALF-CCW-NONE-CW-)
+and 1009 does the same motion counter-clock-wise (CCW-HALF-CW-NONE-CCW-).
+Looking down on the tablet and tilting the head '90' degrees to the right
+would simulate a CW operation.
 
-* Automatic detection and use of the first 'pad' and/or 'stylus' device found
-through the XListInputDevices call. This happens unconditionally, but can be
-overridden by specifically naming a device on the command line.
+* The code refactoring has of course enhanced the quality in many ways not
+immediately obvious to the user. For example: We now filter out any illegal
+keycode already at the configuration read stage; there is a more accurate
+detection of whether a PID-file is 'live' or not; tablets defined in xorg.conf
+but not plugged in at program start will not cause a termination with
+"BadDevice, invalid or uninitialized input device" (though at least ONE
+tablet must be connected at program start, otherwise we exit).
 
-We still only allow one device of each kind (for now) so eg an automatically
-picked stylus, say 1stIntuos3Stylus1, gets dropped if the user specifies the
-1stIntuos3Stylus2 or a 2ndIntuos3Stylus1.
-
-Anyone with a little programming understanding can change a copy of the code
-in globals.c and alter the config_dir string to eg "/.expresskeys2". Then
-that program copy can support another set of pad/stylus (until expresskeys
-properly handles multi-devices).
-
-* Expresskeys can now trace the stylus usage and automatically change
-the pressure sensitivity (PressCurve) depending on which program window
-that has focus. We call "xsetwacom" for the actual change, but the
-implementation has minimal overhead - can't be felt or seen on my machine:
-
-NOTE: To partially overcome a limitation in any Qt3 program (see the BUGS
-file; they swallow all stylus button presses) we also have to judge the
-state _every time_ the pen comes within operational height of the tablet,
-aka ProximityIn.
-
-1a) Stylusbutton - tip or rocker - pressed (doesn't matter which),
-1b) or stylus reports itself as having entered proximity of the tablet.
-2) Is the current focuswindow in our program list (plus "default")? = True.
-3) Does the program name differ from the name in a historybuffer (1 back)?
-4) Does the program presscurve differ from a historybuffer curve (1 back)?
-5) Call xsetwacom only if these are true.
-
-The above mentioned USAGE entry has all the important details.
-
-So... now the program enters a more generic stage where it's beneficial
-to any Wacom tablet user. Though, the name will remain expresskeys ;-)
-
-* Deleted the old-extra directory with the small scripts for re-reading the
-configuration file or terminating the program.
-
-It is actually quite embarrassing, but the two options have been available
-from _within_ the main_setup.c file since... forever. We already did a signal
-send to check for a running daemon, so all it took was a slight rearrangement
-and a few extra code lines. I _am_ myopic, but this oversight borders on
-blindness.
-
-It is now possible to do an "expresskeys -r" or "expresskeys -k" against
-a daemon instance. (BLUSH)!
-
-* A few more command line switches have been introduced:
-
--x sets -v and exits after some important info blocks.
--s tells a daemon instance to report status (info block).
-
-The 'status' signal is triggered through SIGUSR2 (re-read of the config file
-has always been linked with SIGUSR1). The information printed out by -s
-is almost exactly how -x displays it during a non-daemon run. Difference
-being that -s also gives the "OUR RUN-PID" field.
-
-OBSERVE: If expresskeys is started from the "outside" by use of .xinitrc or
-similar methods, the output of -s will be seen on that first text terminal
-(most often back at "Ctrl-Alt-F1" when in X). To get visibility from a terminal
-_inside_ X, first do an "expresskeys -k" then "expresskeys -d" and THEN the
-"expresskeys -s" ;-)
-
-* Finally remembered to give a warning about Gimp and the pad device.
-The USAGE file has it as a top item, and I'll copy the text here:
-
-"Important: Gimp doesn't know _anything_ about a "pad" device, so the option
-File --> Preferences --> Input Devices --> Configure Extended Input Devices...
---> [Device: pad  Mode: Disabled] is how it should be set. If you change it
-to Sceen or Window, pressing pad buttons or using touch strips will NOT work."
-
-* Updated to a working email address in the AUTHORS file and removed the
-obsolete private project page from README. The canonical page now is:
-
-http://freshmeat.net/projects/wacomexpresskeys
-
-It has been so since version 0.2.1, I just never got around to mentioning it.
-
-
-_Version 0.2.6 25 Feb 2006_
-
-* Continuation of the maintenance by future proofing the ./configure phase
-of the program compilation. We now examine what is returned from the commands
-"pkg-config --variable=libdir x11" and "pkg-config --variable=includedir x11"
-which is used to identify a modular X11R7 release. If that fails, we fall
-back on a hardcoded /usr/X11R6/lib[64] and /usr/X11R6/include path for the
-monolithic X11R6 releases. Failing that... the users can specify their own
-paths through the "--with-xlib=" and/or "--with-xinc=" options. ".
-
-
-_Version 0.2.5 7 Feb 2006_
-
-[Absolutely no new functionality! A pure maintenance release to prevent
-trouble. Ticked off a todo-list based on user experiences and their snafus]
-
-* Erased the useless code in the src-expresskeysconf directory. When or
-if a graphical utility is written it should have a fresh start.
-
-* Populated the auto-generated Gimp section of the configuration file
-with a more complete set of keycodes (a collection which I use myself).
-This was done in order to help people's understanding of the fields.
-
-Updated the USAGE file with this Gimp information, close to the bottom,
-since there was no easy way to auto-write a description in the configuration
-file itself.
-
-* Changed the expresskeys-reread.sh and expresskeys-terminate.sh scripts
-in the old-extra directory so they won't use any hardcoded program paths,
-except for the #!/bin/sh trigger. I thought that I had used the canonical
-paths, but distributions apparently shuffle stuff around willy-nilly.
-
-* Threw in a basic trap/filtering routine in config_read.c which silently
-swallows illegal keycodes from the low region - below 9 [Escape] - unless
-the program is run in verbose (-v) mode. Then it spits out a "keycode IGNORED"
-message when the configuration file is read. Xlib crashes the program when
-fed unsavory keycodes, so more work can be done in this area.
-
-* Implemented a ./configure discovery section where a dummy file is
-compiled and linked for each of libX11.so libXext.so libXi.so libXtst.so
-X11/Xlib.h X11/Xutil.h X11/extensions/XInput.h and X11/extensions/XTest.h
-Missing dependencies are thus quickly spotted and a comprehensible error
-message delivered. A section dealing with dependencies has also been added
-at the end of the INSTALL file.
-
-The discovery section can be ogled in the configure.in file of the
-root directory. I almost went mad before nailing a working piece like:
-
-echo $'#include <X11/Xlib.h>\nmain(){}'|$CC -L$XLIBDIR -xc - -o dum 2>/dev/null
-if test $? != 0 ; then
-   echo "Can not include <X11/Xlib.h> header file!"
-   SOMEERROR=1
-else
-   echo "Xlib.h OK"
-fi
-
-So simple looking and yet so hard to produce...
-
-* Included the following text block in the runtime help, the README and
-the USAGE file (and now here ;-)
-
-"Please direct any bug reports or questions to the top address in
-the AUTHORS file. This program is _not_ a linuxwacom project."
+If I've forgotten to mention anything new in 0.4.0 you can always read the
+code. It is very easy nowadays since no line stretches beyond column 80 (with
+a tab-size of 8), and a lot of other coding conventions are followed as well.
 

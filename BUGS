@@ -1,5 +1,42 @@
 
+_Known bugs marked with FIXME in the code_
+
+! Return errors are not caught from the system(3) call, only straight errors
+(e.g. fork() failed). So we never actually know if xsetwacom did its job
+properly when changing stylus PressCurve or doing tablet Rotate.
+
+_Known bugs, unmarked_
+
+! Pressing a pad button with one program window in focus, moving the focus to
+another program window and then releasing the button, probably leaves the first
+program in a confused mind regarding the keyboard state. Returning the focus and
+pressing the button again (or another that has an effect) restores the sanity.
+
 _NOTABUG_
+
+[NOTE: The story below was written when I only owned an Intuos3 tablet. Having
+bought a Graphire4, I was pleased/shocked to see the stylus behaving _perfectly_
+even with Qt-based programs! Both ButtonPress and ProximityIn/Out were
+propagated through the Xlib environment exactly as they should. Could there be
+a bug in the linuxwacom drivers instead of one in Qt? Had I judged too quickly?
+
+Asking a Volito2 owner (who also happens to be a skilled programmer) about the
+stylus-issue did not clear the waters... ButtonPress was swallowed in KDE,
+just like it was for my Intuos3. Furthermore, _ProximityOut_ never became
+visible on his system.
+
+Comparing debug output from the linuxwacom X driver, for Volito2/Graphire4
+/Intuos3, showed them to be almost identical when it came to events. The driver
+correctly hands X everything it should get.
+
+I must admit to being totally confused at this point in time. Why the striking
+differences between tablet models? Why Qt and not GTK+? Why, for heavens sake,
+even a ProximityIn/Out discrepancy?
+
+So, take what you read below with a grain of salt. Blame-wise I could be
+barking up the wrong alley. In that case, Mea Culpa. Pardon etc etc :END NOTE]
+
+--Begin Original Text--
 
 Any program built with the Qt3 toolkit (like eg the KDE desktop...)
 completely swallows the 'stylus' DeviceButtonPress event that we've
@@ -37,7 +74,7 @@ the titlebar or on its other borders (since they are GTK+ derived).
 GTK+ based programs suffer no such limitation. In those we just press
 the pen tip in the window, and by that action the pressure sensitivity
 change is performed. Unless the target is the Gimp canvas (at least as
-high as version 2.2.10)...
+high as version 2.2.13)...
 
 The Gimp canvas is even _more_ broken (in regards to our expectations)
 than the Qt3 programs. Here both the 'stylus' DeviceButtonPress AND
@@ -53,56 +90,7 @@ touch won't work (all the borders are Qt3 derived). Here we must do the
 proximity out/in trick on a part not being the canvas, or touch
 somewhere else than the window borders/Gimp canvas.
 
-Phew. But there's a mitigating factor to all this Qt3/Gimp canvas
-mess. We can use the "non-trigger" to our advantage.
+[A paragraph with faulty logic was deleted. Ed.]
 
-For example, I normally like the PressCurve to be "0 25 75 100"
-(sensitivity 3) in Gimp. But sometimes I'd like it to be a bit firmer.
-So if the root window (the "background" in X) or some other window
-nearby is set to sensitivity 4, it is a quick touch operation away to
-either stay with a level 3, or switch to a level 4 while painting.
-
-_Known bugs marked with FIXME in the code_
-
-! Parsing of the configuration file still leaves some corner cases
-to chance.
-
-It doesn't handle situations where multiple fields are specified
-on the same line. Possibly other cases, see the FIXME markers.
-
-! The exit_on_error function drops the EXIT_KO when callig
-clean_up_exit. It becomes a normal EXIT_OK signal for any controlling
-parent.
-
-! Should check that only valid keycodes (and our fake ones) are used
-in a program definition. It is only partially fixed by filtering out
-anything below the keycode 9 [Esc]. Should ignore erroneous spaces in
-the class name field.
-
-_Possible bugs, unmarked_
-
-! In eg Gimp, if expresskeys is started with the option to handle a pen,
-my core pointer (an USB mouse) and the Wacom puck do not draw through
-button 1 or react to mouse button 2 and 3 presses until the Wacom stylus
-has come into proximity for the first time. After the first proximity,
-the mouse and puck react normally. Strange...
-
-! If the expresskeys program is started before any usage of the
-X program "xmodmap" in eg .xinitrc, it can crash with the message:
-
-X Error of failed request:  BadWindow (invalid Window parameter)
-  Major opcode of failed request:  15 (X_QueryTree)
-  Resource id in failed request:  0x1
-  Serial number of failed request:  20
-  Current serial number in output stream:  20
-
-Reason, totally unknown...
-
-_Known bugs, unmarked_
-
-! Pressing a pad button with one program window in focus, moving the
-focus to another program window and then releasing the button, leaves
-the first program in a confused mind regarding the keyboard state.
-Returning the focus and pressing the button again (or another that
-has an effect) restores the sanity.
+--End Original Text--
 

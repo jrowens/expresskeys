@@ -1,5 +1,5 @@
 /*
- config_write.c -- Support ExpressKeys & Touch Strips on a Wacom Intuos3 tablet.
+ expresskeys - Support ExpressKeys, Touch Strips, Scroll Wheel on Wacom tablets.
 
  Copyright (C) 2005-2006 - Mats Johannesson
 
@@ -13,160 +13,681 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "globals.h"
+#include <stdio.h> /*NULL, FILE, fopen, rewind, fgetc, fprintf, ferror, fclose*/
+#include "tablet.h"
+
+/* Globals: */
+
+/* Obligatory keyword in the config file: */
+const char* configstring = "ConfigVersion";
+/* Our version. Remember to change it if necessary: */
+const char* configversion = "4";
+
+/* Externals: */
+
+extern const int i3;
+extern const int i3s;
+extern const int g4;
+extern const int g4b;
+extern const int nop;
+
+extern const int i3_num_list;
+extern const int i3s_num_list;
+extern const int g4_num_list;
+extern const int g4b_num_list;
+extern const int nop_num_list;
+
+extern const char* our_prog_name;
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- Function writes a header in a new file, including config file version
+ Write a set of records tuned for a Intuos3/Cintiq tablet:
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int write_file_config_header(FILE *fp)
+static void write_i3(FILE* fp)
 {
+	int i;
 
-	fprintf(fp, "\n%s %s\n", configstring, configversion);
-	if (pad1_name) {
-		fprintf(fp, "%s %s\n", pad1idstring, pad1_name);
-	} else {
-		fprintf(fp, "%s %s\n", pad1idstring, "LACKING");
-	}
-	if (stylus1_name) {
-		fprintf(fp, "%s %s\n", stylus1idstring, stylus1_name);
-	} else {
-		fprintf(fp, "%s %s\n", stylus1idstring, "LACKING");
-	}
-	fprintf(fp, "\n# ***************** Please do not remove the above header! ****************\n\n");
-	fprintf(fp, "# Blank lines and everything following a comment \"#\" sign are ignored.\n\n");
-	fprintf(fp, "# This file will be re-created whenever missing, but the name and layout depend\n");
-	fprintf(fp, "# on which devices that are detected at the very moment of program execution.\n\n");
-	if ((pad1_info) && (!is_graphire4)) {
-		fprintf(fp, "# Some ASCII art showing the \"default\" program record:\n");
-		fprintf(fp, "#\n");
-		fprintf(fp, "# Left ExpressKey Pad\n");
-		fprintf(fp, "# ------------\n");
-		fprintf(fp, "# |  |   |   |		Wacom Intuos3 defaults are:\n");
-		fprintf(fp, "# |  | 9 | T |\n");
-		fprintf(fp, "# |11|---| O |		Button 9  = (left) Shift	= keycode 50\n");
-		fprintf(fp, "# |  |10 | U |		Button 10 = (left) Alt		= keycode 64\n");
-		fprintf(fp, "# |------| C |		Button 11 = (left) Control	= keycode 37\n");
-		fprintf(fp, "# |  12  | H |		Button 12 = Space		= keycode 65\n");
-		fprintf(fp, "# ------------\n");
-		fprintf(fp, "#\n");
-		fprintf(fp, "# Right ExpressKey Pad\n");
-		fprintf(fp, "# ------------\n");
-		fprintf(fp, "# |   |   |  |		Wacom Intuos3 defaults are:\n");
-		fprintf(fp, "# | T |13 |  |\n");
-		fprintf(fp, "# | O |---|15|		Button 13 = (left) Shift	= keycode 50\n");
-		fprintf(fp, "# | U |14 |  |		Button 14 = (left) Alt		= keycode 64\n");
-		fprintf(fp, "# | C |------|		Button 15 = (left) Control	= keycode 37\n");
-		fprintf(fp, "# | H |  16  |		Button 16 = Space		= keycode 65\n");
-		fprintf(fp, "# ------------\n");
-		fprintf(fp, "#\n");
-	}
-	if ((pad1_info) || (is_graphire4)) {
-		fprintf(fp, "# Use the value 999 as a keycode to enable pen mode toggling. To be able\n");
-		fprintf(fp, "# to switch mode anywhere each program block must then contain one 999\n");
-		fprintf(fp, "# definition.\n\n");
-		fprintf(fp, "# Use the values 991 to 997 for simulating mouse buttons 1 to 7. Only existing\n");
-		fprintf(fp, "# mouse buttons, defined through the driver of the active core pointer, can be\n");
-		fprintf(fp, "# simulated.\n\n");
-	}
-	fprintf(fp, "# Values for the stylus 'PressCurve' ie 'sensitivity' can be chosen the easy\n");
-	fprintf(fp, "# way - copying from how the wacomcpl program writes them, or the hard way -\n");
-	fprintf(fp, "# by experimenting... The seven curves picked by wacomcpl are (Soft to Firm):\n");
-	fprintf(fp, "# 1               2               3               4 (default)\n");
-	fprintf(fp, "# \"0 75 25 100\" | \"0 50 50 100\" | \"0 25 75 100\" | \"0 0 100 100\"\n");
-	fprintf(fp, "# 5               6               7\n");
-	fprintf(fp, "# \"25 0 100 75\" | \"50 0 100 50\" | \"75 0 100 25\"\n\n");
-	fprintf(fp, "# OBSERVE: The \"default\" program record must exist _somewhere_ in the file!\n");
-	fprintf(fp, "# Each program record is separated by one set of double percentage signs: %s\n", "%%");
-	fprintf(fp, "# Each program field begins after a case sensitive keyword, eg: ProgramName\n");
-	fprintf(fp, "# Whitespace (tabs and spaces) are ignored in the keycode fields, but spaces\n");
-	fprintf(fp, "# are recorded when in a ProgramName or Stylus1PressCurve field (between the\n");
-	fprintf(fp, "# double quotes).\n\n");
-	if (is_graphire4) {
-		fprintf(fp, "# Graphire4 user: Sorry about the automatic keycodes written here. They are\n");
-		fprintf(fp, "# not optimal, to say the least, but picked from a larger set intended for\n");
-		fprintf(fp, "# an Intuos3 (with its different button order). Perhaps we can write out a\n");
-		fprintf(fp, "# more correct initial configuration file in a later version... Also, to you\n");
-		fprintf(fp, "# BlueTooth users, the Scroll Wheel entries will disappear when a finer\n");
-		fprintf(fp, "# grained configuration file can be written.\n\n");
-	}
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+	const char* sec_tail = "# Seconds (Max 10 - Min 0.01 - Or no delay)";
+	const char* tch_onoff = "# Switch 1/0 (Enable/Disable Touch Strips)";
+	const char* key_tail = "# Keycodes (Max number of keys to send is";
+	const char* tht_tail = "# Switch 1/0 (Finger held at top repeat keys)";
+	const char* thb_tail="# Switch 1/0 (Finger held at bottom repeat keys)";
+	const char* but_tail="# Switch 1/0 (Press and hold button repeat keys)";
 
-	return 0;
+	struct i3_program* ip;
+	ip = i3_internal_list;
+	struct i3_configstrings* sp;
+	sp = i3_configstrings;
+
+	for (i = 0; i < i3_num_list; i++, ip++) {
+
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->common_string.keycode_delay, *ip->common_data.keycode_delay,
+				*(ip->common_data.keycode_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->button_string.repeat_after, *ip->button_data.repeat_after,
+				*(ip->button_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->button_string.repeat_delay, *ip->button_data.repeat_delay,
+				*(ip->button_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->touch_string.repeat_after, *ip->touch_data.repeat_after,
+				*(ip->touch_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->touch_string.repeat_delay, *ip->touch_data.repeat_delay,
+				*(ip->touch_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i	%s\n\n",
+		sp->touch_string.handle_touch,
+				*ip->touch_data.handle_touch, tch_onoff);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.left_touch_up,
+			*ip->touch_data.left_touch_up,
+			*(ip->touch_data.left_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.left_touch_down,
+			*ip->touch_data.left_touch_down,
+			*(ip->touch_data.left_touch_down+1), key_tail, MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_left_up,
+				*ip->touch_data.repeat_left_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_left_down,
+				*ip->touch_data.repeat_left_down, thb_tail);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.right_touch_up,
+			*ip->touch_data.right_touch_up,
+			*(ip->touch_data.right_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.right_touch_down,
+			*ip->touch_data.right_touch_down,
+			*(ip->touch_data.right_touch_down+1), key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_right_up,
+				*ip->touch_data.repeat_right_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_right_down,
+				*ip->touch_data.repeat_right_down, thb_tail);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button9, *ip->button_data.button9,
+				*(ip->button_data.button9+1), key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button10, *ip->button_data.button10,
+				*(ip->button_data.button10+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button11, *ip->button_data.button11,
+				*(ip->button_data.button11+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n\n",
+		sp->button_string.button12, *ip->button_data.button12,
+				*(ip->button_data.button12+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat9, *ip->button_data.repeat9, but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat10, *ip->button_data.repeat10,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat11, *ip->button_data.repeat11,but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat12, *ip->button_data.repeat12,but_tail);
+
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button13, *ip->button_data.button13,
+				*(ip->button_data.button13+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button14, *ip->button_data.button14,
+				*(ip->button_data.button14+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n",
+		sp->button_string.button15, *ip->button_data.button15,
+				*(ip->button_data.button15+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->button_string.button16, *ip->button_data.button16,
+				*(ip->button_data.button16+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat13, *ip->button_data.repeat13,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat14, *ip->button_data.repeat14,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat15, *ip->button_data.repeat15,but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat16, *ip->button_data.repeat16,but_tail);
+
+	}
 
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- Function writes out a short configuration file if none exists. It takes
- the info from a global memory structure whose only purpose is this initial
- write moment. The file should then be read back immediately to populate a
- memory structure that other functions rely on for their proper operation.
- Returns nothing useful. Write errors are checked in the calling function.
+ Write a set of records tuned for a Intuos3 'small' tablet:
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int write_file_config(int *ip, FILE *fp)
+static void write_i3s(FILE* fp)
 {
+	int i;
 
-	struct program *p;
-	struct configstrings *hp;
-/* Convert to long for x86_64 systems */
-	p = (void *)(long)*ip;
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+	const char* sec_tail = "# Seconds (Max 10 - Min 0.01 - Or no delay)";
+	const char* tch_onoff = "# Switch 1/0 (Enable/Disable Touch Strips)";
+	const char* key_tail = "# Keycodes (Max number of keys to send is";
+	const char* tht_tail = "# Switch 1/0 (Finger held at top repeat keys)";
+	const char* thb_tail="# Switch 1/0 (Finger held at bottom repeat keys)";
+	const char* but_tail="# Switch 1/0 (Press and hold button repeat keys)";
 
-	if (is_graphire4) {
-		hp = gr4_human_readable;
-	} else {
-		hp = human_readable;
+	struct i3s_program* ip;
+	ip = i3s_internal_list;
+	struct i3s_configstrings* sp;
+	sp = i3s_configstrings;
+
+	for (i = 0; i < i3s_num_list; i++, ip++) {
+
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->common_string.keycode_delay, *ip->common_data.keycode_delay,
+				*(ip->common_data.keycode_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->button_string.repeat_after, *ip->button_data.repeat_after,
+				*(ip->button_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->button_string.repeat_delay, *ip->button_data.repeat_delay,
+				*(ip->button_data.repeat_delay+1), sec_tail);
+
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->touch_string.repeat_after, *ip->touch_data.repeat_after,
+				*(ip->touch_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->touch_string.repeat_delay, *ip->touch_data.repeat_delay,
+				*(ip->touch_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i	%s\n\n",
+		sp->touch_string.handle_touch,
+				*ip->touch_data.handle_touch, tch_onoff);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.left_touch_up,
+			*ip->touch_data.left_touch_up,
+			*(ip->touch_data.left_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.left_touch_down,
+			*ip->touch_data.left_touch_down,
+			*(ip->touch_data.left_touch_down+1), key_tail, MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_left_up,
+				*ip->touch_data.repeat_left_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_left_down,
+				*ip->touch_data.repeat_left_down, thb_tail);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button9, *ip->button_data.button9,
+				*(ip->button_data.button9+1), key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button10, *ip->button_data.button10,
+				*(ip->button_data.button10+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button11, *ip->button_data.button11,
+				*(ip->button_data.button11+1),key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n\n",
+		sp->button_string.button12, *ip->button_data.button12,
+				*(ip->button_data.button12+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat9, *ip->button_data.repeat9, but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat10, *ip->button_data.repeat10,but_tail);
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat11, *ip->button_data.repeat11,but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat12, *ip->button_data.repeat12,but_tail);
+
 	}
 
-	fprintf(fp, "%s			# <---  ********** BEGIN NEW PROGRAM RECORD **********\n\n", "%%");
-	if (!is_graphire4) {
-		fprintf(fp, "%s		\"%s\" # Name must be within double quotes \"\"\n\n", hp->h_class_name, p->class_name);
-		fprintf(fp, "%s \"%s\" # PressCurve must be within double quotes \"\"\n\n", hp->h_stylus1_presscurve, p->stylus1_presscurve);
-		if (pad1_info) {
-			fprintf(fp, "%s	%d	# Main switch. Use 1 to enable the Touch Strips\n\n", hp->h_handle_touch, p->handle_touch);
-			fprintf(fp, "%s		%d	# First keycode\n", hp->h_l_touch_up, p->l_touch_up);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_l_touch_up_plus, p->l_touch_up_plus);
-			fprintf(fp, "%s	%d	# First keycode\n", hp->h_l_touch_down, p->l_touch_down);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_l_touch_down_plus, p->l_touch_down_plus);
-			fprintf(fp, "%s		%d	# First keycode\n", hp->h_r_touch_up, p->r_touch_up);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_r_touch_up_plus, p->r_touch_up_plus);
-			fprintf(fp, "%s	%d	# First keycode\n", hp->h_r_touch_down, p->r_touch_down);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_r_touch_down_plus, p->r_touch_down_plus);
-			fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_9, p->key_9);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_9_plus, p->key_9_plus);
-			fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_10, p->key_10);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_10_plus, p->key_10_plus);
-			fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_11, p->key_11);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_11_plus, p->key_11_plus);
-			fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_12, p->key_12);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_12_plus, p->key_12_plus);
-			fprintf(fp, "%s	%d	# First keycode\n", hp->h_key_13, p->key_13);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_13_plus, p->key_13_plus);
-			fprintf(fp, "%s	%d	# First keycode\n", hp->h_key_14, p->key_14);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_14_plus, p->key_14_plus);
-			fprintf(fp, "%s	%d	# First keycode\n", hp->h_key_15, p->key_15);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_15_plus, p->key_15_plus);
-			fprintf(fp, "%s	%d	# First keycode\n", hp->h_key_16, p->key_16);
-			fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_key_16_plus, p->key_16_plus);
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Write a set of records tuned for a Graphire4 tablet:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_g4(FILE* fp)
+{
+	int i;
+
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+	const char* sec_tail = "# Seconds (Max 10 - Min 0.01 - Or no delay)";
+	const char* whl_onoff = "# Switch 1/0 (Enable/Disable Scroll Wheel)";
+	const char* key_tail = "# Keycodes (Max number of keys to send is";
+	const char* but_tail="# Switch 1/0 (Press and hold button repeat keys)";
+
+	struct g4_program* ip;
+	ip = g4_internal_list;
+	struct g4_configstrings* sp;
+	sp = g4_configstrings;
+
+	for (i = 0; i < g4_num_list; i++, ip++) {
+
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->common_string.keycode_delay, *ip->common_data.keycode_delay,
+				*(ip->common_data.keycode_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->button_string.repeat_after, *ip->button_data.repeat_after,
+				*(ip->button_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->button_string.repeat_delay, *ip->button_data.repeat_delay,
+				*(ip->button_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i	%s\n\n",
+		sp->wheel_string.handle_wheel,
+				*ip->wheel_data.handle_wheel, whl_onoff);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->wheel_string.scroll_wheel_up,
+			*ip->wheel_data.scroll_wheel_up,
+			*(ip->wheel_data.scroll_wheel_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n\n",
+		sp->wheel_string.scroll_wheel_down,
+			*ip->wheel_data.scroll_wheel_down,
+			*(ip->wheel_data.scroll_wheel_down+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button9, *ip->button_data.button9,
+				*(ip->button_data.button9+1), key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n\n",
+		sp->button_string.button10, *ip->button_data.button10,
+				*(ip->button_data.button10+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat9, *ip->button_data.repeat9, but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat10, *ip->button_data.repeat10,but_tail);
+
+	}
+
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Write a set of records tuned for a Graphire4 BlueTooth tablet:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_g4b(FILE* fp)
+{
+	int i;
+
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+	const char* sec_tail = "# Seconds (Max 10 - Min 0.01 - Or no delay)";
+	const char* key_tail = "# Keycodes (Max number of keys to send is";
+	const char* but_tail="# Switch 1/0 (Press and hold button repeat keys)";
+
+	struct g4b_program* ip;
+	ip = g4b_internal_list;
+	struct g4b_configstrings* sp;
+	sp = g4b_configstrings;
+
+	for (i = 0; i < g4b_num_list; i++, ip++) {
+
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->common_string.keycode_delay, *ip->common_data.keycode_delay,
+				*(ip->common_data.keycode_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->button_string.repeat_after, *ip->button_data.repeat_after,
+				*(ip->button_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->button_string.repeat_delay, *ip->button_data.repeat_delay,
+				*(ip->button_data.repeat_delay+1), sec_tail);
+
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->button_string.button9, *ip->button_data.button9,
+				*(ip->button_data.button9+1), key_tail,MAXKEYS);
+		fprintf(fp, "%s		%i %i	%s %i)\n\n",
+		sp->button_string.button10, *ip->button_data.button10,
+				*(ip->button_data.button10+1),key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->button_string.repeat9, *ip->button_data.repeat9, but_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->button_string.repeat10, *ip->button_data.repeat10,but_tail);
+
+	}
+
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Write a set of records tuned for a 'padless' tablet:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_nop(FILE* fp)
+{
+	int i;
+
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+
+	struct nop_program* ip;
+	ip = nop_internal_list;
+	struct nop_configstrings* sp;
+	sp = nop_configstrings;
+
+	for (i = 0; i < nop_num_list; i++, ip++) {
+
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+	}
+
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Write some handy documentation at the top of each configuration file:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_preface(FILE* fp, const int model)
+{
+	const char* common_preface1 =
+"\n# *************** Please do not remove the above header! ***************\n\n"
+
+"# Blank lines and everything following a comment \"#\" sign are ignored.\n\n"
+
+"# This file will be re-created whenever missing, but the name and layout\n"
+"# depend on which devices that are detected at the very moment of program\n"
+"# execution.\n\n";
+
+	const char* model_notnop1 =
+"# Some ASCII art showing the \"default\" program record:\n"
+"#\n";
+
+	const char* model_i3si3 =
+"# Left ExpressKeys Pad\n"
+"# ------------\n"
+"# |  |   |   |		Wacom Intuos3 defaults are:\n"
+"# |  | 9 | T |\n"
+"# |11|---| O |		Button 9  = (left) Shift	= keycode 50\n"
+"# |  |10 | U |		Button 10 = (left) Alt		= keycode 64\n"
+"# |------| C |		Button 11 = (left) Control	= keycode 37\n"
+"# |  12  | H |		Button 12 = Space		= keycode 65\n"
+"# ------------\n";
+
+	const char* model_i3 =
+"#\n"
+"# Right ExpressKeys Pad\n"
+"# ------------\n"
+"# |   |   |  |		Wacom Intuos3 defaults are:\n"
+"# | T |13 |  |\n"
+"# | O |---|15|		Button 13 = (left) Shift	= keycode 50\n"
+"# | U |14 |  |		Button 14 = (left) Alt		= keycode 64\n"
+"# | C |------|		Button 15 = (left) Control	= keycode 37\n"
+"# | H |  16  |		Button 16 = Space		= keycode 65\n"
+"# ------------\n";
+
+	const char* model_g4 =
+"#            ExpressKeys Pad\n"
+"# --------------------------------------\n"
+"# | Left Button | Wheel | Right Button | \n"
+"# --------------------------------------\n"
+"#\n"
+"#     Wacom Graphire4 defaults are:\n"
+"#\n"
+"# Left Button  = (left) Shift	= keycode 50\n"
+"# Right Button = (left) Alt	= keycode 64\n";
+
+	const char* model_g4b =
+"#        ExpressKeys Pad\n"
+"# -------------------------------\n"
+"# | Left Button || Right Button | \n"
+"# -------------------------------\n"
+"#\n"
+"# Wacom Graphire4 BT defaults are:\n"
+"#\n"
+"# Left Button  = (left) Shift	= keycode 50\n"
+"# Right Button = (left) Alt	= keycode 64\n";
+
+	const char* model_notnop2 =
+"\n# Use the X program 'xev' to find keycodes when changing the key fields.\n"
+"# Use the X program 'xprop' to find the name string to use for each record.\n"
+"# A nice output can be obtained from: xprop | grep WM_CLASS | cut -d ',' -f2\n"
+"# Read more about those two programs in the USAGE file.\n\n"
+
+"# * Fake keycode: 999 *\n"
+"# Use the value 999 as a keycode to enable stylus mode toggling between\n"
+"# Absolute/Relative. To be able to switch mode anywhere each program block\n"
+"# must then contain one 999 definition.\n\n"
+
+"# * Fake keycodes: 991, 992, 993, 994, 995, 996, 997 *\n"
+"# Use the values 991 to 997 for simulating mouse buttons 1 to 7. Only\n"
+"# existing mouse buttons, defined through the driver of the active core\n"
+"# pointer, can be simulated.\n\n"
+
+"# * Fake keycodes: 1004, 1005, 1006, 1007, 1008, 1009 *\n"
+"# Use the value 1004 to return from a tablet rotation (NONE), 1005 to flip a\n"
+"# tablet 180 degrees (HALF), 1006 to rotate 90 degrees clock-wise (CW) and\n"
+"# 1007 to rotate 90 degrees counter-clock-wise (CCW). By using 1008 you can\n"
+"# rotate the tablet endlessly in a clock-wise manner (CW-HALF-CCW-NONE-CW-)\n"
+"# and 1009 does the same motion counter-clock-wise (CCW-HALF-CW-NONE-CCW-).\n"
+"# Looking down on the tablet and tilting the head '90' degrees to the right\n"
+"# would simulate a CW operation.\n\n"
+
+"# * Fake keycodes: 1001, 1002, 1003 *\n"
+"# Instead of defining a fixed stylus PressCurve for different program\n"
+"# blocks, you can use three values as keycodes to alter the curve inter-\n"
+"# actively. 1001 will decrease the PressCurve, while 1003 will increase it.\n"
+"# 1002 restores the curve to its default state: \"0 0 100 100\". Both the\n"
+"# upward and downward curve changes flip over in a carousel fashion at the\n"
+"# top and bottom values.\n\n";
+
+	const char* common_preface2 =
+"# Values for the stylus 'PressCurve' ie 'sensitivity' can be chosen the easy\n"
+"# way - copying from how the wacomcpl program writes them, or the hard way -\n"
+"# by experimenting.. The seven curves picked by wacomcpl are (Soft to Firm):\n"
+"# 1               2               3               4 (default)\n"
+"# \"0 75 25 100\" | \"0 50 50 100\" | \"0 25 75 100\" | \"0 0 100 100\"\n"
+"# 5               6               7\n"
+"# \"25 0 100 75\" | \"50 0 100 50\" | \"75 0 100 25\"\n\n"
+
+"# OBSERVE: The \"default\" program record must exist SOMEWHERE in the file!\n"
+"# Each program record is separated by one set of double percentage signs: %%\n"
+"# Each program field begins after a case sensitive keyword, eg: ProgramName\n"
+"# Whitespace (tabs and spaces) are ignored in the keycode fields, but spaces\n"
+"# are recorded when in a ProgramName or StylusXPressCurve field (between the\n"
+"# double quotes).\n\n";
+
+	fprintf(fp, "%s", common_preface1);
+
+	if (model != nop) {
+		fprintf(fp, "%s", model_notnop1);
+	}
+
+	if ((model == i3s) || (model == i3)) {
+		fprintf(fp, "%s", model_i3si3);
+	}
+
+	if (model == i3) {
+		fprintf(fp, "%s", model_i3);
+	}
+
+	if (model == g4) {
+		fprintf(fp, "%s", model_g4);
+	}
+
+	if (model == g4b) {
+		fprintf(fp, "%s", model_g4b);
+	}
+
+	if (model != nop) {
+		fprintf(fp, "%s", model_notnop2);
+	}
+
+	fprintf(fp, "%s", common_preface2);
+
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ If a configuration file doesn't exist we write a minimal one:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_if_lacking(FILE* errorfp, const char* configfile, int model)
+{
+	FILE* fp = NULL;
+
+	if ((fp = fopen(configfile, "a+")) == NULL) {
+		exit_on_error(errorfp,
+"\n%s ERROR: Can not open %s in read/write mode\n", our_prog_name, configfile);
+	}
+
+	rewind(fp);
+
+	if (fgetc(fp) == EOF) {
+
+		fprintf(fp, "\n%s %s\n", configstring, configversion);
+
+		write_preface(fp, model);
+
+		if (model == i3) {
+			write_i3(fp);
+		} else if (model == i3s) {
+			write_i3s(fp);
+		} else if (model == g4) {
+			write_g4(fp);
+		} else if (model == g4b) {
+			write_g4b(fp);
+		} else if (model == nop) {
+			write_nop(fp);
 		}
-	} else {
-		fprintf(fp, "%s		\"%s\" # Name must be within double quotes \"\"\n\n", hp->h_class_name, p->class_name);
-		fprintf(fp, "%s \"%s\" # PressCurve must be within double quotes \"\"\n\n", hp->h_stylus1_presscurve, p->stylus1_presscurve);
-		fprintf(fp, "%s	%d	# Main switch. Use 1 to enable the Scroll Wheel\n\n", hp->h_handle_touch, p->handle_touch);
-		fprintf(fp, "%s		%d	# First keycode\n", hp->h_l_touch_up, p->l_touch_up);
-		fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_l_touch_up_plus, p->l_touch_up_plus);
-		fprintf(fp, "%s		%d	# First keycode\n", hp->h_l_touch_down, p->l_touch_down);
-		fprintf(fp, "%s	%d	# Extra keycode\n\n", hp->h_l_touch_down_plus, p->l_touch_down_plus);
-		fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_9, p->key_9);
-		fprintf(fp, "%s		%d	# Extra keycode\n\n", hp->h_key_9_plus, p->key_9_plus);
-		fprintf(fp, "%s		%d	# First keycode\n", hp->h_key_10, p->key_10);
-		fprintf(fp, "%s		%d	# Extra keycode\n\n", hp->h_key_10_plus, p->key_10_plus);
 	}
-	return 0;
+
+	if (ferror(fp)) {
+		fclose(fp);
+		exit_on_error(errorfp, "\n%s ERROR: Write error in %s\n",
+						our_prog_name, configfile);
+	}
+
+	fclose(fp);
+
+}
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Hand over all the associated configuration files for further processing:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+void write_config(FILE* errorfp)
+{
+	int i;
+
+	struct model_index* mip;
+	mip = model_list;
+
+	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->i3->common_data.configfile) {
+			write_if_lacking(errorfp,
+					mip->i3->common_data.configfile, i3);
+		}
+		if (mip->i3s->common_data.configfile) {
+			write_if_lacking(errorfp,
+					mip->i3s->common_data.configfile, i3s);
+		}
+		if (mip->g4->common_data.configfile) {
+			write_if_lacking(errorfp,
+					mip->g4->common_data.configfile, g4);
+		}
+		if (mip->g4b->common_data.configfile) {
+			write_if_lacking(errorfp,
+					mip->g4b->common_data.configfile, g4b);
+		}
+		if (mip->nop->common_data.configfile) {
+			write_if_lacking(errorfp,
+					mip->nop->common_data.configfile, nop);
+		}
+	}
+
 }
 
 /* End Code */
