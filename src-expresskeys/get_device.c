@@ -87,6 +87,27 @@ extern const char* user_pad;
 extern const char* user_stylus1;
 extern const char* user_stylus2;
 
+static int get_xsetwacom_version(void)
+{
+	FILE* execfp = NULL;
+	int major, minor, release, ret;
+	char read_buffer[MAXBUFFER];
+
+	major = minor = release = 0;
+
+	if ((execfp = popen("xsetwacom -V", "r")) != NULL) {
+		fgets(read_buffer, MAXBUFFER, execfp);
+		if (pclose(execfp) != NON_VALID) {
+			ret = sscanf(read_buffer, "%i.%i.%i", &major, &minor,
+				     &release);
+			if (ret == 3)
+				return major * 100 + minor * 10 + release;
+		}
+	}
+
+	return 0;
+}
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  This function uses the "popen" command which creates a pipe, forks and
  invokes a shell where xsetwacom can be run. First action is to ensure that
@@ -98,8 +119,6 @@ extern const char* user_stylus2;
 
 static int identify_device(char* device_name)
 {
-	ok_xsetwacom = 0;
-
 	const char* cintiq_20wsx = "197"; /* 0xC5 */
 	const char* cintiq_21UX = "63"; /* 0x3F */
 	const char* i3_6x8 = "177"; /* 0xB1 */
@@ -119,31 +138,15 @@ static int identify_device(char* device_name)
 	char read_buffer[MAXBUFFER];
 	char write_buffer[MAXBUFFER];
 
-	int i;
-	int j = 0;
 	int len = 0;
 	int ok_value = 0;
 
 	FILE* execfp = NULL;
 	read_buffer[0] = '\0';
 
-	if ((execfp = popen("xsetwacom -V", "r")) != NULL) {
-		fgets(read_buffer, MAXBUFFER, execfp);
-		if (((pclose(execfp)) != NON_VALID)
-		&& (isdigit(read_buffer[0]))) {
-			len = strcspn(read_buffer, " \t\n");
-			for (i = 0; i < len; i++) {
-				if (isdigit(read_buffer[i])) {
-					write_buffer[j] = read_buffer[i];
-					j++;
-				}
-			}
-			write_buffer[j] = '\0';
-			if ((atoi(write_buffer)) >= min_xsetwacom) {
-				ok_xsetwacom = 1;
-			}
-		}
-	}
+	ok_xsetwacom = 0;
+	if (get_xsetwacom_version() > min_xsetwacom)
+		ok_xsetwacom = 1;
 
 /* linuxwacom-0.7.7-3 changed GetTabletID to plain TabletID. Later, support
  for both strings were introduced. We follow the same pattern here, defaulting
