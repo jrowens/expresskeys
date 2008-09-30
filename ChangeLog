@@ -1,6 +1,8 @@
 _Version 0.4.2 26 Jun 2008_
 
 * added support for Wacom Cintiq 20WSX
+* made the g4 tablet structure more maintainable
+* g4 pad buttons are 9 and 13 not 9 and 10
 
 _Version 0.4.1 28 Mar 2007_
 
