@@ -253,27 +253,76 @@ NULL,NULL,NULL,NULL,NULL,NULL,
 };
 
 struct g4_program g4_internal_list[] = {
-	{NULL,{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,
-	{0,0},"default", "0 0 100 100", "0 0 100 100"},
-	{{1},{994,0},{995,0}},
-	{{0,5},{0,1},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},
-	{50,0},{64,0},}},
-	{NULL,{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,
-	{0,0},"Gimp", "0 0 100 100", "0 0 100 100"},
-	{{1},{20,0},{61,0}},
-	{{0,5},{0,1},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},
-	{37,29},{37,52},}},
-	{NULL,{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,
-	{0,0},"Blender", "0 0 100 100", "0 0 100 100"},
-	{{1},{102,0},{100,0}},
-	{{0,5},{0,1},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},
-	{37,29},{37,52},}},
-	{NULL,{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,
-	{0,0},"XTerm", "0 0 100 100", "0 0 100 100"},
-	{{0},{0,0},{0,0}},
-	{{0,5},{0,1},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},
-	{0,0},{999,0},}}
+	{
+	.common_data = {
+		.class_name = "default",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 1 },
+		.scroll_wheel_up = { 994, 0 },
+		.scroll_wheel_down = { 995, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button9 = { 0, 5 },
+		.button10 = { 0, 1 },
+		.button11 = { 50, 0 },
+		.button12 = { 64, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "Gimp",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 1 },
+		.scroll_wheel_up = { 20, 0 },
+		.scroll_wheel_down = { 61, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button9 = { 37, 29 },
+		.button10 = { 37, 52 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "Blender",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 1 },
+		.scroll_wheel_up = { 102, 0 },
+		.scroll_wheel_down = { 100, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button9 = { 37, 29 },
+		.button10 = { 37, 52 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "XTerm",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button10 = { 999, 0 },
+		},
+	},
 };
+
 const int g4_num_list = (sizeof g4_internal_list / sizeof g4_internal_list[0]);
 
 struct g4_program g4_1_external_list[MAXRECORDS];
