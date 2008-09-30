@@ -533,8 +533,8 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 		}
 	}
 /* ButtonRepeatAfter DelayButtonRepeat
- LeftPadButton9/LeftButton LeftPadButton10/RightButton
- RepeatButton9/RepeatLeft RepeatButton10/RepeatRight */
+ LeftPadButton9/LeftButton
+ RepeatButton9/RepeatLeft */
 	if (model == i3s || model == i3 || model == g4 || model == g4b ||
 							  model == bee) {
 		if (((field = (strstr(read_buffer, bsp->repeat_after)))!= NULL)
@@ -558,18 +558,21 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 			transfer_keycode(bdp->button9, write_buffer);
 			return;
 		}
-		if (((field = (strstr(read_buffer, bsp->button10))) != NULL)
-			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
-						|| (field < comment))) {
-			prune_field(field, write_buffer);
-			transfer_keycode(bdp->button10, write_buffer);
-			return;
-		}
 		if (((field = (strstr(read_buffer, bsp->repeat9))) != NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
 						|| (field < comment))) {
 			prune_field(field, write_buffer);
 			transfer_boolean(bdp->repeat9, write_buffer);
+			return;
+		}
+	}
+/* LeftPadButton10/RightButton RepeatButton10/RepeatRight */
+	if (model == i3s || model == i3 || model == g4b || model == bee) {
+		if (((field = (strstr(read_buffer, bsp->button10))) != NULL)
+			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+						|| (field < comment))) {
+			prune_field(field, write_buffer);
+			transfer_keycode(bdp->button10, write_buffer);
 			return;
 		}
 		if (((field = (strstr(read_buffer, bsp->repeat10))) != NULL)
@@ -580,6 +583,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 			return;
 		}
 	}
+
 /* LeftPadButton11 LeftPadButton12 RepeatButton11 RepeatButton12 */
 	if (model == i3s || model == i3 || model == bee) {
 		if (((field = (strstr(read_buffer, bsp->button11))) != NULL)
@@ -611,6 +615,24 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 			return;
 		}
 	}
+/* RightPadButton13 RepeatButton13 */
+	if (model == i3 || model == g4 || model == bee) {
+		if (((field = (strstr(read_buffer, bsp->button13))) != NULL)
+			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+						|| (field < comment))) {
+			prune_field(field, write_buffer);
+			transfer_keycode(bdp->button13, write_buffer);
+			return;
+		}
+		if (((field = (strstr(read_buffer, bsp->repeat13))) != NULL)
+			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
+						|| (field < comment))) {
+			prune_field(field, write_buffer);
+			transfer_boolean(bdp->repeat13, write_buffer);
+			return;
+		}
+	}
+
 /* RightPadTouchUp RightPadTouchDown RepeatRightUp RepeatRightDown
  RightPadButton13 RightPadButton14 RightPadButton15 RightPadButton16
  RepeatButton13 RepeatButton14 RepeatButton15 RepeatButton16 */
@@ -647,13 +669,6 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 			transfer_boolean(tdp->repeat_right_down, write_buffer);
 			return;
 		}
-		if (((field = (strstr(read_buffer, bsp->button13))) != NULL)
-			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
-						|| (field < comment))) {
-			prune_field(field, write_buffer);
-			transfer_keycode(bdp->button13, write_buffer);
-			return;
-		}
 		if (((field = (strstr(read_buffer, bsp->button14))) != NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
 						|| (field < comment))) {
@@ -673,13 +688,6 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 						|| (field < comment))) {
 			prune_field(field, write_buffer);
 			transfer_keycode(bdp->button16, write_buffer);
-			return;
-		}
-		if (((field = (strstr(read_buffer, bsp->repeat13))) != NULL)
-			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
-						|| (field < comment))) {
-			prune_field(field, write_buffer);
-			transfer_boolean(bdp->repeat13, write_buffer);
 			return;
 		}
 		if (((field = (strstr(read_buffer, bsp->repeat14))) != NULL)

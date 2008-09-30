@@ -508,13 +508,13 @@ static void write_g4(FILE* fp)
 		sp->button_string.button9, *ip->button_data.button9,
 				*(ip->button_data.button9+1), key_tail,MAXKEYS);
 		fprintf(fp, "%s		%i %i	%s %i)\n\n",
-		sp->button_string.button10, *ip->button_data.button10,
-				*(ip->button_data.button10+1),key_tail,MAXKEYS);
+		sp->button_string.button13, *ip->button_data.button13,
+				*(ip->button_data.button13+1),key_tail,MAXKEYS);
 
 		fprintf(fp, "%s		%i	%s\n",
 		sp->button_string.repeat9, *ip->button_data.repeat9, but_tail);
 		fprintf(fp, "%s		%i	%s\n\n",
-		sp->button_string.repeat10, *ip->button_data.repeat10,but_tail);
+		sp->button_string.repeat13, *ip->button_data.repeat13,but_tail);
 
 	}
 

@@ -268,9 +268,9 @@ struct g4_program g4_internal_list[] = {
 		.repeat_after = { 0, 5 },
 		.repeat_delay = { 0, 1 },
 		.button9 = { 0, 5 },
-		.button10 = { 0, 1 },
 		.button11 = { 50, 0 },
 		.button12 = { 64, 0 },
+		.button13 = { 0, 1 },
 		},
 	},
 	{
@@ -288,7 +288,7 @@ struct g4_program g4_internal_list[] = {
 		.repeat_after = { 0, 5 },
 		.repeat_delay = { 0, 1 },
 		.button9 = { 37, 29 },
-		.button10 = { 37, 52 },
+		.button13 = { 37, 52 },
 		},
 	},
 	{
@@ -306,7 +306,7 @@ struct g4_program g4_internal_list[] = {
 		.repeat_after = { 0, 5 },
 		.repeat_delay = { 0, 1 },
 		.button9 = { 37, 29 },
-		.button10 = { 37, 52 },
+		.button13 = { 37, 52 },
 		},
 	},
 	{
@@ -318,7 +318,8 @@ struct g4_program g4_internal_list[] = {
 	.button_data = {
 		.repeat_after = { 0, 5 },
 		.repeat_delay = { 0, 1 },
-		.button10 = { 999, 0 },
+		.button9 = { 999, 0 },
+		.button13 = { 999, 0 },
 		},
 	},
 };
@@ -333,8 +334,8 @@ struct g4_configstrings g4_configstrings[] = {
 {{"DelayEachKeycode", "ProgramName", "Stylus1PressCurve", "Stylus2PressCurve"},
 {"HandleScrollWheel", "ScrollWheelUp", "ScrollWheelDown"},
 {"ButtonRepeatAfter", "DelayButtonRepeat",
-"RepeatLeft", "RepeatRight",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-"LeftButton", "RightButton"}}
+"RepeatLeft", NULL, NULL, NULL, "RepeatRight", NULL, NULL, NULL, NULL, NULL,
+"LeftButton", NULL, NULL, NULL, "RightButton"}}
 };
 
 struct g4b_program g4b_internal_list[] = {
