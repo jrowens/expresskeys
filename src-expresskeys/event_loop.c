@@ -39,6 +39,7 @@ static unsigned long int* id_sty2;
 
 /* Crucial flags to keep track of the event state
  (except for the is_pad. But the future...): */
+static int is_bbo;
 static int is_bee;
 static int is_i3;
 static int is_i3s;
@@ -311,6 +312,11 @@ static void prepare_action(int fake_key, int which_action)
 
 	mip = model_list;
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if ((mip->bbo->common_data.sty1id != NULL)
+		&& (mip->bbo->common_data.sty1id == id_sty1)) {
+			cdp = &mip->bbo->common_data;
+			break;
+		}
 		if ((mip->bee->common_data.sty1id != NULL)
 		&& (mip->bee->common_data.sty1id == id_sty1)) {
 			cdp = &mip->bee->common_data;
@@ -548,6 +554,7 @@ static void do_repeat(void* base_address, void* record_address,
 	XDeviceButtonEvent* tmp_button;
 	XDeviceMotionEvent* tmp_motion;
 
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -559,7 +566,14 @@ static void do_repeat(void* base_address, void* record_address,
 	struct button_data* bdp = NULL;
 	struct touch_data* tdp = NULL;
 
-	if (is_bee) {
+	if (is_bbo) {
+		pbbo = base_address;
+		base_cdp = &pbbo->common_data;
+		pbbo = record_address;
+		cdp = &pbbo->common_data;
+		bdp = &pbbo->button_data;
+		tdp = &pbbo->touch_data;
+	}else if (is_bee) {
 		pbee = base_address;
 		base_cdp = &pbee->common_data;
 		pbee = record_address;
@@ -986,13 +1000,18 @@ static void do_motion(void* base_address, void* record_address,
 		rotation = motion->axis_data[0];
 	}
 
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
 	struct common_data* cdp = NULL;
 	struct touch_data* tdp = NULL;
 
-	if (is_bee) {
+	if (is_bbo) {
+		pbbo = record_address;
+		cdp = &pbbo->common_data;
+		tdp = &pbbo->touch_data;
+	} else if (is_bee) {
 		pbee = record_address;
 		cdp = &pbee->common_data;
 		tdp = &pbee->touch_data;
@@ -1187,6 +1206,7 @@ static void do_button(void* base_address, void* record_address,
 	int repeat_button = 0;
 	int ok_button = 0;
 
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -1197,7 +1217,12 @@ static void do_button(void* base_address, void* record_address,
 	struct button_data* bdp = NULL;
 	struct wheel_data* wdp = NULL;
 
-	if (is_bee) {
+	if (is_bbo) {
+		pbbo = record_address;
+		cdp = &pbbo->common_data;
+		bdp = &pbbo->button_data;
+		wdp = &pbbo->wheel_data;
+	} else if (is_bee) {
 		pbee = record_address;
 		cdp = &pbee->common_data;
 		bdp = &pbee->button_data;
@@ -1399,6 +1424,7 @@ configuration file *\n");
 
 static void do_stylus(void* base_address, void* record_address)
 {
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -1409,7 +1435,12 @@ static void do_stylus(void* base_address, void* record_address)
 	struct common_data* cdp = NULL;
 	struct common_data* base_cdp = NULL;
 
-	if (is_bee) {
+	if (is_bbo) {
+		pbbo = base_address;
+		base_cdp = &pbbo->common_data;
+		pbbo = record_address;
+		cdp = &pbbo->common_data;
+	} else if (is_bee) {
 		pbee = base_address;
 		base_cdp = &pbee->common_data;
 		pbee = record_address;
@@ -1506,6 +1537,7 @@ static void* find_focus(void* record_address, XEvent Event)
 	focus_window = None;
 	name_change = 0;
 
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -1551,7 +1583,48 @@ static void* find_focus(void* record_address, XEvent Event)
 "--------------------------------------------------------------------------\n");
 	}
 
-	if (is_bee) {
+	if (is_bbo) {
+		pbbo = record_address;
+		if ((focus_window == root) || (class_hint->res_class == NULL)) {
+			record_address = pbbo->default_program;
+			pbbo = record_address;
+			if (be_verbose) {
+				fprintf(stderr, "%s %s\n", prog_focus,
+						pbbo->common_data.class_name);
+			}
+			if (strcmp(namebuffer, pbbo->common_data.class_name)
+									!= 0) {
+				snprintf(namebuffer, MAXBUFFER, "%s",
+						pbbo->common_data.class_name);
+				name_change = 1;
+			}
+			goto clean_up;
+		}
+		for (i = 0; i < record_num; i++, pbbo++) {
+			if (strcmp(class_hint->res_class,
+					pbbo->common_data.class_name) == 0) {
+				in_list = 1;
+				break;
+			}
+		}
+		if (!in_list) {
+			pbbo = record_address;
+			record_address = pbbo->default_program;
+			pbbo = record_address;
+		} else {
+			record_address = pbbo;
+		}
+		if (be_verbose) {
+			fprintf(stderr, "%s %s\n", prog_focus,
+						pbbo->common_data.class_name);
+		}
+		if (strcmp(namebuffer, pbbo->common_data.class_name) != 0) {
+			snprintf(namebuffer, MAXBUFFER, "%s",
+						pbbo->common_data.class_name);
+			name_change = 1;
+		}
+		goto clean_up;
+	} else if (is_bee) {
 		pbee = record_address;
 		if ((focus_window == root) || (class_hint->res_class == NULL)) {
 			record_address = pbee->default_program;
@@ -1827,6 +1900,42 @@ static void* match_id(XDeviceButtonEvent* button, XDeviceMotionEvent* motion)
 	if (button) {
 		mip = model_list;
 		for (i = 0; i < MAXPAD; i++, mip++) {
+			if ((mip->bbo->common_data.padid != NULL
+			&& *mip->bbo->common_data.padid ==
+					button->deviceid)
+			|| (mip->bbo->common_data.sty1id != NULL
+			&& *mip->bbo->common_data.sty1id ==
+					button->deviceid)
+			|| (mip->bbo->common_data.sty2id != NULL
+			&& *mip->bbo->common_data.sty2id ==
+					button->deviceid)) {
+				if (mip->bbo->default_program == NULL) {
+					return NULL;
+				}
+				if (mip->bbo->common_data.padid != NULL
+				&& *mip->bbo->common_data.padid ==
+							button->deviceid) {
+					is_pad = 1;
+					id_pad = mip->bbo->common_data.padid;
+				} else if (mip->bbo->common_data.sty1id != NULL
+				&& *mip->bbo->common_data.sty1id ==
+							button->deviceid) {
+					is_sty1 = 1;
+				} else if (mip->bbo->common_data.sty2id != NULL
+				&& *mip->bbo->common_data.sty2id ==
+							button->deviceid) {
+					is_sty2 = 1;
+				}
+				is_bbo = 1;
+				record_num = mip->bbo->common_data.num_record;
+				if (mip->bbo->common_data.sty1id != NULL) {
+					id_sty1 = mip->bbo->common_data.sty1id;
+				}
+				if (mip->bbo->common_data.sty2id != NULL) {
+					id_sty2 = mip->bbo->common_data.sty2id;
+				}
+				return mip->bbo;
+			}
 			if ((mip->bee->common_data.padid != NULL
 			&& *mip->bee->common_data.padid ==
 					button->deviceid)
@@ -2037,6 +2146,24 @@ static void* match_id(XDeviceButtonEvent* button, XDeviceMotionEvent* motion)
 	} else if (motion) {
 		mip = model_list;
 		for (i = 0; i < MAXPAD; i++, mip++) {
+			if ((mip->bbo->common_data.padid != NULL)
+			&& (*mip->bbo->common_data.padid
+					== motion->deviceid)) {
+				if (mip->bbo->default_program == NULL) {
+					return NULL;
+				}
+				is_pad = 1;
+				is_bbo = 1;
+				id_pad = mip->bbo->common_data.padid;
+				record_num = mip->bbo->common_data.num_record;
+				if (mip->bbo->common_data.sty1id != NULL) {
+					id_sty1 = mip->bbo->common_data.sty1id;
+				}
+				if (mip->bbo->common_data.sty2id != NULL) {
+					id_sty2 = mip->bbo->common_data.sty2id;
+				}
+				return mip->bbo;
+			}
 			if ((mip->bee->common_data.padid != NULL)
 			&& (*mip->bee->common_data.padid
 					== motion->deviceid)) {
@@ -2150,6 +2277,7 @@ void use_events()
 			}
 		}
 
+		is_bbo = 0;
 		is_bee = 0;
 		is_i3 = 0;
 		is_i3s = 0;

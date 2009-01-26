@@ -23,6 +23,130 @@
 
 /* Globals: */
 
+struct bbo_program bbo_internal_list[] = {
+	{
+	.common_data = {
+		.class_name = "default",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 1 },
+		.scroll_wheel_up = { 994,0 },
+		.scroll_wheel_down = { 995,0 },
+		},
+	.touch_data = {
+		.handle_touch = { 0 },
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		.repeat_left_up = { 1 },
+		.repeat_left_down = { 1 },
+		.left_touch_up = { 994, 0 },
+		.left_touch_down = { 995, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button9 = { 64, 100 },
+		.button10 = { 64, 0 },
+		.button11 = { 64, 102 },
+		.button12 = { 37, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "Gimp",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 1 },
+		.scroll_wheel_up = { 86,0 },
+		.scroll_wheel_down = { 82,0 },
+		},
+	.touch_data = {
+		.handle_touch = { 0 },
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		.left_touch_up = { 20, 0 },
+		.left_touch_down = { 61, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button9 = { 50, 0 },
+		.button10 = { 64, 0 },
+		.button11 = { 37, 0 },
+		.button12 = { 37, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "Blender",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 1 },
+		.scroll_wheel_up = { 102,0 },
+		.scroll_wheel_down = { 100,0 },
+		},
+	.touch_data = {
+		.handle_touch = { 0 },
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		.repeat_left_up = { 1 },
+		.repeat_left_down = { 1 },
+		.left_touch_up = { 102, 0 },
+		.left_touch_down = { 100, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button9 = { 37, 0 },
+		.button10 = { 9, 0 },
+		.button11 = { 50, 0 },
+		.button12 = { 23, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "XTerm",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.wheel_data = {
+		.handle_wheel = { 0 },
+		.scroll_wheel_up = { 0,0 },
+		.scroll_wheel_down = { 0,0 },
+		},
+	.touch_data = {
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button15 = { 999, 0 },
+		},
+	},
+};
+const int bbo_num_list = (sizeof bbo_internal_list / sizeof bbo_internal_list[0]);
+
+struct bbo_program bbo_1_external_list[MAXRECORDS];
+struct bbo_program bbo_2_external_list[MAXRECORDS];
+struct bbo_program bbo_3_external_list[MAXRECORDS];
+
+struct bbo_configstrings bbo_configstrings[] = {
+{{"DelayEachKeycode", "ProgramName", "Stylus1PressCurve", "Stylus2PressCurve"},
+{"HandleScrollWheel", "ScrollWheelUp", "ScrollWheelDown"},
+{"HandleTouchRing", "TouchRepeatAfter", "DelayTouchRepeat",
+"RepeatUp", "RepeatDown", NULL, NULL, "PadTouchUp", "PadTouchDown", NULL, NULL},
+{"ButtonRepeatAfter", "DelayButtonRepeat",
+"RepeatButton9", "RepeatButton10", "RepeatButton11", "RepeatButton12", NULL, NULL, NULL, NULL, NULL, NULL,
+"LeftPadButton9", "LeftPadButton10", "RightPadButton11", "RightPadButton12",  NULL, NULL, NULL, NULL, NULL, NULL}}
+};
+
 struct bee_program bee_internal_list[] = {
 	{
 	.common_data = {
@@ -31,7 +155,7 @@ struct bee_program bee_internal_list[] = {
 		.stylus2_presscurve = "0 0 100 100",
 		},
 	.touch_data = {
-		.handle_touch = { 1 },
+		.handle_touch = { 0 },
 		.repeat_after = { 0, 6 },
 		.repeat_delay = { 0, 1 },
 		.repeat_left_up = { 1 },
@@ -65,7 +189,7 @@ struct bee_program bee_internal_list[] = {
 		.stylus2_presscurve = "0 0 100 100",
 		},
 	.touch_data = {
-		.handle_touch = { 1 },
+		.handle_touch = { 0 },
 		.repeat_after = { 0, 6 },
 		.repeat_delay = { 0, 1 },
 		.left_touch_up = { 20, 0 },
@@ -95,7 +219,7 @@ struct bee_program bee_internal_list[] = {
 		.stylus2_presscurve = "0 0 100 100",
 		},
 	.touch_data = {
-		.handle_touch = { 1 },
+		.handle_touch = { 0 },
 		.repeat_after = { 0, 6 },
 		.repeat_delay = { 0, 1 },
 		.repeat_left_up = { 1 },
@@ -392,11 +516,11 @@ struct nop_configstrings nop_configstrings[] = {
 };
 
 struct model_index model_list[] = {
-	{bee_1_external_list, i3_1_external_list, i3s_1_external_list,
+	{bbo_1_external_list, bee_1_external_list, i3_1_external_list, i3s_1_external_list,
 	 g4_1_external_list, g4b_1_external_list, nop_1_external_list},
-	{bee_2_external_list, i3_2_external_list, i3s_2_external_list,
+	{bbo_2_external_list, bee_2_external_list, i3_2_external_list, i3s_2_external_list,
 	 g4_2_external_list, g4b_2_external_list, nop_2_external_list},
-	{bee_3_external_list, i3_3_external_list, i3s_3_external_list,
+	{bbo_3_external_list, bee_3_external_list, i3_3_external_list, i3s_3_external_list,
 	 g4_3_external_list, g4b_3_external_list, nop_3_external_list}
 };
 

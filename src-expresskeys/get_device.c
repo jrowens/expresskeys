@@ -43,6 +43,7 @@ int proximity_in_type;
 int proximity_out_type;
 
 /* Used in many situations as identification, for math and for flow control: */
+const int bbo = 6;
 const int bee = 5;
 const int i3 = 4;
 const int i3s = 3;
@@ -143,6 +144,7 @@ static int identify_device(char* device_name)
 	const char* g4_4x5 = "21"; /* 0x15 */
 	const char* g4_6x8 = "22"; /* 0x16 */
 	const char* g4b_6x8 = "129"; /* 0x81 */
+	const char* bamboo = "101"; /* 0x65 */
 
 /* Minimum xsetwacom version we can use is 0.0.7 */
 	const int min_xsetwacom = 7;
@@ -211,6 +213,9 @@ static int identify_device(char* device_name)
 
 		if (ok_value) {
 			len = strcspn(read_buffer, " \t\n");
+			if ((strncmp(read_buffer, bamboo, len)) == 0) {
+				return bbo;
+			}
 			if ((strncmp(read_buffer, cintiq_20wsx, len)) == 0) {
 				return bee;
 			}

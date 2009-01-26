@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 "features, or none at all, will be available.\n\n";
 
 	const char* no_tablet =
-"ERROR: Tablet not attached, OR (in case of Cintiq 21UX, Intuos3\n"
+"ERROR: Tablet not attached, OR (in case of Bamboo, Cintiq 21UX, Intuos3\n"
 "and Graphire4) the 'pad' device has not been specified in xorg.conf, OR is\n"
 "lacking on the command line when using \"named devices\".\n";
 
