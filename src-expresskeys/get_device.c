@@ -434,6 +434,13 @@ static int check_name(char* read_buffer, char* write_buffer, int len)
 
 }
 
+/* newer Xorg servers changed the "use" field on the list of input devices */
+#ifdef IsXExtensionKeyboard
+#define EXTENSION_DEVICE IsXExtensionKeyboard
+#else
+#define EXTENSION_DEVICE IsXExtensionDevice
+#endif
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Find all extension-devices containing the strings 'pad'/'stylus'. If the
  user has specified which pad/stylus(es) to use on the command line, we
@@ -467,7 +474,7 @@ void get_device_info()
 	xdevice_list = XListInputDevices(display, &nr_devices);
 
 	for(i = 0; i < nr_devices; i++) {
-		if (xdevice_list[i].use == IsXExtensionDevice) {
+		if (xdevice_list[i].use == EXTENSION_DEVICE) {
 			len = strlen(xdevice_list[i].name);
 			snprintf(read_buffer, MAXBUFFER, "%s", xdevice_list[i]
 									.name);
