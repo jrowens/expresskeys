@@ -33,6 +33,7 @@
 /* State flags: */
 int have_pad;
 int ok_xsetwacom;
+int xsetwacom_version;
 
 /* Numbers we get from registering our interest in certain events: */
 int button_press_type;
@@ -108,6 +109,17 @@ static int get_xsetwacom_version(void)
 	return 0;
 }
 
+#define setwacom_ignore_result(buffer, buff_size, device, prop, value) \
+		{\
+			FILE *pfd; \
+			snprintf(buffer, buff_size, "xsetwacom set %s "prop " " value, \
+								device); \
+			pfd = popen(buffer, "r"); \
+			if (pclose(pfd) == NON_VALID) \
+				fprintf(stderr, "Error setting " prop " as " value "\n"); \
+		}
+
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  This function uses the "popen" command which creates a pipe, forks and
  invokes a shell where xsetwacom can be run. First action is to ensure that
@@ -145,8 +157,30 @@ static int identify_device(char* device_name)
 	read_buffer[0] = '\0';
 
 	ok_xsetwacom = 0;
-	if (get_xsetwacom_version() > min_xsetwacom)
+	xsetwacom_version = get_xsetwacom_version();
+	if (xsetwacom_version > min_xsetwacom) {
 		ok_xsetwacom = 1;
+
+		/*
+		 * linuxwacom >= 0.8.0 (xsetwacom 0.1.0) handles the
+		 * touchstrips and expresskeys by default. let's make
+		 * sure those settings are cleared.
+		 */
+		if (xsetwacom_version >= 10) {
+			printf("Info: linuxwacom 0.8.0 or newer detected, the "
+			       "TouchStrips and ExpressKeys settings will "
+			       "be reset.\n");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "RelWUp", "0");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "RelWDn", "0");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "AbsWUp", "0");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "AbsWDn", "0");
+
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "StripRUp", "0");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "StripRDn", "0");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "StripLUp", "0");
+			setwacom_ignore_result(write_buffer, MAXBUFFER, device_name, "StripLDn", "0");
+		}
+	}
 
 /* linuxwacom-0.7.7-3 changed GetTabletID to plain TabletID. Later, support
  for both strings were introduced. We follow the same pattern here, defaulting
