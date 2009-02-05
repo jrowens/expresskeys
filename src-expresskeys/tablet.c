@@ -267,10 +267,10 @@ struct g4_program g4_internal_list[] = {
 	.button_data = {
 		.repeat_after = { 0, 5 },
 		.repeat_delay = { 0, 1 },
-		.button9 = { 0, 5 },
+		.button9 = { 50, 0 },
 		.button11 = { 50, 0 },
 		.button12 = { 64, 0 },
-		.button13 = { 0, 1 },
+		.button13 = { 64, 0 },
 		},
 	},
 	{
