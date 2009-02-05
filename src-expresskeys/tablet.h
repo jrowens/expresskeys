@@ -91,6 +91,15 @@ extern struct button_data {
 
 /* Data structures (consolidation): */
 
+extern struct bbo_program {
+	struct bbo_program* default_program;
+	struct common_data common_data;
+	struct wheel_data wheel_data;
+	struct touch_data touch_data;
+	struct button_data button_data;
+} bbo_internal_list[], bbo_1_external_list[], bbo_2_external_list[],
+							bbo_3_external_list[];
+
 extern struct bee_program {
 	struct bee_program* default_program;
 	struct common_data common_data;
@@ -194,6 +203,13 @@ extern struct button_string {
 
 /* String structures (consolidation): */
 
+extern struct bbo_configstrings {
+	struct common_string common_string;
+	struct wheel_string wheel_string;
+	struct touch_string touch_string;
+	struct button_string button_string;
+} bbo_configstrings[];
+
 extern struct bee_configstrings {
 	struct common_string common_string;
 	struct touch_string touch_string;
@@ -231,6 +247,7 @@ extern struct nop_configstrings {
 /* Data structure (final consolidation): */
 
 extern struct model_index {
+	struct bbo_program* bbo;
 	struct bee_program* bee;
 	struct i3_program* i3;
 	struct i3s_program* i3s;

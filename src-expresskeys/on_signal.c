@@ -43,6 +43,7 @@ const char* sty2str = "CurrentSty2";
 extern int ok_config;
 extern int go_daemon;
 
+extern const int bbo;
 extern const int bee;
 extern const int i3;
 extern const int i3s;
@@ -87,6 +88,9 @@ extern char* total_file3_intuos3;
 extern char* total_file1_bee;
 extern char* total_file2_bee;
 extern char* total_file3_bee;
+extern char* total_file1_bbo;
+extern char* total_file2_bbo;
+extern char* total_file3_bbo;
 
 extern void read_config(FILE* errorfp);
 
@@ -100,14 +104,15 @@ void report_header(FILE* statusfp)
 
 	fprintf(statusfp,
 "\n'Models': nopad, Graphire4 BlueTooth, Graphire4, Intuos3 small, \
-Intuos3/Cintiq, Cintiq 20wsx\n");
+Intuos3/Cintiq, Cintiq 20wsx, Bamboo\n");
 	fprintf(statusfp, "\n* Pad-index *\n");
 	fprintf(statusfp, "%i (nop): 0 1 2\n", nop);
 	fprintf(statusfp, "%i (g4b): 0 1 2\n", g4b);
 	fprintf(statusfp, "%i (g4 ): 0 1 2\n", g4);
 	fprintf(statusfp, "%i (i3s): 0 1 2\n", i3s);
 	fprintf(statusfp, "%i (i3 ): 0 1 2\n", i3);
-	fprintf(statusfp, "%i (bee): 0 1 2\n\n", bee);
+	fprintf(statusfp, "%i (bee): 0 1 2\n", bee);
+	fprintf(statusfp, "%i (bbo): 0 1 2\n\n", bbo);
 	fprintf(statusfp, "* Stylus-index *\n");
 	fprintf(statusfp, "0 st1 (nop): 0 1 2 (g4b): 3 4 5 (g4): 6 7 8 \
 (i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16\n");
@@ -146,6 +151,7 @@ Intuos3/Cintiq, Cintiq 20wsx\n");
 
 static void report_record(FILE* statusfp, void* address, const int model)
 {
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -154,7 +160,10 @@ static void report_record(FILE* statusfp, void* address, const int model)
 	struct nop_program* pnop;
 	struct common_data* cdp = NULL;
 
-	if (model == bee) {
+	if (model == bbo) {
+		pbbo = address;
+		cdp = &pbbo->common_data;
+	} else if (model == bee) {
 		pbee = address;
 		cdp = &pbee->common_data;
 	} else if (model == i3) {
@@ -215,6 +224,7 @@ static void report_common(FILE* statusfp)
 	int num_record;
 	const char* pgr_records = "PGR RECORDS =";
 
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -226,6 +236,20 @@ static void report_common(FILE* statusfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->bbo->common_data.num_record) {
+			print_common(statusfp, mip->bbo->common_data.configfile,
+					mip->bbo->common_data.userconfigversion,
+						mip->bbo->common_data.padname,
+						mip->bbo->common_data.sty1name,
+						mip->bbo->common_data.sty2name);
+			num_record = mip->bbo->common_data.num_record;
+			pbbo = mip->bbo;
+			for (j = 0; j < num_record; j++, pbbo++) {
+				report_record(statusfp, pbbo, bbo);
+			}
+			fprintf(statusfp, "%s %i (of max %i)\n\n", pgr_records,
+							num_record, MAXRECORDS);
+		}
 		if (mip->bee->common_data.num_record) {
 			print_common(statusfp, mip->bee->common_data.configfile,
 					mip->bee->common_data.userconfigversion,
@@ -390,6 +414,7 @@ void re_read_config(int signum)
 
 static void free_common(void* address, const int model)
 {
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -398,7 +423,10 @@ static void free_common(void* address, const int model)
 	struct nop_program* pnop;
 	struct common_data* cdp = NULL;
 
-	if (model == bee) {
+	if (model == bbo) {
+		pbbo = address;
+		cdp = &pbbo->common_data;
+	} else if (model == bee) {
 		pbee = address;
 		cdp = &pbee->common_data;
 	} else if (model == i3) {
@@ -445,6 +473,7 @@ void clean_up_exit(int signum)
 {
 	int i, j;
 
+	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
 	struct i3s_program* pi3s;
@@ -469,6 +498,12 @@ void clean_up_exit(int signum)
 
 	mip = model_list;
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->bbo->common_data.configfile) {
+			pbbo = mip->bbo;
+			for (j = 0; j < MAXRECORDS; j++, pbbo++) {
+				free_common(pbbo, bbo);
+			}
+		}
 		if (mip->bee->common_data.configfile) {
 			pbee = mip->bee;
 			for (j = 0; j < MAXRECORDS; j++, pbee++) {
@@ -600,6 +635,18 @@ void clean_up_exit(int signum)
 	}
 	if (total_file3_bee) {
 		free(total_file3_bee);
+	}
+
+/*---*/
+
+	if (total_file1_bbo) {
+		free(total_file1_bbo);
+	}
+	if (total_file2_bbo) {
+		free(total_file2_bbo);
+	}
+	if (total_file3_bbo) {
+		free(total_file3_bbo);
 	}
 
 /* The pad devices and styli devices should not be explicitly closed by a

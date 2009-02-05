@@ -31,8 +31,8 @@ extern void exit_on_error(FILE* errorfp, char* string1, const char* string2,
 the longest keyword (currently RightPadTouchDown + a space = 18) + 32 keycodes
 of max 4 digits length + a space between each of them (sum 178): */
 #define MAXBUFFER 180
-/* 'Models': padless, Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3, Bee */
-#define MAXMODEL 6
+/* 'Models': padless, Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3, Bee, Bamboo */
+#define MAXMODEL 7
 /* Max number of tablets per 'model': */
 #define MAXPAD 3
 /* Max number of styli per tablet: */
