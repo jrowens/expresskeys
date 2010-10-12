@@ -30,6 +30,7 @@ const char* configversion = "4";
 
 /* Externals: */
 
+extern const int ux2;
 extern const int bbo;
 extern const int bee;
 extern const int i3;
@@ -38,6 +39,7 @@ extern const int g4;
 extern const int g4b;
 extern const int nop;
 
+extern const int ux2_num_list;
 extern const int bbo_num_list;
 extern const int bee_num_list;
 extern const int i3_num_list;
@@ -47,6 +49,129 @@ extern const int g4b_num_list;
 extern const int nop_num_list;
 
 extern const char* our_prog_name;
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Write a set of records tuned for a Cintiq 21UX2 tablet:
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void write_ux2(FILE* fp)
+{
+	int i;
+
+	const char* new_record =
+"%%			# <---  ******** BEGIN NEW PROGRAM RECORD ********\n\n";
+	const char* name_tail = "# Name must be within double quotes \"\"";
+	const char* cur_tail = "# PressCurve must be within double quotes \"\"";
+	const char* sec_tail = "# Seconds (Max 10 - Min 0.01 - Or no delay)";
+	const char* tch_onoff = "# Switch 1/0 (Enable/Disable Touch Strips)";
+	const char* key_tail = "# Keycodes (Max number of keys to send is";
+	const char* tht_tail = "# Switch 1/0 (Finger held at top repeat keys)";
+	const char* thb_tail="# Switch 1/0 (Finger held at bottom repeat keys)";
+	const char* but_tail="# Switch 1/0 (Press and hold button repeat keys)";
+
+	struct ux2_program* ip;
+	ip = ux2_internal_list;
+	struct ux2_configstrings* sp;
+	sp = ux2_configstrings;
+
+	for (i = 0; i < ux2_num_list; i++, ip++) {
+		fprintf(fp, "%s", new_record);
+
+		fprintf(fp, "%s		\"%s\" %s\n\n",
+		sp->common_string.class_name, ip->common_data.class_name,
+								name_tail);
+
+		fprintf(fp, "%s \"%s\" %s\n",
+		sp->common_string.stylus1_presscurve,
+				ip->common_data.stylus1_presscurve, cur_tail);
+		fprintf(fp, "%s \"%s\" %s\n\n",
+		sp->common_string.stylus2_presscurve,
+				ip->common_data.stylus2_presscurve, cur_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->common_string.keycode_delay, *ip->common_data.keycode_delay,
+				*(ip->common_data.keycode_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->button_string.repeat_after, *ip->button_data.repeat_after,
+				*(ip->button_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->button_string.repeat_delay, *ip->button_data.repeat_delay,
+				*(ip->button_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i.%i	%s\n",
+		sp->touch_string.repeat_after, *ip->touch_data.repeat_after,
+				*(ip->touch_data.repeat_after+1), sec_tail);
+		fprintf(fp, "%s	%i.%i	%s\n\n",
+		sp->touch_string.repeat_delay, *ip->touch_data.repeat_delay,
+				*(ip->touch_data.repeat_delay+1), sec_tail);
+
+		fprintf(fp, "%s	%i	%s\n\n",
+		sp->touch_string.handle_touch,
+				*ip->touch_data.handle_touch, tch_onoff);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.left_touch_up,
+			*ip->touch_data.left_touch_up,
+			*(ip->touch_data.left_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.left_touch_down,
+			*ip->touch_data.left_touch_down,
+			*(ip->touch_data.left_touch_down+1), key_tail, MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_left_up,
+				*ip->touch_data.repeat_left_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_left_down,
+				*ip->touch_data.repeat_left_down, thb_tail);
+
+		fprintf(fp, "%s		%i %i	%s %i)\n",
+		sp->touch_string.right_touch_up,
+			*ip->touch_data.right_touch_up,
+			*(ip->touch_data.right_touch_up+1), key_tail, MAXKEYS);
+		fprintf(fp, "%s	%i %i	%s %i)\n\n",
+		sp->touch_string.right_touch_down,
+			*ip->touch_data.right_touch_down,
+			*(ip->touch_data.right_touch_down+1), key_tail,MAXKEYS);
+
+		fprintf(fp, "%s		%i	%s\n",
+		sp->touch_string.repeat_right_up,
+				*ip->touch_data.repeat_right_up, tht_tail);
+		fprintf(fp, "%s		%i	%s\n\n",
+		sp->touch_string.repeat_right_down,
+				*ip->touch_data.repeat_right_down, thb_tail);
+
+#define UX2_BUTTON(n) \
+		fprintf(fp, "%s		%i %i	%s %i)\n", \
+			sp->button_string.button##n, \
+			*ip->button_data.button##n, \
+			*(ip->button_data.button##n + 1), \
+			key_tail, MAXKEYS); \
+		fprintf(fp, "%s		%i	%s\n", \
+			sp->button_string.repeat##n, \
+			*ip->button_data.repeat##n, \
+			but_tail);
+		UX2_BUTTON(1);
+		UX2_BUTTON(2);
+		UX2_BUTTON(3);
+		UX2_BUTTON(4);
+		UX2_BUTTON(5);
+		UX2_BUTTON(6);
+		UX2_BUTTON(7);
+		UX2_BUTTON(8);
+		UX2_BUTTON(9);
+		UX2_BUTTON(10);
+		UX2_BUTTON(11);
+		UX2_BUTTON(12);
+		UX2_BUTTON(13);
+		UX2_BUTTON(14);
+		UX2_BUTTON(15);
+		UX2_BUTTON(16);
+		UX2_BUTTON(17);
+		UX2_BUTTON(18);
+	}
+}
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  Write a set of records tuned for a Bamboo tablet:
@@ -759,6 +884,37 @@ static void write_preface(FILE* fp, const int model)
 	const char* model_notnop1 =
 "# Some ASCII art showing the \"default\" program record:\n"
 "#\n";
+	
+	const char* model_ux2 =
+"# Cintiq 21UX2 ExpressKeys Pad\n"
+"# +----+                 +----+\n"
+"# |  2 |                 | 11 |\n"
+"# +----+                 +----+\n"
+"# +----+                 +----+\n"
+"# |  3 |                 | 12 |\n"
+"# +----+                 +----+\n"
+"# +----+                 +----+\n"
+"# |  4 |                 | 13 |\n"
+"# +----+                 +----+\n"
+"# +----+                 +----+\n"
+"# |  5 |                 | 14 |\n"
+"# +----+                 +----+\n"
+"#   --                     --\n"
+"# /    \\                 /    \\\n"
+"# \\  1 /                 \\ 10 /\n"
+"#   --                     --\n"
+"# +----+                 +----+\n"
+"# |  6 |                 | 15 |\n"
+"# +----+                 +----+\n"
+"# +----+                 +----+\n"
+"# |  7 |                 | 16 |\n"
+"# +----+                 +----+\n"
+"# +----+                 +----+\n"
+"# |  8 |                 | 17 |\n"
+"# +----+                 +----+\n"
+"# +----+                 +----+\n"
+"# |  9 |                 | 18 |\n"
+"# +----+                 +----+\n\n";
 
 	const char* model_bbo =
 "#      Bamboo ExpressKeys Pad\n"
@@ -895,6 +1051,9 @@ static void write_preface(FILE* fp, const int model)
 		fprintf(fp, "%s", model_notnop1);
 	}
 
+	if (model == ux2)
+		fprintf(fp, "%s", model_ux2);
+
 	if (model == bbo)
 		fprintf(fp, "%s", model_bbo);
 
@@ -946,7 +1105,9 @@ static void write_if_lacking(FILE* errorfp, const char* configfile, int model)
 
 		write_preface(fp, model);
 
-		if (model == bbo) {
+		if (model == ux2) {
+			write_ux2(fp);
+		} else if (model == bbo) {
 			write_bbo(fp);
 		} else if (model == bee) {
 			write_bee(fp);
@@ -985,6 +1146,10 @@ void write_config(FILE* errorfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->ux2->common_data.configfile) {
+			write_if_lacking(errorfp,
+					mip->ux2->common_data.configfile, ux2);
+		}
 		if (mip->bbo->common_data.configfile) {
 			write_if_lacking(errorfp,
 					mip->bbo->common_data.configfile, bbo);

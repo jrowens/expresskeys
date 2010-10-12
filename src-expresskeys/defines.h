@@ -32,7 +32,7 @@ the longest keyword (currently RightPadTouchDown + a space = 18) + 32 keycodes
 of max 4 digits length + a space between each of them (sum 178): */
 #define MAXBUFFER 180
 /* 'Models': padless, Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3, Bee, Bamboo */
-#define MAXMODEL 7
+#define MAXMODEL 8
 /* Max number of tablets per 'model': */
 #define MAXPAD 3
 /* Max number of styli per tablet: */

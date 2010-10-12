@@ -39,6 +39,7 @@ static unsigned long int* id_sty2;
 
 /* Crucial flags to keep track of the event state
  (except for the is_pad. But the future...): */
+static int is_ux2;
 static int is_bbo;
 static int is_bee;
 static int is_i3;
@@ -312,6 +313,11 @@ static void prepare_action(int fake_key, int which_action)
 
 	mip = model_list;
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if ((mip->ux2->common_data.sty1id != NULL)
+		&& (mip->ux2->common_data.sty1id == id_sty1)) {
+			cdp = &mip->ux2->common_data;
+			break;
+		}
 		if ((mip->bbo->common_data.sty1id != NULL)
 		&& (mip->bbo->common_data.sty1id == id_sty1)) {
 			cdp = &mip->bbo->common_data;
@@ -554,6 +560,7 @@ static void do_repeat(void* base_address, void* record_address,
 	XDeviceButtonEvent* tmp_button;
 	XDeviceMotionEvent* tmp_motion;
 
+	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
@@ -566,14 +573,21 @@ static void do_repeat(void* base_address, void* record_address,
 	struct button_data* bdp = NULL;
 	struct touch_data* tdp = NULL;
 
-	if (is_bbo) {
+	if (is_ux2) {
+		pux2 = base_address;
+		base_cdp = &pux2->common_data;
+		pux2 = record_address;
+		cdp = &pux2->common_data;
+		bdp = &pux2->button_data;
+		tdp = &pux2->touch_data;
+	} else if (is_bbo) {
 		pbbo = base_address;
 		base_cdp = &pbbo->common_data;
 		pbbo = record_address;
 		cdp = &pbbo->common_data;
 		bdp = &pbbo->button_data;
 		tdp = &pbbo->touch_data;
-	}else if (is_bee) {
+	} else if (is_bee) {
 		pbee = base_address;
 		base_cdp = &pbee->common_data;
 		pbee = record_address;
@@ -892,6 +906,38 @@ static void do_repeat(void* base_address, void* record_address,
 			}
 
 			switch (button->button) {
+				case 1:
+					send_keys(bdp->button1, button_state);
+					break;
+
+				case 2:
+					send_keys(bdp->button2, button_state);
+					break;
+
+				case 3:
+					send_keys(bdp->button3, button_state);
+					break;
+
+				case 4:
+					send_keys(bdp->button4, button_state);
+					break;
+
+				case 5:
+					send_keys(bdp->button5, button_state);
+					break;
+
+				case 6:
+					send_keys(bdp->button6, button_state);
+					break;
+
+				case 7:
+					send_keys(bdp->button7, button_state);
+					break;
+
+				case 8:
+					send_keys(bdp->button8, button_state);
+					break;
+
 				case 9:
 					send_keys(bdp->button9, button_state);
 					break;
@@ -1000,6 +1046,7 @@ static void do_motion(void* base_address, void* record_address,
 		rotation = motion->axis_data[0];
 	}
 
+	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
@@ -1007,7 +1054,11 @@ static void do_motion(void* base_address, void* record_address,
 	struct common_data* cdp = NULL;
 	struct touch_data* tdp = NULL;
 
-	if (is_bbo) {
+	if (is_ux2) {
+		pux2 = record_address;
+		cdp = &pux2->common_data;
+		tdp = &pux2->touch_data;
+	} else if (is_bbo) {
 		pbbo = record_address;
 		cdp = &pbbo->common_data;
 		tdp = &pbbo->touch_data;
@@ -1206,6 +1257,7 @@ static void do_button(void* base_address, void* record_address,
 	int repeat_button = 0;
 	int ok_button = 0;
 
+	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
@@ -1217,7 +1269,11 @@ static void do_button(void* base_address, void* record_address,
 	struct button_data* bdp = NULL;
 	struct wheel_data* wdp = NULL;
 
-	if (is_bbo) {
+	if (is_ux2) {
+		pux2 = record_address;
+		cdp = &pux2->common_data;
+		bdp = &pux2->button_data;
+	} else if (is_bbo) {
 		pbbo = record_address;
 		cdp = &pbbo->common_data;
 		bdp = &pbbo->button_data;
@@ -1259,8 +1315,45 @@ static void do_button(void* base_address, void* record_address,
 	}
 
 	switch (button->button) {
+		case 1:
+			if (*bdp->button1) {
+				ok_button = 1;
+				send_keys(bdp->button1, button_state);
+				if (*bdp->repeat1) {
+					repeat_button = 1;
+				}
+			}
+			break;
+		case 2:
+			if (*bdp->button2) {
+				ok_button = 1;
+				send_keys(bdp->button2, button_state);
+				if (*bdp->repeat2) {
+					repeat_button = 2;
+				}
+			}
+			break;
+		case 3:
+			if (*bdp->button3) {
+				ok_button = 1;
+				send_keys(bdp->button3, button_state);
+				if (*bdp->repeat3) {
+					repeat_button = 1;
+				}
+			}
+			break;
 		case 4:
-			if (!*wdp->handle_wheel) {
+			if (is_ux2) {
+				if (*bdp->button4) {
+					ok_button = 1;
+					send_keys(bdp->button4, button_state);
+					if (*bdp->repeat4) {
+						repeat_button = 1;
+					}
+				}
+				break;
+			}
+			if (!wdp || !*wdp->handle_wheel) {
 				if (be_verbose) {
 					fprintf(stderr,
 				"* Scroll Wheel is not defined/enabled in \
@@ -1284,7 +1377,17 @@ configuration file *\n");
 			}
 			return;
 		case 5:
-			if (!*wdp->handle_wheel) {
+			if (is_ux2) {
+				if (*bdp->button5) {
+					ok_button = 1;
+					send_keys(bdp->button5, button_state);
+					if (*bdp->repeat5) {
+						repeat_button = 1;
+					}
+				}
+				break;
+			}
+			if (!wdp && !*wdp->handle_wheel) {
 				if (be_verbose) {
 					fprintf(stderr,
 				"* Scroll Wheel is not defined/enabled in \
@@ -1307,6 +1410,33 @@ configuration file *\n");
 				}
 			}
 			return;
+		case 6:
+			if (*bdp->button6) {
+				ok_button = 1;
+				send_keys(bdp->button6, button_state);
+				if (*bdp->repeat6) {
+					repeat_button = 1;
+				}
+			}
+			break;
+		case 7:
+			if (*bdp->button7) {
+				ok_button = 1;
+				send_keys(bdp->button7, button_state);
+				if (*bdp->repeat7) {
+					repeat_button = 1;
+				}
+			}
+			break;
+		case 8:
+			if (*bdp->button8) {
+				ok_button = 1;
+				send_keys(bdp->button8, button_state);
+				if (*bdp->repeat8) {
+					repeat_button = 1;
+				}
+			}
+			break;
 		case 9:
 			if (*bdp->button9) {
 				ok_button = 1;
@@ -1424,6 +1554,7 @@ configuration file *\n");
 
 static void do_stylus(void* base_address, void* record_address)
 {
+	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
@@ -1435,7 +1566,12 @@ static void do_stylus(void* base_address, void* record_address)
 	struct common_data* cdp = NULL;
 	struct common_data* base_cdp = NULL;
 
-	if (is_bbo) {
+	if (is_ux2) {
+		pux2 = base_address;
+		base_cdp = &pux2->common_data;
+		pux2 = record_address;
+		cdp = &pux2->common_data;
+	} else if (is_bbo) {
 		pbbo = base_address;
 		base_cdp = &pbbo->common_data;
 		pbbo = record_address;
@@ -1537,6 +1673,7 @@ static void* find_focus(void* record_address, XEvent Event)
 	focus_window = None;
 	name_change = 0;
 
+	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
 	struct i3_program* pi3;
@@ -1583,7 +1720,48 @@ static void* find_focus(void* record_address, XEvent Event)
 "--------------------------------------------------------------------------\n");
 	}
 
-	if (is_bbo) {
+	if (is_ux2) {
+		pux2 = record_address;
+		if ((focus_window == root) || (class_hint->res_class == NULL)) {
+			record_address = pux2->default_program;
+			pux2 = record_address;
+			if (be_verbose) {
+				fprintf(stderr, "%s %s\n", prog_focus,
+						pux2->common_data.class_name);
+			}
+			if (strcmp(namebuffer, pux2->common_data.class_name)
+									!= 0) {
+				snprintf(namebuffer, MAXBUFFER, "%s",
+						pux2->common_data.class_name);
+				name_change = 1;
+			}
+			goto clean_up;
+		}
+		for (i = 0; i < record_num; i++, pux2++) {
+			if (strcmp(class_hint->res_class,
+					pux2->common_data.class_name) == 0) {
+				in_list = 1;
+				break;
+			}
+		}
+		if (!in_list) {
+			pux2 = record_address;
+			record_address = pux2->default_program;
+			pux2 = record_address;
+		} else {
+			record_address = pux2;
+		}
+		if (be_verbose) {
+			fprintf(stderr, "%s %s\n", prog_focus,
+						pux2->common_data.class_name);
+		}
+		if (strcmp(namebuffer, pux2->common_data.class_name) != 0) {
+			snprintf(namebuffer, MAXBUFFER, "%s",
+						pux2->common_data.class_name);
+			name_change = 1;
+		}
+		goto clean_up;
+	} else if (is_bbo) {
 		pbbo = record_address;
 		if ((focus_window == root) || (class_hint->res_class == NULL)) {
 			record_address = pbbo->default_program;
@@ -1900,6 +2078,42 @@ static void* match_id(XDeviceButtonEvent* button, XDeviceMotionEvent* motion)
 	if (button) {
 		mip = model_list;
 		for (i = 0; i < MAXPAD; i++, mip++) {
+			if ((mip->ux2->common_data.padid != NULL
+			&& *mip->ux2->common_data.padid ==
+					button->deviceid)
+			|| (mip->ux2->common_data.sty1id != NULL
+			&& *mip->ux2->common_data.sty1id ==
+					button->deviceid)
+			|| (mip->ux2->common_data.sty2id != NULL
+			&& *mip->ux2->common_data.sty2id ==
+					button->deviceid)) {
+				if (mip->ux2->default_program == NULL) {
+					return NULL;
+				}
+				if (mip->ux2->common_data.padid != NULL
+				&& *mip->ux2->common_data.padid ==
+							button->deviceid) {
+					is_pad = 1;
+					id_pad = mip->ux2->common_data.padid;
+				} else if (mip->ux2->common_data.sty1id != NULL
+				&& *mip->ux2->common_data.sty1id ==
+							button->deviceid) {
+					is_sty1 = 1;
+				} else if (mip->ux2->common_data.sty2id != NULL
+				&& *mip->ux2->common_data.sty2id ==
+							button->deviceid) {
+					is_sty2 = 1;
+				}
+				is_ux2 = 1;
+				record_num = mip->ux2->common_data.num_record;
+				if (mip->ux2->common_data.sty1id != NULL) {
+					id_sty1 = mip->ux2->common_data.sty1id;
+				}
+				if (mip->ux2->common_data.sty2id != NULL) {
+					id_sty2 = mip->ux2->common_data.sty2id;
+				}
+				return mip->ux2;
+			}
 			if ((mip->bbo->common_data.padid != NULL
 			&& *mip->bbo->common_data.padid ==
 					button->deviceid)
@@ -2146,6 +2360,24 @@ static void* match_id(XDeviceButtonEvent* button, XDeviceMotionEvent* motion)
 	} else if (motion) {
 		mip = model_list;
 		for (i = 0; i < MAXPAD; i++, mip++) {
+			if ((mip->ux2->common_data.padid != NULL)
+			&& (*mip->ux2->common_data.padid
+					== motion->deviceid)) {
+				if (mip->ux2->default_program == NULL) {
+					return NULL;
+				}
+				is_pad = 1;
+				is_ux2 = 1;
+				id_pad = mip->ux2->common_data.padid;
+				record_num = mip->ux2->common_data.num_record;
+				if (mip->ux2->common_data.sty1id != NULL) {
+					id_sty1 = mip->ux2->common_data.sty1id;
+				}
+				if (mip->ux2->common_data.sty2id != NULL) {
+					id_sty2 = mip->ux2->common_data.sty2id;
+				}
+				return mip->ux2;
+			}
 			if ((mip->bbo->common_data.padid != NULL)
 			&& (*mip->bbo->common_data.padid
 					== motion->deviceid)) {
@@ -2277,6 +2509,7 @@ void use_events()
 			}
 		}
 
+		is_ux2 = 0;
 		is_bbo = 0;
 		is_bee = 0;
 		is_i3 = 0;

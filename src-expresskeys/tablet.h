@@ -66,6 +66,14 @@ extern struct wheel_data {
 extern struct button_data {
 	int repeat_after[2];
 	int repeat_delay[2];
+	int repeat1 [1];
+	int repeat2 [1];
+	int repeat3 [1];
+	int repeat4 [1];
+	int repeat5 [1];
+	int repeat6 [1];
+	int repeat7 [1];
+	int repeat8 [1];
 	int repeat9 [1];
 	int repeat10 [1];
 	int repeat11 [1];
@@ -76,6 +84,14 @@ extern struct button_data {
 	int repeat16 [1];
 	int repeat17 [1];
 	int repeat18 [1];
+	int button1[MAXKEYS];
+	int button2[MAXKEYS];
+	int button3[MAXKEYS];
+	int button4[MAXKEYS];
+	int button5[MAXKEYS];
+	int button6[MAXKEYS];
+	int button7[MAXKEYS];
+	int button8[MAXKEYS];
 	int button9[MAXKEYS];
 	int button10[MAXKEYS];
 	int button11[MAXKEYS];
@@ -90,6 +106,13 @@ extern struct button_data {
 
 
 /* Data structures (consolidation): */
+extern struct ux2_program {
+	struct ux2_program* default_program;
+	struct common_data common_data;
+	struct touch_data touch_data;
+	struct button_data button_data;
+} ux2_internal_list[], ux2_1_external_list[], ux2_2_external_list[],
+							ux2_3_external_list[];
 
 extern struct bbo_program {
 	struct bbo_program* default_program;
@@ -178,6 +201,14 @@ extern struct wheel_string {
 extern struct button_string {
 	const char* repeat_after;
 	const char* repeat_delay;
+	const char* repeat1;
+	const char* repeat2;
+	const char* repeat3;
+	const char* repeat4;
+	const char* repeat5;
+	const char* repeat6;
+	const char* repeat7;
+	const char* repeat8;
 	const char* repeat9;
 	const char* repeat10;
 	const char* repeat11;
@@ -188,6 +219,14 @@ extern struct button_string {
 	const char* repeat16;
 	const char* repeat17;
 	const char* repeat18;
+	const char* button1;
+	const char* button2;
+	const char* button3;
+	const char* button4;
+	const char* button5;
+	const char* button6;
+	const char* button7;
+	const char* button8;
 	const char* button9;
 	const char* button10;
 	const char* button11;
@@ -202,6 +241,12 @@ extern struct button_string {
 
 
 /* String structures (consolidation): */
+
+extern struct ux2_configstrings {
+	struct common_string common_string;
+	struct touch_string touch_string;
+	struct button_string button_string;
+} ux2_configstrings[];
 
 extern struct bbo_configstrings {
 	struct common_string common_string;
@@ -247,6 +292,7 @@ extern struct nop_configstrings {
 /* Data structure (final consolidation): */
 
 extern struct model_index {
+	struct ux2_program* ux2;
 	struct bbo_program* bbo;
 	struct bee_program* bee;
 	struct i3_program* i3;
