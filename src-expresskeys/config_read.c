@@ -43,6 +43,7 @@ static int st2_prcurve_malloced;
 extern int be_verbose;
 extern int reread_config;
 
+extern const int ux;
 extern const int ux2;
 extern const int bbo;
 extern const int bee;
@@ -303,6 +304,7 @@ static void prune_field(char* field_begin, char* write_buffer)
 static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 								const int model)
 {
+	struct ux_program* pux;
 	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
@@ -315,6 +317,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 	struct touch_data* tdp = NULL;
 	struct wheel_data* wdp = NULL;
 	struct button_data* bdp = NULL;
+	struct ux_configstrings* cux;
 	struct ux2_configstrings* cux2;
 	struct bbo_configstrings* cbbo;
 	struct bee_configstrings* cbee;
@@ -328,7 +331,16 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 	struct wheel_string* wsp = NULL;
 	struct button_string* bsp = NULL;
 
-	if (model == ux2) {
+	if (model == ux) {
+		pux = address;
+		cdp = &pux->common_data;
+		tdp = &pux->touch_data;
+		bdp = &pux->button_data;
+		cux = ux_configstrings;
+		csp = &cux->common_string;
+		tsp = &cux->touch_string;
+		bsp = &cux->button_string;
+	} else if (model == ux2) {
 		pux2 = address;
 		cdp = &pux2->common_data;
 		tdp = &pux2->touch_data;
@@ -477,7 +489,7 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 	}
 /* HandleTouchStrips TouchRepeatAfter DelayTouchRepeat
  LeftPadTouchUp LeftPadTouchDown RepeatLeftUp RepeatLeftDown */
-	if (model == i3s || model == i3 || model == bee || model == ux2 || model == bbo) {
+	if (model == i3s || model == i3 || model == bee || model == ux2 || model == bbo || model == ux) {
 		if (((field = (strstr(read_buffer, tsp->handle_touch))) != NULL)
 			&& (((comment = (strchr(read_buffer, '#'))) == NULL)
 						|| (field < comment))) {
@@ -593,6 +605,17 @@ static void handle_field(FILE* errorfp, char* read_buffer, void* address,
 		READ_BUTTON(17);
 		READ_BUTTON(18);
 	}
+	if (model == ux) {
+		READ_BUTTON(1);
+		READ_BUTTON(2);
+		READ_BUTTON(3);
+		READ_BUTTON(4);
+		READ_BUTTON(5);
+		READ_BUTTON(6);
+		READ_BUTTON(7);
+		READ_BUTTON(8);
+	}
+
 /* ButtonRepeatAfter DelayButtonRepeat
  LeftPadButton9/LeftButton
  RepeatButton9/RepeatLeft */
@@ -829,6 +852,7 @@ static void read_body(FILE* errorfp, void* address, const int model,
 	st1_prcurve_malloced = 0;
 	st2_prcurve_malloced = 0;
 
+	struct ux_program* pux = NULL;
 	struct ux2_program* pux2 = NULL;
 	struct bbo_program* pbbo = NULL;
 	struct bee_program* pbee = NULL;
@@ -837,6 +861,7 @@ static void read_body(FILE* errorfp, void* address, const int model,
 	struct g4_program* pg4 = NULL;
 	struct g4b_program* pg4b = NULL;
 	struct nop_program* pnop = NULL;
+	struct ux_program* pux_base = NULL;
 	struct ux2_program* pux2_base = NULL;
 	struct bbo_program* pbbo_base = NULL;
 	struct bee_program* pbee_base = NULL;
@@ -846,7 +871,14 @@ static void read_body(FILE* errorfp, void* address, const int model,
 	struct g4b_program* pg4b_base = NULL;
 	struct nop_program* pnop_base = NULL;
 
-	if (model == ux2) {
+	if (model == ux) {
+		pux = address;
+		pux_base = pux;
+		if (reread_config) {
+			pux->default_program = NULL;
+			pux->common_data.num_record = 0;
+		}
+	} else if (model == ux2) {
 		pux2 = address;
 		pux2_base = pux2;
 		if (reread_config) {
@@ -987,7 +1019,9 @@ static void read_body(FILE* errorfp, void* address, const int model,
 				continue;
 			}
 
-			if (pux2) {
+			if (pux) {
+				handle_field(errorfp, read_buffer, pux, model);
+			} else if (pux2) {
 				handle_field(errorfp, read_buffer, pux2, model);
 			} else if (pbbo) {
 				handle_field(errorfp, read_buffer, pbbo, model);
@@ -1008,7 +1042,42 @@ static void read_body(FILE* errorfp, void* address, const int model,
 
 /* End field loop*/
 
-		if (pux2) {
+		if (pux) {
+			if (pux->common_data.class_name == NULL) {
+				revert_config = 1;
+				if (pux->common_data.stylus1_presscurve
+								!= NULL) {
+				free(pux->common_data.stylus1_presscurve);
+				st1_prcurve_malloced = 0;
+				pux->common_data.stylus1_presscurve = NULL;
+				}
+				if (pux->common_data.stylus2_presscurve
+								!= NULL) {
+				free(pux->common_data.stylus2_presscurve);
+				st2_prcurve_malloced = 0;
+				pux->common_data.stylus2_presscurve = NULL;
+				}
+			}
+			if ((pux->common_data.class_name != NULL)
+				&& (strcmp(pux->common_data.class_name,
+							def_rec) == 0)) {
+				pux_base->default_program = pux;
+			}
+			if (pux->common_data.class_name != NULL) {
+				pgr_recname_malloced = 0;
+				revert_config = 0;
+				num_record++;
+				if (pux->common_data.stylus1_presscurve
+								!= NULL) {
+					st1_prcurve_malloced = 0;
+				}
+				if (pux->common_data.stylus2_presscurve
+								!= NULL) {
+					st2_prcurve_malloced = 0;
+				}
+				pux++;
+			}
+		} else if (pux2) {
 			if (pux2->common_data.class_name == NULL) {
 				revert_config = 1;
 				if (pux2->common_data.stylus1_presscurve
@@ -1043,7 +1112,7 @@ static void read_body(FILE* errorfp, void* address, const int model,
 				}
 				pux2++;
 			}
-		} if (pbbo) {
+		} else if (pbbo) {
 			if (pbbo->common_data.class_name == NULL) {
 				revert_config = 1;
 				if (pbbo->common_data.stylus1_presscurve
@@ -1295,7 +1364,13 @@ static void read_body(FILE* errorfp, void* address, const int model,
 
 	fclose(fp);
 
-	if (model == ux2) {
+	if (model == ux) {
+		pux = address;
+		if (pux->default_program == NULL) {
+			no_default = 1;
+		}
+		pux->common_data.num_record = num_record;
+	} else if (model == ux2) {
 		pux2 = address;
 		if (pux2->default_program == NULL) {
 			no_default = 1;
@@ -1474,6 +1549,25 @@ void read_config(FILE* errorfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->ux->common_data.configfile) {
+			if (be_verbose) {
+				fprintf(stderr, "%s %s\n", our_cnffile,
+				mip->ux->common_data.configfile);
+			}
+
+			if ((k = read_header(errorfp, write_buffer,
+					mip->ux->common_data.configfile))) {
+				mip->ux->common_data.userconfigversion = k;
+				if (be_verbose) {
+					print_device(stderr,
+						mip->ux->common_data.padname,
+						mip->ux->common_data.sty1name,
+						mip->ux->common_data.sty2name);
+				}
+				read_body(errorfp, mip->ux, ux,
+					mip->ux->common_data.configfile);
+			}
+		}
 		if (mip->ux2->common_data.configfile) {
 			if (be_verbose) {
 				fprintf(stderr, "%s %s\n", our_cnffile,

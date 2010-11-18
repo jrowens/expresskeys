@@ -43,6 +43,7 @@ const char* sty2str = "CurrentSty2";
 extern int ok_config;
 extern int go_daemon;
 
+extern const int ux;
 extern const int ux2;
 extern const int bbo;
 extern const int bee;
@@ -95,6 +96,9 @@ extern char* total_file3_bbo;
 extern char* total_file1_ux2;
 extern char* total_file2_ux2;
 extern char* total_file3_ux2;
+extern char* total_file1_ux;
+extern char* total_file2_ux;
+extern char* total_file3_ux;
 
 extern void read_config(FILE* errorfp);
 
@@ -118,11 +122,12 @@ Intuos3/Cintiq, Cintiq 20wsx, Bamboo, Cintiq 21UX2\n");
 	fprintf(statusfp, "%i (bee): 0 1 2\n", bee);
 	fprintf(statusfp, "%i (bbo): 0 1 2\n", bbo);
 	fprintf(statusfp, "%i (ux2): 0 1 2\n\n", ux2);
+	fprintf(statusfp, "%i (ux): 0 1 2\n\n", ux);
 	fprintf(statusfp, "* Stylus-index *\n");
 	fprintf(statusfp, "0 st1 (nop): 0 1 2 (g4b): 3 4 5 (g4): 6 7 8 \
-(i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16 (bbo): 17 18 (ux2): 19 20\n");
+(i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16 (bbo): 17 18 (ux2): 19 20 (ux): 21 22\n");
 	fprintf(statusfp, "1 st2 (nop): 0 1 2 (g4b): 3 4 5 (g4): 6 7 8 \
-(i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16 (bbo): 17 18 (ux2): 19 20\n\n");
+(i3s): 9 10 11 (i3): 12 13 14 (bee): 15 16 (bbo): 17 18 (ux2): 19 20 (ux): 21 22\n\n");
 	fprintf(statusfp, "PGR RUNNAME = %s\n", our_prog_name);
 	fprintf(statusfp, "PGR VERSION = %s\n", our_prog_version);
 	fprintf(statusfp, "USR HOMEDIR = %s\n", getenv("HOME"));
@@ -156,6 +161,7 @@ Intuos3/Cintiq, Cintiq 20wsx, Bamboo, Cintiq 21UX2\n");
 
 static void report_record(FILE* statusfp, void* address, const int model)
 {
+	struct ux_program* pux;
 	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
@@ -166,7 +172,10 @@ static void report_record(FILE* statusfp, void* address, const int model)
 	struct nop_program* pnop;
 	struct common_data* cdp = NULL;
 
-	if (model == ux2) {
+	if (model == ux) {
+		pux = address;
+		cdp = &pux->common_data;
+	} else if (model == ux2) {
 		pux2 = address;
 		cdp = &pux2->common_data;
 	} else if (model == bbo) {
@@ -233,6 +242,7 @@ static void report_common(FILE* statusfp)
 	int num_record;
 	const char* pgr_records = "PGR RECORDS =";
 
+	struct ux_program* pux;
 	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
@@ -246,6 +256,20 @@ static void report_common(FILE* statusfp)
 	mip = model_list;
 
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->ux->common_data.num_record) {
+			print_common(statusfp, mip->ux->common_data.configfile,
+					mip->ux->common_data.userconfigversion,
+						mip->ux->common_data.padname,
+						mip->ux->common_data.sty1name,
+						mip->ux->common_data.sty2name);
+			num_record = mip->ux->common_data.num_record;
+			pux = mip->ux;
+			for (j = 0; j < num_record; j++, pux++) {
+				report_record(statusfp, pux, ux);
+			}
+			fprintf(statusfp, "%s %i (of max %i)\n\n", pgr_records,
+							num_record, MAXRECORDS);
+		}
 		if (mip->ux2->common_data.num_record) {
 			print_common(statusfp, mip->ux2->common_data.configfile,
 					mip->ux2->common_data.userconfigversion,
@@ -438,6 +462,7 @@ void re_read_config(int signum)
 
 static void free_common(void* address, const int model)
 {
+	struct ux_program* pux;
 	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
@@ -448,7 +473,10 @@ static void free_common(void* address, const int model)
 	struct nop_program* pnop;
 	struct common_data* cdp = NULL;
 
-	if (model == ux2) {
+	if (model == ux) {
+		pux = address;
+		cdp = &pux->common_data;
+	} else if (model == ux2) {
 		pux2 = address;
 		cdp = &pux2->common_data;
 	} else if (model == bbo) {
@@ -501,6 +529,7 @@ void clean_up_exit(int signum)
 {
 	int i, j;
 
+	struct ux_program* pux;
 	struct ux2_program* pux2;
 	struct bbo_program* pbbo;
 	struct bee_program* pbee;
@@ -527,6 +556,12 @@ void clean_up_exit(int signum)
 
 	mip = model_list;
 	for (i = 0; i < MAXPAD; i++, mip++) {
+		if (mip->ux->common_data.configfile) {
+			pux = mip->ux;
+			for (j = 0; j < MAXRECORDS; j++, pux++) {
+				free_common(pux, ux);
+			}
+		}
 		if (mip->ux2->common_data.configfile) {
 			pux2 = mip->ux2;
 			for (j = 0; j < MAXRECORDS; j++, pux2++) {
@@ -694,6 +729,18 @@ void clean_up_exit(int signum)
 	}
 	if (total_file3_ux2) {
 		free(total_file3_ux2);
+	}
+
+/*---*/
+
+	if (total_file1_ux) {
+		free(total_file1_ux);
+	}
+	if (total_file2_ux) {
+		free(total_file2_ux);
+	}
+	if (total_file3_ux) {
+		free(total_file3_ux);
 	}
 
 /* The pad devices and styli devices should not be explicitly closed by a

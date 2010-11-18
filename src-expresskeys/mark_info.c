@@ -50,12 +50,16 @@ const char* total_file3_bbo;
 const char* total_file1_ux2;
 const char* total_file2_ux2;
 const char* total_file3_ux2;
+const char* total_file1_ux;
+const char* total_file2_ux;
+const char* total_file3_ux;
 
 /* Externals: */
 
 extern int have_pad;
 extern int have_padless;
 
+extern const int ux;
 extern const int ux2;
 extern const int bbo;
 extern const int bee;
@@ -91,6 +95,20 @@ static void mark_device(const char* device, int row, int column,
 							const char* configfile)
 {
 	if (device == pad_string) {
+		if (row == ux) {
+			struct ux_program* p = NULL;
+			if (column == 0) {
+				p = ux_1_external_list;
+			} else if (column == 1) {
+				p = ux_2_external_list;
+			} else if (column == 2) {
+				p = ux_3_external_list;
+			}
+			p->common_data.padname = pad_name[row][column];
+			p->common_data.padid = pad_id[row][column];
+			p->common_data.configfile = configfile;
+			return;
+		}
 		if (row == ux2) {
 			struct ux2_program* p = NULL;
 			if (column == 0) {
@@ -412,8 +430,35 @@ static void mark_config(const char* device, int row, int column)
 	const char* file1_ux2 = "/ux2.conf1";
 	const char* file2_ux2 = "/ux2.conf2";
 	const char* file3_ux2 = "/ux2.conf3";
+	const char* file1_ux = "/ux.conf1";
+	const char* file2_ux = "/ux.conf2";
+	const char* file3_ux = "/ux.conf3";
 
 	switch (row) {
+/* pad Cintiq 21ux */
+	case 8:
+		switch (column) {
+		case 0:
+			total_file1_ux = path_malloc
+				((void*)total_config_dir, (void*)file1_ux);
+			mark_device(device, row, column, total_file1_ux);
+			return;
+
+		case 1:
+			total_file2_ux = path_malloc
+				((void*)total_config_dir, (void*)file2_ux);
+			mark_device(device, row, column, total_file2_ux);
+			return;
+
+		case 2:
+			total_file3_ux = path_malloc
+				((void*)total_config_dir, (void*)file3_ux);
+			mark_device(device, row, column, total_file3_ux);
+			return;
+
+		default:
+			return;
+		}
 /* pad Cintiq 21ux2 */
 	case 7:
 		switch (column) {

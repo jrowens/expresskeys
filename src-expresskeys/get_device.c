@@ -43,6 +43,7 @@ int proximity_in_type;
 int proximity_out_type;
 
 /* Used in many situations as identification, for math and for flow control: */
+const int ux = 8;
 const int ux2 = 7;
 const int bbo = 6;
 const int bee = 5;
@@ -225,7 +226,7 @@ static int identify_device(char* device_name)
 				return bee;
 			}
 			if ((strncmp(read_buffer, cintiq_21UX, len)) == 0) {
-				return i3;
+				return ux;
 			}
 			if (((strncmp(read_buffer, i3_6x8, len)) == 0)
 				|| ((strncmp(read_buffer, i3_9x12, len)) == 0)

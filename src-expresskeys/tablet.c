@@ -23,6 +23,150 @@
 
 /* Globals: */
 
+struct ux_program ux_internal_list[] = {
+	{
+	.common_data = {
+		.class_name = "default",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.touch_data = {
+		.handle_touch = { 0 },
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		.repeat_left_up = { 1 },
+		.repeat_left_down = { 1 },
+		.repeat_right_up = { 1 },
+		.repeat_right_down = { 1 },
+		.left_touch_up = { 994, 0 },
+		.left_touch_down = { 995, 0 },
+		.right_touch_up = { 98, 0 },
+		.right_touch_down = { 104, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button1 = { 50, 0 },
+		.button2 = { 64, 0 },
+		.button3 = { 37, 0 },
+		.button4 = { 65, 0 },
+		.button5 = { 50, 0 },
+		.button6 = { 64, 0 },
+		.button7 = { 37, 0 },
+		.button8 = { 65, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "Gimp",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.touch_data = {
+		.handle_touch = { 0 },
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		.left_touch_up = { 20, 0 },
+		.left_touch_down = { 61, 0 },
+		.right_touch_up = { 98, 20 },
+		.right_touch_down = { 104, 61 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button1 = { 50, 0 },
+		.button2 = { 64, 0 },
+		.button3 = { 37, 0 },
+		.button4 = { 65, 0 },
+		.button5 = { 37, 29 },
+		.button6 = { 37, 52 },
+		.button7 = { 999, 0 },
+		.button8 = { 65, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "Blender",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.touch_data = {
+		.handle_touch = { 0 },
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		.repeat_left_up = { 1 },
+		.repeat_left_down = { 1 },
+		.repeat_right_up = { 1 },
+		.repeat_right_down = { 1 },
+		.left_touch_up = { 102, 0 },
+		.left_touch_down = { 100, 0 },
+		.right_touch_up = { 98, 0 },
+		.right_touch_down = { 104, 0 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button1 = { 37, 0 },
+		.button2 = { 9, 0 },
+		.button3 = { 50, 0 },
+		.button4 = { 23, 0 },
+		.button5 = { 37, 29 },
+		.button6 = { 37, 52 },
+		.button7 = { 999, 0 },
+		.button8 = { 65, 0 },
+		},
+	},
+	{
+	.common_data = {
+		.class_name = "XTerm",
+		.stylus1_presscurve = "0 0 100 100",
+		.stylus2_presscurve = "0 0 100 100",
+		},
+	.touch_data = {
+		.repeat_after = { 0, 6 },
+		.repeat_delay = { 0, 1 },
+		},
+	.button_data = {
+		.repeat_after = { 0, 5 },
+		.repeat_delay = { 0, 1 },
+		.button8 = { 999, 0 },
+		},
+	},
+};
+const int ux_num_list = (sizeof ux_internal_list / sizeof ux_internal_list[0]);
+
+struct ux_program ux_1_external_list[MAXRECORDS];
+struct ux_program ux_2_external_list[MAXRECORDS];
+struct ux_program ux_3_external_list[MAXRECORDS];
+
+struct ux_configstrings ux_configstrings[] = {
+{
+	.common_string = {"DelayEachKeycode", "ProgramName", "Stylus1PressCurve", "Stylus2PressCurve"},
+	.touch_string = {"HandleTouchStrips", "TouchRepeatAfter", "DelayTouchRepeat",
+			 "RepeatLeftUp", "RepeatLeftDown", "RepeatRightUp", "RepeatRightDown",
+			 "LeftPadTouchUp", "LeftPadTouchDown", "RightPadTouchUp", "RightPadTouchDown"},
+	.button_string = {
+		.repeat_after = "ButtonRepeatAfter",
+		.repeat_delay = "DelayButtonRepeat",
+		.repeat1 = "RepeatButton1",
+		.repeat2 = "RepeatButton2",
+		.repeat3 = "RepeatButton3",
+		.repeat4 = "RepeatButton4",
+		.repeat5 = "RepeatButton5",
+		.repeat6 = "RepeatButton6",
+		.repeat7 = "RepeatButton7",
+		.repeat8 = "RepeatButton8",
+		.button1 = "LeftPadButton1",
+		.button2 = "LeftPadButton2",
+		.button3 = "LeftPadButton3",
+		.button4 = "LeftPadButton4",
+		.button5 = "RightPadButton5",
+		.button6 = "RightPadButton6",
+		.button7 = "RightPadButton7",
+		.button8 = "RightPadButton8",
+	},
+}};
+
 struct ux2_program ux2_internal_list[] = {
 	{
 	.common_data = {
@@ -917,12 +1061,15 @@ struct nop_configstrings nop_configstrings[] = {
 };
 
 struct model_index model_list[] = {
-	{ux2_1_external_list, bbo_1_external_list, bee_1_external_list, i3_1_external_list,
-	 i3s_1_external_list, g4_1_external_list, g4b_1_external_list, nop_1_external_list},
-	{ux2_2_external_list, bbo_2_external_list, bee_2_external_list, i3_2_external_list,
-	 i3s_2_external_list, g4_2_external_list, g4b_2_external_list, nop_2_external_list},
-	{ux2_3_external_list, bbo_3_external_list, bee_3_external_list, i3_3_external_list,
-	 i3s_3_external_list, g4_3_external_list, g4b_3_external_list, nop_3_external_list}
+	{ux_1_external_list, ux2_1_external_list, bbo_1_external_list, bee_1_external_list,
+	 i3_1_external_list, i3s_1_external_list, g4_1_external_list, g4b_1_external_list,
+	 nop_1_external_list},
+	{ux_2_external_list, ux2_2_external_list, bbo_2_external_list, bee_2_external_list,
+	 i3_2_external_list, i3s_2_external_list, g4_2_external_list, g4b_2_external_list,
+	 nop_2_external_list},
+	{ux_3_external_list, ux2_3_external_list, bbo_3_external_list, bee_3_external_list,
+	 i3_3_external_list, i3s_3_external_list, g4_3_external_list, g4b_3_external_list,
+	 nop_3_external_list}
 };
 
 /* End Code */

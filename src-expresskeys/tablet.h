@@ -106,6 +106,14 @@ extern struct button_data {
 
 
 /* Data structures (consolidation): */
+extern struct ux_program {
+	struct ux_program* default_program;
+	struct common_data common_data;
+	struct touch_data touch_data;
+	struct button_data button_data;
+} ux_internal_list[], ux_1_external_list[], ux_2_external_list[],
+							ux_3_external_list[];
+
 extern struct ux2_program {
 	struct ux2_program* default_program;
 	struct common_data common_data;
@@ -242,6 +250,12 @@ extern struct button_string {
 
 /* String structures (consolidation): */
 
+extern struct ux_configstrings {
+	struct common_string common_string;
+	struct touch_string touch_string;
+	struct button_string button_string;
+} ux_configstrings[];
+
 extern struct ux2_configstrings {
 	struct common_string common_string;
 	struct touch_string touch_string;
@@ -292,6 +306,7 @@ extern struct nop_configstrings {
 /* Data structure (final consolidation): */
 
 extern struct model_index {
+	struct ux_program* ux;
 	struct ux2_program* ux2;
 	struct bbo_program* bbo;
 	struct bee_program* bee;
