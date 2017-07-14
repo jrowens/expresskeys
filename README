@@ -11,9 +11,10 @@ independent of the connected tablet model.
 A maximum of fifteen tablets (three of each model) can be handled concurrently.
 'Models': nopad, Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3/Cintiq
 
-Latest version can be found through the project page at:
+The original version can be found through the project pages at:
 
 http://freshmeat.net/projects/wacomexpresskeys
+http://expresskeys.ruivo.org/
 
 Please direct any bug reports or questions to the top address in the AUTHORS
 file. This program is _not_ a linuxwacom project.
