@@ -4,7 +4,7 @@ dnl --- Style and some code below nicked from the linuxwacom package ;-) ---
 
 AC_INIT(src-expresskeys/main_setup.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(expresskeys, 0.4.2)
+AM_INIT_AUTOMAKE(expresskeys, 0.5.0)
 AM_MAINTAINER_MODE
 AC_PROG_CC
 

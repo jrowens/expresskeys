@@ -40,7 +40,7 @@ int send_sigusr1;
 int send_sigusr2;
 
 /* Our version. Remember to change it: */
-const char* our_prog_version = "0.4.2";
+const char* our_prog_version = "0.5.0";
 
 /* Generic strings used in comparisons,
  and for flow control in some functions: */
