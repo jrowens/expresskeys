@@ -139,7 +139,7 @@ void check_pid(const char* pidfile, const char* statusfile,
 				if ((strstr(write_buffer, pgr_runline))
 								!=NULL) {
 					cp = strchr(write_buffer, '=')+2;
-					snprintf(status_buffer, MAXBUFFER, cp);
+					snprintf(status_buffer, MAXBUFFER, "%s", cp);
 					status_buffer[strlen(status_buffer)-1]
 									= '\0';
 					break;
